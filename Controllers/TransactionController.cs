@@ -30,9 +30,9 @@ namespace RiskGame.API.Controllers
             return "you are connected to the transactions controller";
         }
         [HttpPost]
-        public ActionResult<TradeTicket> Trade(TradeTicket trade)
+        public async Task<ActionResult<TradeTicket>> Trade(TradeTicket trade)
         {
-            return _transactionService.Transact(trade);
+            return await _transactionService.Transact(trade);
         }
     }
 }

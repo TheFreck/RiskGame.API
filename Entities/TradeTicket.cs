@@ -16,11 +16,9 @@ namespace RiskGame.API.Entities
         //[Required]
         public ModelReference Seller { get; set; }
         [Required]
-        public ModelReference Asset { get; set; }
+        public List<ModelReference> Shares { get; set; }
         [Required]
-        public ModelReference[] Shares { get; set; }
-        [Required]
-        public int Price { get; set; }
+        public List<ModelReference> Cash { get; set; }
         [Required]
         public DateTime TradeTime { get; set; }
         public bool SuccessfulTrade { get; set; }

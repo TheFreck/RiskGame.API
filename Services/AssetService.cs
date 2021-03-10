@@ -24,15 +24,21 @@ namespace RiskGame.API.Services
 
             _assets = database.GetCollection<Asset>(settings.AssetCollectionName);
         }
-        public List<Asset> Get() =>
-            _assets.Find(asset => true).ToList();
+        public async Task<List<Asset>> GetAsync()
+        {
+            var foundAsssets = await _assets.FindAsync(asset => true);
+            return foundAsssets.ToList();
+        }
 
-        public Asset Get(Guid id) =>
-            _assets.Find<Asset>(asset => asset.Id == id).FirstOrDefault();
+        public async Task<IAsyncCursor<Asset>> GetAsync(Guid id)
+        {
+            var asset = await _assets.FindAsync<Asset>(asset => asset.Id == id);
+            return asset;
+        }
         public Guid Create(Asset asset, int qty)
         {
             _assets.InsertOne(asset);
-            _shareService.CreateShares(_mapper.Map<Asset,ModelReference>(asset), qty);
+            _shareService.CreateShares(_mapper.Map<Asset, ModelReference>(asset), qty);
             return asset.Id;
         }
         public void Update(Guid id, Asset assetIn) =>

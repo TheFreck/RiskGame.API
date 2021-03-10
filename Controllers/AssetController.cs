@@ -26,28 +26,28 @@ namespace RiskGame.API.Controllers
         }
 
         [HttpGet]
-        public ActionResult<List<Asset>> Get() =>
-            _assetService.Get();
+        public async Task<ActionResult<List<Asset>>> Get() =>
+            await _assetService.GetAsync();
 
         [HttpGet("{id:length(36)}")]
-        public ActionResult<Asset> Get(string id)
+        public async Task<ActionResult<Asset>> Get(string id)
         {
                 var isGuid = Guid.TryParse(id, out var incomingId);
                 if (!isGuid) return NotFound("Me thinks that Id was not a Guid");
-                var asset = _assetService.Get(incomingId);
+                var asset = await _assetService.GetAsync(incomingId);
                 if (asset == null)
                 {
                     return NotFound("couldn't find it with that Id");
                 }
-                return asset;
+                return (Asset)asset;
         }
         [HttpGet("shares/{id:length(36)}")]
-        public ActionResult<List<Share>> GetShares(string id)
+        public async Task<ActionResult<List<Share>>> GetShares(string id)
         {
             var isGuid = Guid.TryParse(id, out var incomingId);
             if (!isGuid) return NotFound("Me thinks that Id was not a Guid");
-            var asset = _assetService.Get(incomingId);
-            return _shareService.Get(asset);
+            var asset = await _assetService.GetAsync(incomingId);
+            return _shareService.GetAsync((Asset)asset);
         }
 
         [HttpPost]
@@ -60,11 +60,12 @@ namespace RiskGame.API.Controllers
         }
 
         [HttpPut("{id:length(36)}")]
-        public IActionResult Update(string id, AssetIn assetIn)
+        public async Task<IActionResult> Update(string id, AssetIn assetIn)
         {
             var isGuid = Guid.TryParse(id, out var incomingId);
             if (!isGuid) return NotFound("Me thinks that Id was not a Guid");
-            var foundAsset = _assetService.Get(incomingId);
+            var awaitedAsset = await _assetService.GetAsync(incomingId);
+            Asset foundAsset = (Asset)awaitedAsset;
             if (foundAsset == null) return NotFound();
 
             if (assetIn.Name == null) assetIn.Name = foundAsset.Name;
@@ -85,11 +86,11 @@ namespace RiskGame.API.Controllers
         }
 
         [HttpDelete("{id:length(36)}")]
-        public IActionResult Delete(string id)
+        public async Task<IActionResult> Delete(string id)
         {
             var isGuid = Guid.TryParse(id, out var incomingId);
             if (!isGuid) return NotFound("Me thinks that Id was not a Guid");
-            var asset = _assetService.Get(incomingId);
+            var asset = await _assetService.GetAsync(incomingId);
             if (asset == null)
             {
                 return NotFound();

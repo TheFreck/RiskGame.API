@@ -18,7 +18,7 @@ namespace RiskGame.API.Models.PlayerFolder
         [BsonElement("Name")]
         [JsonProperty("Name")]
         public string Name { get; set; }
-        public List<Asset> Cash { get; set; }
+        public List<ModelReference> Cash { get; set; }
         public int Risk { get; set; }
         public int Safety { get; set; }
         public List<ModelReference> Portfolio { get; set; }

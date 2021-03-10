@@ -52,7 +52,7 @@ namespace RiskGame.API.Controllers
         public IActionResult Update(string id, [FromBody]PlayerIn playerIn)
         {
             var isGuid = Guid.TryParse(id, out var incomingId);
-            if (!isGuid) return NotFound("Me thinks that Id was not a Guid");
+            if (!isGuid) return NotFound("Me thinks that Id was not a proper Guid");
 
             var foundPlayer = _playerService.Get(incomingId);
             if (foundPlayer == null) return NotFound();
@@ -60,27 +60,27 @@ namespace RiskGame.API.Controllers
             if (playerIn.Name == null) playerIn.Name = foundPlayer.Name;
             if (playerIn.Risk == null) playerIn.Risk = foundPlayer.Risk;
             if (playerIn.Safety == null) playerIn.Safety = foundPlayer.Safety;
+            var update = _mapper.Map<PlayerIn, Player>(playerIn);
             // if the player does not have a current portfolio then set the player portfolio to the one passed in
-            if (playerIn.Portfolio == null) playerIn.Portfolio = foundPlayer.Portfolio;
+            if (playerIn.Portfolio == null) update.Portfolio = foundPlayer.Portfolio;
             // otherwise update player's portfolio with the new info
             else
             {
                 foreach (var item in playerIn.Portfolio)
                 {
-                    foundPlayer.Portfolio.Add(item);
+                    update.Portfolio.Add(item);
                 }
             }
-            if (playerIn.Cash == null) playerIn.Cash = foundPlayer.Cash;
+            if (playerIn.Cash == null) update.Cash = foundPlayer.Cash;
             else
             {
                 foreach(var item in playerIn.Cash)
                 {
-                    foundPlayer.Cash.Add(item);
+                    update.Cash.Add(item);
                 }
             }
 
 
-            var update = _mapper.Map<PlayerIn, Player>(playerIn);
             update.Id = incomingId;
             update.ObjectId = foundPlayer.ObjectId;
             try

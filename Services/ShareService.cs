@@ -25,17 +25,23 @@ namespace RiskGame.API.Services
 
             _shares = database.GetCollection<Share>(settings.ShareCollectionName);
         }
-        public List<Share> Get() =>
+        public List<Share> GetAsync() =>
             _shares.Find(share => true).ToList();
-        public List<Share> Get(Asset asset)
+        public List<Share> GetAsync(Asset asset)
         {
             var filter = Builders<Share>.Filter.Eq("_assetId", asset.Id);
             return _shares.Find<Share>(filter).ToList();
         }
-        public Share Get(Guid id)
+        public Share GetAsync(Guid id)
         {
             var filter = Builders<Share>.Filter.Eq("Id", id.ToString());
             return _shares.Find(filter).FirstOrDefault();
+        }
+        public async Task<List<Share>> GetAsync(List<Guid> shares)
+        {
+            var filter = Builders<Share>.Filter.Where(s => shares.Contains(s.Id));
+            var foundShares = await _shares.FindAsync(filter);
+            return foundShares.ToList();
         }
         public ModelReference CreateShares(ModelReference asset, int qty)
         {

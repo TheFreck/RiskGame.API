@@ -27,42 +27,57 @@ namespace RiskGame.API.Services
             _mapper = mapper;
         }
 
-        public TradeTicket Transact(TradeTicket trade)
+        public async Task<TradeTicket> Transact(TradeTicket trade)
         {
             var buyer = _playerService.Get(trade.Buyer.Id);
-            var buyerCash = buyer.Cash;
-            if (buyerCash < trade.Price * trade.Shares.Length)
+            var seller = _playerService.Get(trade.Seller.Id);
+            var cashIds = _mapper.Map<List<ModelReference>, List<SimpleId>>(trade.Cash);
+            var cashGuids = new List<Guid>();
+            foreach(var id in cashIds)
             {
-                trade.SuccessfulTrade = false;
-                trade.Message = "buyer does not have enough cash for this puchase";
+                cashGuids.Add(id.Id);
+            }
+            var buyerCash = await _shareService.GetAsync(cashGuids);
+            var shareIds = _mapper.Map<List<ModelReference>, List<SimpleId>>(trade.Shares);
+            var shareGuids = new List<Guid>();
+            foreach(var id in shareIds)
+            {
+                shareGuids.Add(id.Id);
+            }
+
+            var tradeShares = await _shareService.GetAsync(shareGuids);
+            
+            // Transfer ownership of cash
+            foreach(var cash in buyerCash)
+            {
+                var cashRef = _mapper.Map<Share, ModelReference>(cash);
+                cash.CurrentOwner = _mapper.Map<Player,ModelReference>(seller);
+                seller.Cash.Add(cashRef);
+                buyer.Cash.Remove(cashRef);
+            }
+
+            // Transfer ownership of assets
+            foreach (var tradeShare in tradeShares)
+            {
+                var shareRef = _mapper.Map<Share, ModelReference>(tradeShare);
+                tradeShare.CurrentOwner = _mapper.Map<Player, ModelReference>(buyer);
+                buyer.Portfolio.Add(shareRef);
+                buyer.Portfolio.Remove(shareRef);
+            }
+            try
+            {
+                trade.Message = $"Shares: {_shareService.UpdateShares(tradeShares).Message}; Cash: {_shareService.UpdateShares(buyerCash)}";
+                trade.TradeTime = DateTime.Now;
+                trade.SuccessfulTrade = true;
                 return trade;
             }
-            var seller = _playerService.Get(trade.Seller.Id);
-            var shares = new List<Share>();
-
-            // Transfer ownership of the assets
-            foreach (var shareRef in trade.Shares)
+            catch (Exception e)
             {
-                var share = _shareService.Get(shareRef.Id);
-                if (share.CurrentOwner.Id == seller.Id)
-                {
-                    share.CurrentOwner = new ModelReference {Id = buyer.Id,Name = buyer.Name,ModelType = ModelTypes.Player };
-                    seller.Portfolio.Remove(shareRef);
-                    buyer.Portfolio.Add(shareRef);
-                    share.CurrentOwner = _mapper.Map<Player, ModelReference>(buyer);
-                    shares.Add(share);
-                }
-                else
-                {
-                    trade.SuccessfulTrade = false;
-                    trade.Message = "The seller does not have the assets to sell";
-                    return trade;
-                }
+                trade.Message = $"Something went wrong while trying to perform this trade: {e.Message}";
+                trade.TradeTime = DateTime.Now;
+                trade.SuccessfulTrade = false;
+                return trade;
             }
-            trade.Message = _shareService.UpdateShares(shares).Message;
-            trade.TradeTime = DateTime.Now;
-            trade.SuccessfulTrade = true;
-            return trade;
             //foreach(var item in seller.Portfolio.Where(a => assets.Contains(a)))
             //{
             //    seller.Portfolio.Remove(item);
