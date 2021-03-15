@@ -14,10 +14,10 @@ namespace RiskGame.API.Services
     {
         private readonly IMongoCollection<Asset> _assets;
         private readonly IMapper _mapper;
-        private readonly ShareService _shareService;
+        //private readonly ShareService _shareService;
         public AssetService(IDatabaseSettings settings, ShareService shareService, IMapper mapper)
         {
-            _shareService = shareService;
+            //_shareService = shareService;
             _mapper = mapper;
             var client = new MongoClient(settings.ConnectionString);
             var database = client.GetDatabase(settings.DatabaseName);
@@ -35,10 +35,9 @@ namespace RiskGame.API.Services
             var asset = await _assets.FindAsync<Asset>(asset => asset.Id == id);
             return asset;
         }
-        public Guid Create(Asset asset, int qty)
+        public Guid Create(Asset asset)
         {
             _assets.InsertOne(asset);
-            _shareService.CreateShares(_mapper.Map<Asset, ModelReference>(asset), qty);
             return asset.Id;
         }
         public void Update(Guid id, Asset assetIn) =>

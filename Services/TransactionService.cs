@@ -10,6 +10,7 @@ using RiskGame.API.Models.PlayerFolder;
 using RiskGame.API.Models;
 using AutoMapper;
 using RiskGame.API.Models.SharesFolder;
+using MongoDB.Driver;
 
 namespace RiskGame.API.Services
 {
@@ -29,31 +30,46 @@ namespace RiskGame.API.Services
 
         public async Task<TradeTicket> Transact(TradeTicket trade)
         {
-            var buyer = _playerService.Get(trade.Buyer.Id);
-            var seller = _playerService.Get(trade.Seller.Id);
-            var cashIds = _mapper.Map<List<ModelReference>, List<SimpleId>>(trade.Cash);
+            var incomingBuyer = _playerService.GetAsync(trade.Buyer.Id);
+            var buyer = new Player();
+            await incomingBuyer.Result.ForEachAsync(b => buyer = b);
+            var incomingSeller = _playerService.GetAsync(trade.Seller.Id);
+            var seller = new Player();
+            await incomingSeller.Result.ForEachAsync(s => seller = s);
+
             var cashGuids = new List<Guid>();
-            foreach(var id in cashIds)
+            foreach(var id in buyer.Wallet)
             {
                 cashGuids.Add(id.Id);
             }
-            var buyerCash = await _shareService.GetAsync(cashGuids);
-            var shareIds = _mapper.Map<List<ModelReference>, List<SimpleId>>(trade.Shares);
+            var incomingCash = await _shareService.GetAsync(cashGuids);
+            var tradeCash = new List<Share>();
+            await incomingCash.ForEachAsync(c => tradeCash.Add(c));
+
             var shareGuids = new List<Guid>();
-            foreach(var id in shareIds)
+            foreach(var id in trade.Shares)
             {
                 shareGuids.Add(id.Id);
             }
 
-            var tradeShares = await _shareService.GetAsync(shareGuids);
+            var incomingShares = await _shareService.GetAsync(shareGuids);
+            var tradeShares = new List<Share>();
+            await incomingShares.ForEachAsync(s => tradeShares.Add(s));
             
             // Transfer ownership of cash
-            foreach(var cash in buyerCash)
+            foreach(var cash in tradeCash)
             {
                 var cashRef = _mapper.Map<Share, ModelReference>(cash);
                 cash.CurrentOwner = _mapper.Map<Player,ModelReference>(seller);
-                seller.Cash.Add(cashRef);
-                buyer.Cash.Remove(cashRef);
+                foreach(var bill in buyer.Wallet)
+                {
+                    if(cash.Id == bill.Id)
+                    {
+                        buyer.Wallet.Remove(bill);
+                        break;
+                    }
+                }
+                seller.Wallet.Add(cashRef);
             }
 
             // Transfer ownership of assets
@@ -62,11 +78,14 @@ namespace RiskGame.API.Services
                 var shareRef = _mapper.Map<Share, ModelReference>(tradeShare);
                 tradeShare.CurrentOwner = _mapper.Map<Player, ModelReference>(buyer);
                 buyer.Portfolio.Add(shareRef);
-                buyer.Portfolio.Remove(shareRef);
+                seller.Portfolio.Remove(shareRef);
             }
             try
             {
-                trade.Message = $"Shares: {_shareService.UpdateShares(tradeShares).Message}; Cash: {_shareService.UpdateShares(buyerCash)}";
+                // update buyer and seller
+                _playerService.Update(buyer.Id, buyer);
+                _playerService.Update(seller.Id, seller);
+                trade.Message = $"Shares: {_shareService.UpdateShares(tradeShares).Message}; Cash: {_shareService.UpdateShares(tradeCash)}";
                 trade.TradeTime = DateTime.Now;
                 trade.SuccessfulTrade = true;
                 return trade;
@@ -78,12 +97,6 @@ namespace RiskGame.API.Services
                 trade.SuccessfulTrade = false;
                 return trade;
             }
-            //foreach(var item in seller.Portfolio.Where(a => assets.Contains(a)))
-            //{
-            //    seller.Portfolio.Remove(item);
-
-            //}
-
         }
     }
 }

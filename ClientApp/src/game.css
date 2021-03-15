@@ -1,0 +1,16 @@
+﻿body {
+}
+
+.show{
+    display: initial;
+}
+.hide{
+    display: none;
+}
+
+.asset-create-header {
+    display: grid;
+    grid-template-columns: 40% 30% 30%;
+    width: 50%;
+    color: green;
+}

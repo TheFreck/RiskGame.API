@@ -7,10 +7,10 @@ namespace RiskGame.API.Models.AssetFolder
 {
     public class AssetIn
     {
-        public string Name;
-        public string Id;
-        public int SharesOutstanding;
-        public int? BookValue;
-        public int? RateOfReturn;
+        public string Name { get; set; }
+        public string Id { get; set; }
+        public int SharesOutstanding { get; set; }
+        public int? BookValue { get; set; }
+        public int? RateOfReturn { get; set; }
     }
 }

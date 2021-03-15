@@ -10,6 +10,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using RiskGame.API.Models.PlayerFolder;
+using Microsoft.AspNetCore.Mvc;
 
 namespace RiskGame.API.Services
 {
@@ -25,58 +26,53 @@ namespace RiskGame.API.Services
 
             _shares = database.GetCollection<Share>(settings.ShareCollectionName);
         }
-        public List<Share> GetAsync() =>
-            _shares.Find(share => true).ToList();
-        public List<Share> GetAsync(Asset asset)
+        public async Task<IAsyncCursor<Share>> GetAsync() =>
+            await _shares.FindAsync(share => true);
+        public async Task<IAsyncCursor<Share>> GetAsync(Asset asset)
         {
             var filter = Builders<Share>.Filter.Eq("_assetId", asset.Id);
-            return _shares.Find<Share>(filter).ToList();
+            return await _shares.FindAsync(filter);
         }
-        public Share GetAsync(Guid id)
+        public async Task<IAsyncCursor<Share>> GetAsync(Guid id)
         {
             var filter = Builders<Share>.Filter.Eq("Id", id.ToString());
-            return _shares.Find(filter).FirstOrDefault();
+            return await _shares.FindAsync(filter);
         }
-        public async Task<List<Share>> GetAsync(List<Guid> shares)
+        public async Task<IAsyncCursor<Share>> GetAsync(List<Guid> shares)
         {
             var filter = Builders<Share>.Filter.Where(s => shares.Contains(s.Id));
-            var foundShares = await _shares.FindAsync(filter);
-            return foundShares.ToList();
+            return await _shares.FindAsync(filter);
         }
-        public ModelReference CreateShares(ModelReference asset, int qty)
+        public async Task<List<Share>> CreateShares(ModelReference asset, int qty, ModelReference owner)
         {
             var sharesList = new List<Share>();
             for(var i=0; i<qty; i++)
             {
                 sharesList.Add(new Share(
                     asset.Id,
-                    Guid.NewGuid(),
-                    $"Share of {asset.Name}"
+                    $"Share of {asset.Name}",
+                    owner
                     ));
             }
-            try
-            {
-                // submit sharesList to the db
-                _shares.InsertManyAsync(sharesList).ConfigureAwait(true);
-                asset.Message = "Shares successfully created";
-                return asset;
-            }
-            catch (Exception e)
-            {
-                asset.Message = $"Something went wrong in the creation of the shares: {e.Message}";
-                return asset;
-            }
+            // submit sharesList to the db
+            await _shares.InsertManyAsync(sharesList).ConfigureAwait(true);
+            return sharesList;
         }
         public ModelReference UpdateShares(List<Share> shares)
         {
             try
             {
+                var message = "";
+                var success = shares.Count();
                 foreach(var share in shares)
                 {
                     var filter = Builders<Share>.Filter.Eq("Id", share.Id.ToString());
-                    _shares.FindOneAndReplace<Share>(filter,share);
+                    var outcome = _shares.FindOneAndReplace<Share>(filter,share);
+                    message += outcome.Id.ToString() + "\n";
+                    success--;
                 }
-                return new ModelReference { Name = shares[0].Name, ModelType = ModelTypes.Share, Message = "shares were successfully created" };
+                if (success > 0) throw new Exception("not all of the bills were removed from the buyer's wallet");
+                return new ModelReference { Name = shares?[0]?.Name, ModelType = ModelTypes.Share, Message = message += "shares were successfully updated" };
             }
             catch (Exception e)
             {

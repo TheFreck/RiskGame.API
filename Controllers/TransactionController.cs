@@ -24,15 +24,28 @@ namespace RiskGame.API.Controllers
             _transactionService = transactionService;
             _mapper = mapper;
         }
+        // ***************************************************************
+        // GET GET GET GET GET GET GET GET GET GET GET GET GET GET GET GET
+        // ***************************************************************
         [HttpGet]
         public ActionResult<string> Get()
         {
             return "you are connected to the transactions controller";
         }
+        // ****************************************************************
+        // POST POST POST POST POST POST POST POST POST POST POST POST POST
+        // ****************************************************************
         [HttpPost]
         public async Task<ActionResult<TradeTicket>> Trade(TradeTicket trade)
         {
             return await _transactionService.Transact(trade);
         }
+        // ***************************************************************
+        // PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT
+        // ***************************************************************
+
+        // **************************************************************
+        // DELETE DELETE DELETE DELETE DELETE DELETE DELETE DELETE DELETE 
+        // **************************************************************
     }
 }

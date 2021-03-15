@@ -1,5 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
+using MongoDB.Driver;
+using RiskGame.API.Models;
 using RiskGame.API.Models.AssetFolder;
 using RiskGame.API.Models.SharesFolder;
 using RiskGame.API.Services;
@@ -24,7 +26,9 @@ namespace RiskGame.API.Controllers
             _assetService = assetService;
             _mapper = mapper;
         }
-
+        // ***************************************************************
+        // GET GET GET GET GET GET GET GET GET GET GET GET GET GET GET GET
+        // ***************************************************************
         [HttpGet]
         public async Task<ActionResult<List<Asset>>> Get() =>
             await _assetService.GetAsync();
@@ -32,35 +36,69 @@ namespace RiskGame.API.Controllers
         [HttpGet("{id:length(36)}")]
         public async Task<ActionResult<Asset>> Get(string id)
         {
-                var isGuid = Guid.TryParse(id, out var incomingId);
-                if (!isGuid) return NotFound("Me thinks that Id was not a Guid");
-                var asset = await _assetService.GetAsync(incomingId);
-                if (asset == null)
-                {
-                    return NotFound("couldn't find it with that Id");
-                }
-                return (Asset)asset;
+            var isGuid = Guid.TryParse(id, out var incomingId);
+            if (!isGuid) return NotFound("Me thinks that Id was not a Guid");
+            var incoming = await _assetService.GetAsync(incomingId);
+            var asset = new Asset();
+            await incoming.ForEachAsync(a => asset = a);
+            if (asset.Id == Guid.Empty) NotFound("couldn't find it with that Id");
+            return asset;
         }
         [HttpGet("shares/{id:length(36)}")]
-        public async Task<ActionResult<List<Share>>> GetShares(string id)
+        public async Task<ActionResult<List<Asset>>> GetShares(string id)
         {
             var isGuid = Guid.TryParse(id, out var incomingId);
             if (!isGuid) return NotFound("Me thinks that Id was not a Guid");
-            var asset = await _assetService.GetAsync(incomingId);
-            return _shareService.GetAsync((Asset)asset);
+            var incomingAsset = await _assetService.GetAsync(incomingId);
+            var asset = new Asset();
+            await incomingAsset.ForEachAsync(a => asset = a);
+            if (asset.Id == Guid.Empty)
+            {
+                return NotFound("couldn't find it with that Id");
+            }
+            var incomingShares = _shareService.GetAsync(asset);
+            var shares = new List<Share>();
+            await incomingShares.Result.ForEachAsync(s => shares.Add(s));
+            var returnShares = new List<Share>();
+            foreach(var share in shares)
+            {
+                returnShares.Add(share);
+                Console.WriteLine(share.Name);
+                Console.WriteLine(share.Id);
+            }
+            return Ok(returnShares);
         }
-
+        // ****************************************************************
+        // POST POST POST POST POST POST POST POST POST POST POST POST POST
+        // ****************************************************************
         [HttpPost]
-        public ActionResult<AssetIn> Create([FromBody] AssetIn assetIn)
+        public async Task<ActionResult<AssetIn>> Create([FromBody]AssetIn assetIn)
         {
-            var asset = _mapper.Map<AssetIn, Asset>(assetIn);
+            var asset = new Asset();
+            asset = _mapper.Map<AssetIn, Asset>(assetIn);
             asset.Id = Guid.NewGuid();
-            _assetService.Create(asset, assetIn.SharesOutstanding);
-            return _mapper.Map<Asset,AssetIn>(asset);
-        }
+            var assetId = _assetService.Create(asset);
+            await _shareService.CreateShares(_mapper.Map<Asset, ModelReference>(asset), asset.SharesOutstanding, new ModelReference());
 
+            return _mapper.Map<Asset, AssetIn>(asset);
+        }
+        [HttpPost("add-shares/{id:length(36)}/{qty}")]
+        public async Task<ActionResult<List<Share>>> AddShares(string id, int qty)
+        {
+            var isGuid = Guid.TryParse(id, out var incomingId);
+            if (!isGuid) return NotFound("Me thinks that Id was not a Guid");
+
+            var incoming = await _assetService.GetAsync(incomingId);
+            var asset = new ModelReference();
+            await incoming.ForEachAsync(a => asset = _mapper.Map<Asset,ModelReference>(a));
+            if (asset.Id == Guid.Empty) NotFound("couldn't find it with that Id");
+            return await _shareService.CreateShares(asset, qty, new ModelReference());
+        }
+        // ***************************************************************
+        // PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT
+        // ***************************************************************
         [HttpPut("{id:length(36)}")]
-        public async Task<IActionResult> Update(string id, AssetIn assetIn)
+        public async Task<IActionResult> Update(string id, [FromBody]AssetIn assetIn)
         {
             var isGuid = Guid.TryParse(id, out var incomingId);
             if (!isGuid) return NotFound("Me thinks that Id was not a Guid");
@@ -84,7 +122,9 @@ namespace RiskGame.API.Controllers
                 return NotFound(e);
             }
         }
-
+        // **************************************************************
+        // DELETE DELETE DELETE DELETE DELETE DELETE DELETE DELETE DELETE 
+        // **************************************************************
         [HttpDelete("{id:length(36)}")]
         public async Task<IActionResult> Delete(string id)
         {

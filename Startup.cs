@@ -15,6 +15,9 @@ using AutoMapper;
 using RiskGame.API.Models.PlayerFolder;
 using RiskGame.API.Models.AssetFolder;
 using RiskGame.API.Persistence;
+using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.AspNetCore;
+using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
 
 namespace RiskGame.API
 {
@@ -38,8 +41,12 @@ namespace RiskGame.API
             services.AddSingleton<AssetService>();
             services.AddSingleton<ShareService>();
 
-            services.AddControllers()
-                .AddNewtonsoftJson(options => options.UseMemberCasing());
+            services.AddControllersWithViews();
+
+            services.AddSpaStaticFiles(configuration =>
+            {
+                configuration.RootPath = "ClientApp/build";
+            });
 
             services.AddAutoMapper(typeof(Startup));
         }
@@ -50,6 +57,15 @@ namespace RiskGame.API
             {
                 app.UseDeveloperExceptionPage();
             }
+            else
+            {
+                app.UseExceptionHandler("/Error");
+                app.UseHsts();
+            }
+
+            app.UseHttpsRedirection();
+            app.UseStaticFiles();
+            app.UseSpaStaticFiles();
 
             app.UseRouting();
 
@@ -58,6 +74,16 @@ namespace RiskGame.API
                 endpoints.MapControllerRoute(
                     name: "default",
                     pattern: "api/{controller}/{action=Index}/{id?}");
+            });
+
+            app.UseSpa(spa =>
+            {
+                spa.Options.SourcePath = "ClientApp";
+
+                if (env.IsDevelopment())
+                {
+                    spa.UseReactDevelopmentServer(npmScript: "start");
+                }
             });
         }
     }

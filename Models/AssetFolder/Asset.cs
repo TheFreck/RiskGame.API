@@ -14,24 +14,32 @@ namespace RiskGame.API.Models.AssetFolder
     {
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
-        public string ObjectId;
-        public Guid Id;
+        public string ObjectId { get; set; }
+        //
+        // Asset id is automatically set and can be overridden
+        public Guid Id { get; set; }
         [BsonElement("Name")]
         [JsonProperty("Name")]
-        public string Name;
-        public int BookValue;
-        public int RateOfReturn;
-        public int SharesOutstanding;
-        public List<TradeTicket> History;
-        public string Message;
-        public Asset(string name, int bookValue, int rateOfReturn, int sharesOutstanding)
+        public string Name { get; set; }
+        public int BookValue { get; set; }
+        public int RateOfReturn { get; set; }
+        public int SharesOutstanding { get; set; }
+        public string Message { get; set; }
+        //
+        // model type is used to convert this class to a ModelReference
+        // it is automatically set and cannot be overridden
+        public readonly ModelTypes ModelType = ModelTypes.Asset;
+        public Asset(string name, int bookValue, int rateOfReturn, int sharesOutstanding, Guid id)
         {
             Name = name;
             RateOfReturn = rateOfReturn;
-            Id = Id = Guid.NewGuid();
+            Id = id;
             SharesOutstanding = sharesOutstanding;
             BookValue = bookValue;
         }
-        //public Asset() {}
+        public Asset() 
+        {
+            Id = Guid.NewGuid();
+        }
     }
 }

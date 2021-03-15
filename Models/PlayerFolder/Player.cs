@@ -13,15 +13,31 @@ namespace RiskGame.API.Models.PlayerFolder
     {
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
+        //
+        // Mongo id
         public string ObjectId;
+        //
+        // Player id is automatically set and can be overridden
         public Guid Id { get; set; }
         [BsonElement("Name")]
         [JsonProperty("Name")]
         public string Name { get; set; }
-        public List<ModelReference> Cash { get; set; }
+        //
+        // a list of model references representing shares of the Asset cash
+        public List<ModelReference> Wallet { get; set; }
+        public int Cash { get; set; }
         public int Risk { get; set; }
         public int Safety { get; set; }
-        public List<ModelReference> Portfolio { get; set; }
-
+        //
+        // a list of model references representing shares of the Assets being traded
+        public List<ModelReference> Portfolio;
+        //
+        // model type is used to convert this class to a ModelReference
+        // it is automatically set and cannot be overridden
+        public readonly ModelTypes ModelType = ModelTypes.Player;
+        public Player()
+        {
+            Id = Guid.NewGuid();
+        }
     }
 }
