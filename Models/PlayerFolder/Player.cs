@@ -6,6 +6,7 @@ using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using Newtonsoft.Json;
 using RiskGame.API.Models.AssetFolder;
+using RiskGame.API.Services;
 
 namespace RiskGame.API.Models.PlayerFolder
 {
@@ -15,7 +16,7 @@ namespace RiskGame.API.Models.PlayerFolder
         [BsonRepresentation(BsonType.ObjectId)]
         //
         // Mongo id
-        public string ObjectId;
+        public string ObjectId { get; set; }
         //
         // Player id is automatically set and can be overridden
         public Guid Id { get; set; }
@@ -30,7 +31,7 @@ namespace RiskGame.API.Models.PlayerFolder
         public int Safety { get; set; }
         //
         // a list of model references representing shares of the Assets being traded
-        public List<ModelReference> Portfolio;
+        public List<ModelReference> Portfolio { get; set; }
         //
         // model type is used to convert this class to a ModelReference
         // it is automatically set and cannot be overridden
@@ -38,6 +39,10 @@ namespace RiskGame.API.Models.PlayerFolder
         public Player()
         {
             Id = Guid.NewGuid();
+        }
+        public Player(Guid id)
+        {
+            Id = id;
         }
     }
 }

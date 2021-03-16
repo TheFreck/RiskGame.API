@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using RiskGame.API.Models.PlayerFolder;
 using Microsoft.AspNetCore.Mvc;
+using System.Reflection.Metadata;
 
 namespace RiskGame.API.Services
 {
@@ -38,12 +39,23 @@ namespace RiskGame.API.Services
             var filter = Builders<Share>.Filter.Eq("Id", id.ToString());
             return await _shares.FindAsync(filter);
         }
-        public async Task<IAsyncCursor<Share>> GetAsync(List<Guid> shares)
+        public async Task<List<Share>> GetNonCashAsync()
+        {
+            var incoming = await _shares.FindAsync(s => s.ModelType.Equals(ModelTypes.Share));
+            var shares = new List<Share>();
+            await incoming.ForEachAsync(s => shares.Add(s));
+            Console.WriteLine("shares count: " + shares.Count);
+            return shares;
+        }
+        public async Task<List<Share>> GetAsync(List<Guid> shares)
         {
             var filter = Builders<Share>.Filter.Where(s => shares.Contains(s.Id));
-            return await _shares.FindAsync(filter);
+            var incoming = await _shares.FindAsync<Share>(filter);
+            var returnShares = new List<Share>();
+            await incoming.ForEachAsync(s => returnShares.Add(s));
+            return returnShares;
         }
-        public async Task<List<Share>> CreateShares(ModelReference asset, int qty, ModelReference owner)
+        public async Task<List<ModelReference>> CreateShares(ModelReference asset, int qty, ModelReference owner, ModelTypes type)
         {
             var sharesList = new List<Share>();
             for(var i=0; i<qty; i++)
@@ -51,27 +63,27 @@ namespace RiskGame.API.Services
                 sharesList.Add(new Share(
                     asset.Id,
                     $"Share of {asset.Name}",
-                    owner
+                    owner,
+                    type
                     ));
             }
             // submit sharesList to the db
             await _shares.InsertManyAsync(sharesList).ConfigureAwait(true);
-            return sharesList;
+            return ToRef(sharesList);
         }
-        public ModelReference UpdateShares(List<Share> shares)
+        public async Task<ModelReference> UpdateShares(List<Share> shares)
         {
             try
             {
                 var message = "";
-                var success = shares.Count();
                 foreach(var share in shares)
                 {
-                    var filter = Builders<Share>.Filter.Eq("Id", share.Id.ToString());
-                    var outcome = _shares.FindOneAndReplace<Share>(filter,share);
-                    message += outcome.Id.ToString() + "\n";
-                    success--;
+                    var filter = Builders<Share>.Filter.Eq(s => s.Id, share.Id);
+                    var update = Builders<Share>.Update.Set(s => s.CurrentOwner, share.CurrentOwner);
+                    await _shares.UpdateOneAsync(filter,update);
+                    message += $"{share.Id}\n";
                 }
-                if (success > 0) throw new Exception("not all of the bills were removed from the buyer's wallet");
+
                 return new ModelReference { Name = shares?[0]?.Name, ModelType = ModelTypes.Share, Message = message += "shares were successfully updated" };
             }
             catch (Exception e)
@@ -79,5 +91,9 @@ namespace RiskGame.API.Services
                 return new ModelReference { Message = $"Something went wrong while updating the shares: {e.Message}" };
             }
         }
+        public ModelReference ToRef(Share share) =>
+            _mapper.Map<Share,ModelReference>(share);
+        public List<ModelReference> ToRef(List<Share> shares) =>
+            _mapper.Map<List<Share>, List<ModelReference>>(shares);
     }
 }

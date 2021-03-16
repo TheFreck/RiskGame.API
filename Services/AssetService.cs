@@ -14,10 +14,8 @@ namespace RiskGame.API.Services
     {
         private readonly IMongoCollection<Asset> _assets;
         private readonly IMapper _mapper;
-        //private readonly ShareService _shareService;
         public AssetService(IDatabaseSettings settings, ShareService shareService, IMapper mapper)
         {
-            //_shareService = shareService;
             _mapper = mapper;
             var client = new MongoClient(settings.ConnectionString);
             var database = client.GetDatabase(settings.DatabaseName);
@@ -46,5 +44,7 @@ namespace RiskGame.API.Services
             _assets.DeleteOne(asset => asset.Id == assetIn.Id);
         public void Remove(Guid id) =>
             _assets.DeleteOne(asset => asset.Id == id);
+        public ModelReference ToRef(Asset asset) =>
+            _mapper.Map<Asset,ModelReference>(asset);
     }
 }

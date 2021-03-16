@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
 
 namespace RiskGame.API.Models.SharesFolder
 {
@@ -30,17 +31,19 @@ namespace RiskGame.API.Models.SharesFolder
         //
         // model type is used to convert this class to a ModelReference
         // it is automatically set and cannot be overridden
-        public readonly ModelTypes ModelType = ModelTypes.Share;
-        public Share(Guid assetId, string name, ModelReference owner)
+        public ModelTypes ModelType { get; set; }
+        public Share(Guid assetId, string name, ModelReference owner, ModelTypes type)
         {
             _assetId = assetId;
             Id = Guid.NewGuid();
             Name = name;
             CurrentOwner = owner;
+            ModelType = type;
         }
-        public Share()
+        public Share(ModelTypes type)
         {
             Id = Guid.NewGuid();
+            ModelType = type;
         }
     }
 }

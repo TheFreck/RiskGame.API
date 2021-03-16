@@ -22,21 +22,21 @@ export class PlayerCreate extends Component {
             submitDisplay: false,
 
             player: {},
+            cash: {},
             cashShares: []
         };
     }
 
     handleSubmit = event => {
-        if (this.state.playerName && this.state.shareCount) {
+        if (this.state.playerName && this.state.playerCash) {
             API.player.createPlayer({
-                "Name": this.state.playerName,
-                "Cash": this.state.playerCash
+                Name: this.state.playerName,
+                Cash: this.state.playerCash
             }).then(result => {
-                console.log("result: ", result);
-                console.log("id: ", result.data.id);
                 this.setState({ submitMessage: "submitted successfully", submitDisplay: true, player: result.data })
                 setTimeout(() => this.setState({ submitDisplay: false }), 3333);
                 this.addCash(result.data.id, this.state.playerCash);
+                this.getCash();
             });
         }
         else {
@@ -109,12 +109,28 @@ export class PlayerCreate extends Component {
         }
     };
     addCash = (id, qty) => {
-        console.log("get shares: ", id);
-        console.log("the player: ", this.state.player);
-        API.asset.addShares({ id, qty }).then(cash => {
-            console.log("cash: ", cash);
-            console.log("cash data: ", cash.data);
-            this.setState({ cashShares: cash.data });
+        API.player.getPlayer(id).then(player => {
+            this.setState({ cashShares: player.data.wallet });
+        })
+    };
+    setPlayerAndCash = cash => {
+        this.props.updateState({
+            cash: cash,
+            player: this.state.player
+        });
+    };
+    getCash = () => {
+        API.asset.getAssets().then(assets => {
+            console.log("assets: ", assets);
+            for (let asset of assets.data) {
+                console.log("asset: ", asset);
+                console.log("asset name: ", asset.name);
+                if (asset.name === "Cash") {
+                    console.log("asset");
+                    this.setState({ cash: asset });
+                    this.setPlayerAndCash(asset);
+                }
+            }
         })
     };
 

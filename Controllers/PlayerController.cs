@@ -43,7 +43,6 @@ namespace RiskGame.API.Controllers
             await incoming.Result.ForEachAsync(p => players.Add(p));
             return players;
         }
-
         [HttpGet("{id:length(36)}")]
         public async Task<ActionResult<Player>> Get(string id)
         {
@@ -52,17 +51,18 @@ namespace RiskGame.API.Controllers
             var incoming = _playerService.GetAsync(incomingId);
             var player = new Player();
             await incoming.Result.ForEachAsync(p => player = p);
-            if(player == null)
+            if (player == null)
             {
                 return NotFound();
             }
+            Console.WriteLine("Player wallet: " + player.Wallet.Count);
             return player;
         }
         // ****************************************************************
         // POST POST POST POST POST POST POST POST POST POST POST POST POST
         // ****************************************************************
         [HttpPost]
-        public async Task<ActionResult<PlayerIn>> Create([FromBody]PlayerIn playerIn)
+        public async Task<ActionResult<PlayerIn>> Create([FromBody] PlayerIn playerIn)
         {
             var player = _mapper.Map<PlayerIn, Player>(playerIn);
             player.Id = Guid.NewGuid();
@@ -70,30 +70,27 @@ namespace RiskGame.API.Controllers
             var incoming = _assetService.GetAsync(Guid.Parse("5490B3E5-1242-4EB9-A9B3-627878795996")).Result;
             var cash = new Asset();
             await incoming.ForEachAsync(c => cash = c);
-            var cashShares = new List<Share>();
             var playerRef = _mapper.Map<Player, ModelReference>(player);
-            if(cash.SharesOutstanding == 0)
+            if (cash.SharesOutstanding == 0)
             {
                 // if cash does not exist then create it
                 cash.Id = Guid.Parse("5490B3E5-1242-4EB9-A9B3-627878795996");
                 cash.Name = "Cash";
                 cash.SharesOutstanding += playerIn.Cash;
                 var outcome = _assetService.Create(cash);
-                var incomingCash = _shareService.CreateShares(_mapper.Map<Asset,ModelReference>(cash),player.Cash, playerRef).Result;
-                incomingCash.ForEach(c => cashShares.Add(c));
-                foreach(var cShare in cashShares)
+                var incomingCash = _shareService.CreateShares(_mapper.Map<Asset, ModelReference>(cash), player.Cash, playerRef, ModelTypes.Cash).Result;
+                foreach (var cShare in incomingCash)
                 {
-                    cShare.CurrentOwner = _mapper.Map<Player, ModelReference>(player);
-                    player.Wallet.Add(_mapper.Map<Share, ModelReference>(cShare));
+                    player.Wallet.Add(cShare);
                 }
             }
             else
             {
-                var outcome = await _shareService.CreateShares(_mapper.Map<Asset,ModelReference>(cash), player.Cash, playerRef);
+                var outcome = await _shareService.CreateShares(_mapper.Map<Asset, ModelReference>(cash), player.Cash, playerRef, ModelTypes.Cash);
 
             }
-
             _playerService.Create(player);
+            playerIn.Id = player.Id;
             return playerIn;
         }
         [HttpPost("add-shares/{playerId:length(36)}/{assetId}/{qty}")]
@@ -121,10 +118,10 @@ namespace RiskGame.API.Controllers
             await incomingShares.Result.ForEachAsync(s => shares.Add(s));
 
             // add shares to player's portfolio
-            foreach(var share in shares)
+            foreach (var share in shares)
             {
                 if (qty == 0) break;
-                if(share.CurrentOwner == null)
+                if (share.CurrentOwner == null)
                 {
                     player.Portfolio.Add(_mapper.Map<Share, ModelReference>(share));
                     qty--;
@@ -145,12 +142,11 @@ namespace RiskGame.API.Controllers
                 };
             }
         }
-
         // ***************************************************************
         // PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT
         // ***************************************************************
         [HttpPut("{id:length(36)}")]
-        public async Task<ActionResult> Update(string id, [FromBody]PlayerIn playerIn)
+        public async Task<ActionResult> Update(string id, [FromBody] PlayerIn playerIn)
         {
             var isGuid = Guid.TryParse(id, out var incomingId);
             if (!isGuid) return NotFound("Me thinks that Id was not a proper Guid");
@@ -178,7 +174,7 @@ namespace RiskGame.API.Controllers
             if (playerIn.Wallet.Count() == 0) update.Wallet = foundPlayer.Wallet;
             else
             {
-                foreach(var item in playerIn.Wallet)
+                foreach (var item in playerIn.Wallet)
                 {
                     update.Wallet.Add(item);
                 }
@@ -210,9 +206,8 @@ namespace RiskGame.API.Controllers
             if (!isGuid) return NotFound("Me thinks that Id was not a proper Guid");
             return await _playerService.EmptyWallet(incomingId);
         }
-
         // **************************************************************
-        // DELETE DELETE DELETE DELETE DELETE DELETE DELETE DELETE DELETE 
+        // DELETE DELETE DELETE DELETE DELETE DELETE DELETE DELETE DELETE
         // **************************************************************
         [HttpDelete("{id:length(36)}")]
         public ActionResult Delete(string id)
@@ -220,7 +215,7 @@ namespace RiskGame.API.Controllers
             var isGuid = Guid.TryParse(id, out var incomingId);
             if (!isGuid) return NotFound("Me thinks that Id was not a Guid");
             var player = _playerService.GetAsync(incomingId);
-            if(player == null)
+            if (player == null)
             {
                 return NotFound();
             }

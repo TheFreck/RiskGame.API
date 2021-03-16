@@ -2,35 +2,38 @@
 import InputGroup from 'react-bootstrap/InputGroup';
 import Form from 'react-bootstrap/Form';
 import API from './../../API';
-import SharesResults from './SharesResults';
 
-export class AssetCreate extends Component {
-    static displayName = AssetCreate.name;
+export class Transaction extends Component {
+    static displayName = Transaction.name;
 
     constructor(props) {
         super(props);
         this.state = {
-            assetName: "",
-            assetIncome: 0,
-            shareCount: 0,
+            player: {},
 
-            assetNameMessage: "Required: All assets must have a name.",
-            assetIncomeMessage: "Optional: Would you like this asset to pay income?",
-            shareCountMessage: "Required: How many shares of this asset are there?",
-            submitMessage: "",
+            tradeShares: 0,
+            tradeCost: 0,
+            totalCost: 0,
 
-            assetNameDisplay: false,
-            assetIncomeDisplay: false,
-            shareCountDisplay: false,
+            playerCash: [],
+            playerShares: [],
+            
+            tradeSharesDisplay: false,
+            tradeCostDisplay: false,
             submitDisplay: false,
 
-            asset: {},
-            cash: {},
-            shares: []
+            tradeSharesMessage: "How many shares would you like to trade?",
+            tradeCostMessage: "How much per share are you willing to go?",
+            submitMessage: ""
         };
     }
-
     componentDidMount = () => {
+        if (this.props.retrieveState.player !== null) {
+            API.player.getPlayer(this.props.retrieveState.player.id).then(player => {
+                this.setState({ player: player });
+
+            });
+        }
     }
 
     handleSubmit = event => {
@@ -51,9 +54,6 @@ export class AssetCreate extends Component {
             this.setState({ submitMessage: "fill in the missing information", submitDisplay: true });
             setTimeout(() => this.setState({ submitDisplay: false }), 3333);
         }
-    }
-    setCashAndAsset = () => {
-        this.props.updateState({ asset: this.state.asset });
     }
     handleChange = event => {
         event.preventDefault();
@@ -139,31 +139,51 @@ export class AssetCreate extends Component {
             console.log("shares: ", shares);
             console.log("shares data: ", shares.data);
             this.setState({ shares: shares.data });
-            this.setCashAndAsset();
         })
     };
+    totalCost = () => this.state.tradeShares * this.state.tradeCost;
 
     render() {
         return (
             <div>
                 <InputGroup className="mb-3">
                     <InputGroup.Prepend>
-                        <InputGroup.Text id="assetName">Asset Name: </InputGroup.Text>
+                        <InputGroup.Text id="trade-shares">Shares: </InputGroup.Text>
                     </InputGroup.Prepend>
                     <Form.Control
-                        placeholder="Asset Name"
-                        aria-label="AssetName"
-                        aria-describedby="assetName"
+                        placeholder="Number of shares"
+                        aria-label="TradeShares"
+                        aria-describedby="trade-shares"
                         onChange={this.handleChange}
-                        name="assetName"
+                        name="tradeShares"
                         onBlur={this.handleBlur}
                     />
                 </InputGroup>
-                <p className={this.state.assetNameDisplay ? 'show assetName-message' : 'hide assetName-message'}>{this.state.assetNameMessage}</p>
+                <p className={this.state.tradeSharesDisplay ? 'show tradeShares-message' : 'hide tradeShares-message'}>{this.state.tradeSharesMessage}</p>
 
                 <InputGroup className="mb-3">
                     <InputGroup.Prepend>
-                        <InputGroup.Text id="assetIncome">Asset Income: </InputGroup.Text>
+                        <InputGroup.Text id="trade-cash">Cash: </InputGroup.Text>
+                    </InputGroup.Prepend>
+                    <Form.Control
+                        placeholder="Price Per Share"
+                        aria-label="TradeCash"
+                        aria-describedby="trade-cash"
+                        onChange={this.handleChange}
+                        name="tradeCash"
+                        onBlur={this.handleBlur}
+                    />
+                </InputGroup>
+                <p className={this.state.tradeCashDisplay ? 'show tradeCash-message' : 'hide tradeCash-message'}>{this.state.tradeCashMessage}</p>
+
+                <button id="submit" onClick={this.handleSubmit}>Submit</button>
+                <p className={this.state.submitDisplay ? 'show submit-message' : 'hide submit-message'}>{this.state.submitMessage}</p>
+
+                <hr />
+
+                <InputGroup className="mb-3">
+                    <InputGroup.Prepend>
+                        <InputGroup.Text id="assetIncome">Cash: </InputGroup.Text>
                     </InputGroup.Prepend>
                     <Form.Control
                         placeholder="Asset Income"
@@ -178,35 +198,22 @@ export class AssetCreate extends Component {
 
                 <InputGroup className="mb-3">
                     <InputGroup.Prepend>
-                        <InputGroup.Text id="shareCount">Number of Shares: </InputGroup.Text>
+                        <InputGroup.Text id="assetIncome">Cash: </InputGroup.Text>
                     </InputGroup.Prepend>
                     <Form.Control
-                        placeholder="How many shares?"
-                        aria-label="ShareCount"
-                        aria-describedby="shareCount"
+                        placeholder="Asset Income"
+                        aria-label="AssetIncome"
+                        aria-describedby="assetIncome"
                         onChange={this.handleChange}
-                        name="shareCount"
+                        name="assetIncome"
                         onBlur={this.handleBlur}
                     />
                 </InputGroup>
-                <p className={this.state.shareCountDisplay ? 'show shareCount-message' : 'hide shareCount-message'}>{this.state.shareCountMessage}</p>
-
-                <button id="submit" onClick={this.handleSubmit}>Submit</button>
-                <p className={this.state.submitDisplay ? 'show submit-message' : 'hide submit-message'}>{this.state.submitMessage}</p>
-
-                {/*<div className="asset-create-header">*/}
-                {/*    <h2>Asset Name: <span><h3>{this.state.asset.name}</h3></span></h2>*/}
-                {/*    <h2>Income: <span><h3>{this.state.asset.rateOfReturn}</h3></span></h2>*/}
-                {/*    <h2>Shares Outstanding: <span><h3>{this.state.asset.sharesOutstanding}</h3></span></h2>*/}
-                {/*</div>*/}
-                {/*<div>*/}
-                {/*    <SharesResults*/}
-                {/*        shares={this.state.shares}*/}
-                {/*    />*/}
-                {/*</div>*/}
+                <p className={this.state.assetIncomeDisplay ? 'show assetIncome-message' : 'hide assetIncome-message'}>{this.state.assetIncomeMessage}</p>
+                
             </div>
         );
     }
 }
 
-export default AssetCreate;
+export default Transaction;

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
 using RiskGame.API.Models;
 using RiskGame.API.Models.AssetFolder;
+using RiskGame.API.Models.PlayerFolder;
 using RiskGame.API.Models.SharesFolder;
 using RiskGame.API.Services;
 using System;
@@ -19,11 +20,13 @@ namespace RiskGame.API.Controllers
     {
         private readonly AssetService _assetService;
         private readonly ShareService _shareService;
+        private readonly PlayerService _playerService;
         private readonly IMapper _mapper;
-        public AssetController(AssetService assetService, ShareService shareService, IMapper mapper)
+        public AssetController(AssetService assetService, ShareService shareService, PlayerService playerService, IMapper mapper)
         {
             _shareService = shareService;
             _assetService = assetService;
+            _playerService = playerService;
             _mapper = mapper;
         }
         // ***************************************************************
@@ -78,12 +81,16 @@ namespace RiskGame.API.Controllers
             asset = _mapper.Map<AssetIn, Asset>(assetIn);
             asset.Id = Guid.NewGuid();
             var assetId = _assetService.Create(asset);
-            await _shareService.CreateShares(_mapper.Map<Asset, ModelReference>(asset), asset.SharesOutstanding, new ModelReference());
-
-            return _mapper.Map<Asset, AssetIn>(asset);
+            var theShares = await _shareService.CreateShares(_mapper.Map<Asset, ModelReference>(asset), asset.SharesOutstanding, new ModelReference(),ModelTypes.Share);
+            var haus = _playerService.HAUS;
+            haus.Portfolio.AddRange(theShares);
+            var hausUpdate = new Player(haus.Id) { Portfolio = haus.Portfolio };
+            var hausResult = await _playerService.UpdateHaus(hausUpdate);
+            if(hausResult.Name == "HAUS") return _mapper.Map<Asset, AssetIn>(asset);
+            else return NotFound(hausResult.Message);
         }
         [HttpPost("add-shares/{id:length(36)}/{qty}")]
-        public async Task<ActionResult<List<Share>>> AddShares(string id, int qty)
+        public async Task<ActionResult<List<ModelReference>>> AddShares(string id, int qty)
         {
             var isGuid = Guid.TryParse(id, out var incomingId);
             if (!isGuid) return NotFound("Me thinks that Id was not a Guid");
@@ -92,7 +99,7 @@ namespace RiskGame.API.Controllers
             var asset = new ModelReference();
             await incoming.ForEachAsync(a => asset = _mapper.Map<Asset,ModelReference>(a));
             if (asset.Id == Guid.Empty) NotFound("couldn't find it with that Id");
-            return await _shareService.CreateShares(asset, qty, new ModelReference());
+            return await _shareService.CreateShares(asset, qty, new ModelReference(), ModelTypes.Share);
         }
         // ***************************************************************
         // PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT

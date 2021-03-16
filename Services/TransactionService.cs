@@ -30,45 +30,44 @@ namespace RiskGame.API.Services
 
         public async Task<TradeTicket> Transact(TradeTicket trade)
         {
+            // get the buyer and seller
             var incomingBuyer = _playerService.GetAsync(trade.Buyer.Id);
             var buyer = new Player();
             await incomingBuyer.Result.ForEachAsync(b => buyer = b);
             var incomingSeller = _playerService.GetAsync(trade.Seller.Id);
             var seller = new Player();
             await incomingSeller.Result.ForEachAsync(s => seller = s);
+            var sellerRef = _playerService.ToRef(seller);
+            var buyerRef = _playerService.ToRef(buyer);
+            var buyerWallet = new List<ModelReference>();
+            buyerWallet = buyer.Wallet;
 
+            // get the cash
             var cashGuids = new List<Guid>();
-            foreach(var id in buyer.Wallet)
+            foreach(var id in trade.Cash)
             {
                 cashGuids.Add(id.Id);
             }
             var incomingCash = await _shareService.GetAsync(cashGuids);
             var tradeCash = new List<Share>();
-            await incomingCash.ForEachAsync(c => tradeCash.Add(c));
+            incomingCash.ForEach(c => tradeCash.Add(c));
 
+            // get the shares
             var shareGuids = new List<Guid>();
             foreach(var id in trade.Shares)
             {
                 shareGuids.Add(id.Id);
             }
-
             var incomingShares = await _shareService.GetAsync(shareGuids);
             var tradeShares = new List<Share>();
-            await incomingShares.ForEachAsync(s => tradeShares.Add(s));
+            incomingShares.ForEach(s => tradeShares.Add(s));
             
             // Transfer ownership of cash
             foreach(var cash in tradeCash)
             {
-                var cashRef = _mapper.Map<Share, ModelReference>(cash);
-                cash.CurrentOwner = _mapper.Map<Player,ModelReference>(seller);
-                foreach(var bill in buyer.Wallet)
-                {
-                    if(cash.Id == bill.Id)
-                    {
-                        buyer.Wallet.Remove(bill);
-                        break;
-                    }
-                }
+                var cashRef = _shareService.ToRef(cash);
+                cash.CurrentOwner = sellerRef;
+                buyer.Wallet.RemoveAll(c => c.Id == cashRef.Id);
                 seller.Wallet.Add(cashRef);
             }
 
@@ -76,16 +75,20 @@ namespace RiskGame.API.Services
             foreach (var tradeShare in tradeShares)
             {
                 var shareRef = _mapper.Map<Share, ModelReference>(tradeShare);
-                tradeShare.CurrentOwner = _mapper.Map<Player, ModelReference>(buyer);
+                tradeShare.CurrentOwner = buyerRef;
                 buyer.Portfolio.Add(shareRef);
-                seller.Portfolio.Remove(shareRef);
+                seller.Portfolio.RemoveAll(s => s.Id == shareRef.Id);
             }
             try
             {
+                // update cash and shares
+                var updatedCash = _shareService.UpdateShares(tradeCash);
+                var updatedShares = _shareService.UpdateShares(tradeShares);
                 // update buyer and seller
                 _playerService.Update(buyer.Id, buyer);
                 _playerService.Update(seller.Id, seller);
-                trade.Message = $"Shares: {_shareService.UpdateShares(tradeShares).Message}; Cash: {_shareService.UpdateShares(tradeCash)}";
+                // complete the trade ticket
+                trade.Message = $"Shares: {_shareService.UpdateShares(tradeShares).Result.Message}; Cash: {_shareService.UpdateShares(tradeCash)}";
                 trade.TradeTime = DateTime.Now;
                 trade.SuccessfulTrade = true;
                 return trade;

@@ -45,7 +45,7 @@ export default {
             return axios.post('api/player/', query);
         },
         addSharesToPlayer: query => {
-            console.log("query: ", query);
+            console.log("add shares query: ", query);
             return axios.post(`api/player/${query.playerId}/${query.assetId}/${query.qty}`, query.changeSet);
         },
         // Put

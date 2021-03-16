@@ -9,6 +9,7 @@ namespace RiskGame.API.Models
     {
         Asset,
         Share,
-        Player
+        Player,
+        Cash
     }
 }

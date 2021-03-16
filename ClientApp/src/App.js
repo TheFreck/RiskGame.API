@@ -33,7 +33,7 @@ export default class App extends Component {
         var docheight = $(document).height();
         var scrollTop = $(window).scrollTop();
         var trackLength = docheight - winheight;
-        var pctScrolled = Math.floor(scrollTop / trackLength * 100); // gets percentage scrolled (ie: 80 NaN if tracklength == 0)
+        var pctScrolled = Math.floor(scrollTop / trackLength * 100);
         this.setState({
             now: pctScrolled
         })
