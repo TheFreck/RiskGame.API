@@ -42,8 +42,6 @@ export class AssetCreate extends Component {
 
     handleSubmit = event => {
         if (this.state.cashCount > 0) {
-            console.log("submit cash Id: ", this.state.cash.id);
-            console.log("submit cash count: ", this.state.cashCount);
             API.asset.addShares(this.state.cash.id, this.state.cashCount).then(result => {
                 console.log("house cash: ", result.data.shares.length)
             });
@@ -51,12 +49,10 @@ export class AssetCreate extends Component {
         if (this.state.assetName && this.state.shareCount && !this.state.assetCreated) {
                     setTimeout(() => this.setState({ submitDisplay: false }), 3333);
             this.createAsset(this.state.assetName, result => {
-                console.log("result: ", result);
                 if (result.status === 200) {
                     this.setState({ assetCreated: true });
                     this.setState({ submitMessage: "submitted successfully", submitDisplay: true, asset: result.data })
                     this.getShares(result.data.id, sharesResults => {
-                        console.log("shares: ", sharesResults.data);
                     });
                 }
                 else {
@@ -83,7 +79,6 @@ export class AssetCreate extends Component {
         const target = event.target;
         const eventName = target.name;
         const value = target.value;
-        console.log(eventName, value);
         this.setState({
             [eventName]: value
         });

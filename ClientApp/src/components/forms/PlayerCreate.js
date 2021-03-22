@@ -123,7 +123,6 @@ export class PlayerCreate extends Component {
     getCash = () => {
         console.log("this.state.player.id: ", this.state.player.id);
         API.asset.getPlayerShares({ id: this.state.player.id, type: 3 }).then(cash => {
-            console.log("cash: ", cash);
             this.setState({ cashShares: cash.data });
             this.setPlayerAndCash(cash.data[0]);
             this.getAssets();
@@ -131,7 +130,6 @@ export class PlayerCreate extends Component {
     };
     getAssets = () => {
         API.asset.getPlayerShares({ id: this.state.player.id, type: 1}).then(shares => {
-            console.log("shares: ", shares.data);
             this.setState({ shares: shares.data });
         })
     }

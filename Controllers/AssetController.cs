@@ -36,7 +36,6 @@ namespace RiskGame.API.Controllers
         [HttpGet]
         public async Task<List<Asset>> Get() =>
             _mapper.Map<List<AssetResource>, List<Asset>>(await _assetService.GetAsync());
-
         [HttpGet("{id:length(36)}")]
         public async Task<ActionResult<Asset>> Get(string id) // assetId
         {
@@ -100,6 +99,13 @@ namespace RiskGame.API.Controllers
         // ****************************************************************
         // POST POST POST POST POST POST POST POST POST POST POST POST POST
         // ****************************************************************
+        [HttpPost("game/start/initialize")]
+        public ActionResult<string> Initialize([FromBody]string id)
+        {
+            Console.WriteLine("initialize: " + id);
+            if (id == "Playa101") return Ok(_assetService.Initialize());
+            else return Unauthorized("no way doood!");
+        }
         [HttpPost]
         public async Task<ActionResult<AssetIn>> Create([FromBody] AssetIn assetIn)
         {

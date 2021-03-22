@@ -46,10 +46,8 @@ export const Transaction = props => {
     }
     const getShares = () => {
         if (props.retrieveState.player.id) {
-            console.log("getting shares player id: ", props.retrieveState.player.id);
             API.asset.getPlayerShares({id: props.retrieveState.player.id, type: 1})
                 .then(shares => {
-                    console.log("shares data: ", shares.data);
                     SETplayerShares(shares.data)
                 });
         }
@@ -61,7 +59,6 @@ export const Transaction = props => {
         if (props.retrieveState.player.id) {
             API.asset.getPlayerShares({ id: props.retrieveState.player.id, type: 3 })
                 .then(cash => {
-                    console.log("get cash data: ", cash.data);
                     SETplayerCash(cash.data)
                 });
         
@@ -92,16 +89,11 @@ export const Transaction = props => {
 
     const handleSubmit = e => {
         e.preventDefault();
-        console.log("player: ", player);
-        console.log("player[0]; ", player[0]);
-        console.log("shareCost: ", shareCost);
-        console.log("tradeShares: ", tradeShares);
         let playerRef = <ModelReference
             name={player[0].name}
             id={player[0].id}
             type={player[0].type}
         />
-        debugger;
         let tradeTicket = <TradeTicket
             buyer={isBuySwitch ? playerRef.props : null}
             seller={isBuySwitch ? null : playerRef.props}
@@ -110,12 +102,7 @@ export const Transaction = props => {
             cashCount={shareCost * tradeShares}
             sharesCount={parseInt(tradeShares)}
         />
-        console.log("trade ticket: ", tradeTicket.props);
-        debugger;
         API.transactions.submitTrade(tradeTicket.props).then(outcome => {
-            console.log("outcome: ", outcome);
-            console.log("outcome data: ", outcome.data);
-
             SETplayer(getPlayer());
             SETplayerShares(getShares());
             SETplayerCash(getCash());
@@ -125,7 +112,6 @@ export const Transaction = props => {
     const handleCashChange = event => {
         event.preventDefault();
         SETshareCost(event.target.value);
-        console.log("share cost: ", shareCost);
         if (tradeCost > 0)  SETtradeCostDisplay(true) 
         else  SETtradeCostDisplay(false);
     }
@@ -133,7 +119,6 @@ export const Transaction = props => {
         event.preventDefault();
         SETtradeShares(event.target.value);
         SETtradeCost(event.target.value * shareCost);
-        console.log("trade shares: ", tradeShares);
         if (shareCost > 0) SETtradeSharesDisplay(true)
         else SETtradeSharesDisplay(false);
     }
@@ -159,8 +144,6 @@ export const Transaction = props => {
         const target = event.target;
         const eventName = target.name;
         const value = target.value;
-
-        
     };
     const handleBuySell = isBuy => {
         let switchNumber = `${isBuy}Switch`;

@@ -91,8 +91,9 @@ export default {
             return axios.post('api/transaction', query);
         }
     },
-    initialize: () => {
-        axios.get('/game/start/initialize');
+    initialize: secretCode => {
+        console.log("secretCode query: ", secretCode);
+        return axios.post('api/asset/game/start/initialize', secretCode);
     },
     messages: {
         badInput: "Huh? Didn't hear that"

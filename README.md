@@ -24,3 +24,9 @@ Wired up a React front
 **Worked through** the logic to add a player called **HAUS** in PlayerService following similar logic to Cash. As new assets are created the shares are added to HAUS's portfolio.
 Ironed out the logic to Trade between players.
 Built onto the front end and wired up state transfer between the components. 
+
+3/21/21
+**Separated out** some processes and cleaned up some server code. The front end consists of a form to create an **Asset**, the number of **Shares** and the amount of **Cash** for the house.  
+There is also a form to create a **Player** and an amount of cash for them.  
+Once both an **Asset** and a **Player** have been created the **Place a Trade** button becomes active. This opens the **Trading Component**.  
+Trading is basically done between the player and the House who acts as the "Specialist Post" like in the NY Stock Exchange.

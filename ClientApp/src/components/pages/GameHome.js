@@ -2,6 +2,7 @@
 import AssetCreate from '../forms/AssetCreate';
 import PlayerCreate from './../forms/PlayerCreate';
 import Transaction from './../forms/Transaction';
+import API from './../../API';
 import './../../game.css';
 import Button from 'react-bootstrap/Button';
 
@@ -15,7 +16,7 @@ export class GameHome extends Component {
             cash: {},
             asset: {},
 
-            gotEm: true,
+            gotEm: false,
             tradeTicket: false,
             tradeButtonMessageDisplay: false,
 
@@ -31,19 +32,19 @@ export class GameHome extends Component {
         if ((this.state.player || changeSet.player) && (this.state.cash || changeSet.cash) && (this.state.asset || changeSet.asset)) {
             gotEm = true;
         }
+        console.log("state set");
         this.setState({
             player: changeSet.player ? changeSet.player : this.state.player,
             cash: changeSet.cash ? changeSet.cash : this.state.cash,
             asset: changeSet.asset ? changeSet.asset : this.state.asset,
             gotEm
         });
-        //console.log("game home state: ", this.state);
     };
     tradeButtonClick = () => this.setState({ tradeTicket: !this.state.tradeTicket });
     tradeButtonMouseEnter = () => {
         console.log("enter");
         this.setState({ tradeButtonMessage: "Create an asset and a player to start" });
-        setTimeout(() => this.setState({ tradeButtonMessage: "" }), 3000);
+        setTimeout(() => this.setState({ tradeButtonMessage: "" }), 3333);
     }
     tradeButtonMouseLeave = () => {
         console.log("exit");
@@ -57,7 +58,6 @@ export class GameHome extends Component {
         
     }
     TradeButton = gotEm => {
-        //console.log("gotEm: ", gotEm);
         if (gotEm.gotEm) {
             return <Button onClick={this.tradeButtonClick} variant="dark">Place a Trade</Button>;
         }
@@ -65,12 +65,18 @@ export class GameHome extends Component {
             return <Button onMouseEnter={this.tradeButtonMouseEnter} variant="secondary" disabled>Place a Trade</Button>;
         }
     }
-
+    selfDestruct = () => {
+        API.initialize('playa101').then(answer => {
+            console.log(answer);
+            console.log(answer.data);
+        })
+    }
 
     render = () => {
 
         return (
             <>
+                <Button onClick={this.selfDestruct} variant="danger">Don't<br/> Press!</Button>
                 <AssetCreate
                     updateState={this.updateState}
                     retrieveState={this.state}

@@ -16,8 +16,10 @@ namespace RiskGame.API.Services
         private readonly IMongoCollection<AssetResource> _assets;
         private readonly IMapper _mapper;
         private readonly AssetResource CASH;
+        private readonly IDatabaseSettings dbSettings;
         public AssetService(IDatabaseSettings settings, IMapper mapper)
         {
+            dbSettings = settings;
             _mapper = mapper;
             var client = new MongoClient(settings.ConnectionString);
             var database = client.GetDatabase(settings.DatabaseName);
@@ -25,6 +27,21 @@ namespace RiskGame.API.Services
             database.DropCollection(settings.ShareCollectionName);
             _assets = database.GetCollection<AssetResource>(settings.AssetCollectionName);
             CASH = Create(new Asset(ModelTypes.Cash.ToString(), Guid.NewGuid()));
+        }
+        public string Initialize()
+        {
+            try
+            {
+                _assets.Database.DropCollection(dbSettings.AssetCollectionName);
+                _assets.Database.DropCollection(dbSettings.PlayerCollectionName);
+                _assets.Database.DropCollection(dbSettings.ShareCollectionName);
+                return "Tabula Rasa";
+            }
+            catch (Exception e)
+            {
+                return "Error: " + e.Message;
+            }
+
         }
         public async Task<List<AssetResource>> GetAsync()
         {
@@ -69,6 +86,7 @@ namespace RiskGame.API.Services
     }
     public interface IAssetService
     {
+        string Initialize();
         Task<List<AssetResource>> GetAsync();
         AssetResource GetCash(); Task<IAsyncCursor<AssetResource>> GetSharesAsync(Guid id, ModelTypes type);
         Task<IAsyncCursor<AssetResource>> GetAsync(Guid id);
