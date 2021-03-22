@@ -21,11 +21,11 @@ namespace RiskGame.API.Controllers
     [Produces("application/json")]
     public class PlayerController : ControllerBase
     {
-        private readonly PlayerService _playerService;
-        private readonly AssetService _assetService;
-        private readonly ShareService _shareService;
+        private readonly IPlayerService _playerService;
+        private readonly IAssetService _assetService;
+        private readonly IShareService _shareService;
         private readonly IMapper _mapper;
-        public PlayerController(PlayerService playerService, AssetService assetService, ShareService shareService, IMapper mapper)
+        public PlayerController(IPlayerService playerService, IAssetService assetService, IShareService shareService, IMapper mapper)
         {
             _playerService = playerService;
             _assetService = assetService;
@@ -40,7 +40,7 @@ namespace RiskGame.API.Controllers
         {
             var incoming = _playerService.GetAsync();
             var players = new List<Player>();
-            await incoming.Result.ForEachAsync(p => players.Add(p));
+            await incoming.Result.ForEachAsync(p => players.Add(_mapper.Map<PlayerResource,Player>(p)));
             return players;
         }
         [HttpGet("{id:length(36)}")]
@@ -49,14 +49,13 @@ namespace RiskGame.API.Controllers
             var isGuid = Guid.TryParse(id, out var incomingId);
             if (!isGuid) return NotFound("Me thinks that Id was not a Guid");
             var incoming = _playerService.GetAsync(incomingId);
-            var player = new Player();
-            await incoming.Result.ForEachAsync(p => player = p);
-            if (player == null)
+            var playerRes = new List<PlayerResource>();
+            await incoming.Result.ForEachAsync(p => playerRes.Add(p));
+            if (playerRes == null)
             {
                 return NotFound();
             }
-            Console.WriteLine("Player wallet: " + player.Wallet.Count);
-            return player;
+            return Ok(_mapper.Map<List<PlayerResource>,List<Player>>(playerRes));
         }
         // ****************************************************************
         // POST POST POST POST POST POST POST POST POST POST POST POST POST
@@ -66,82 +65,16 @@ namespace RiskGame.API.Controllers
         {
             var player = _mapper.Map<PlayerIn, Player>(playerIn);
             player.Id = Guid.NewGuid();
+            player.PlayerId = player.Id.ToString();
             // check if a cash asset already exists
-            var incoming = _assetService.GetAsync(Guid.Parse("5490B3E5-1242-4EB9-A9B3-627878795996")).Result;
-            var cash = new Asset();
-            await incoming.ForEachAsync(c => cash = c);
-            var playerRef = _mapper.Map<Player, ModelReference>(player);
-            if (cash.SharesOutstanding == 0)
-            {
-                // if cash does not exist then create it
-                cash.Id = Guid.Parse("5490B3E5-1242-4EB9-A9B3-627878795996");
-                cash.Name = "Cash";
-                cash.SharesOutstanding += playerIn.Cash;
-                var outcome = _assetService.Create(cash);
-                var incomingCash = _shareService.CreateShares(_mapper.Map<Asset, ModelReference>(cash), player.Cash, playerRef, ModelTypes.Cash).Result;
-                foreach (var cShare in incomingCash)
-                {
-                    player.Wallet.Add(cShare);
-                }
-            }
-            else
-            {
-                var outcome = await _shareService.CreateShares(_mapper.Map<Asset, ModelReference>(cash), player.Cash, playerRef, ModelTypes.Cash);
-
-            }
+            var cash = _assetService.GetCash();
+            var playerRef = _playerService.ToRef(player);
+            var outcome = await _shareService.CreateShares(_mapper.Map<AssetResource, ModelReference>(cash), player.Cash, playerRef, ModelTypes.Cash);
             _playerService.Create(player);
             playerIn.Id = player.Id;
-            return playerIn;
+            return Ok(playerIn);
         }
         [HttpPost("add-shares/{playerId:length(36)}/{assetId}/{qty}")]
-        //
-        // Adds shares of assets or cash to the player's portfolio/wallet respectively
-        public async Task<ActionResult<Player>> AddShares(string playerId, string assetId, int qty)
-        {
-            // get the player
-            var isPlayerGuid = Guid.TryParse(playerId, out var incomingPlayerId);
-            if (!isPlayerGuid) return NotFound("Me thinks that Player Id was not a Guid");
-            var incomingPlayer = _playerService.GetAsync(incomingPlayerId);
-            var player = new Player();
-            await incomingPlayer.Result.ForEachAsync(p => player = p);
-
-            // get the asset
-            var isAssetGuid = Guid.TryParse(assetId, out var incomingAssetId);
-            if (!isAssetGuid) return NotFound("Me thinks that Asset Id was not a Guid");
-            var incomingAsset = _assetService.GetAsync(incomingAssetId);
-            var asset = new Asset();
-            await incomingAsset.Result.ForEachAsync(a => asset = a);
-
-            // get the shares
-            var incomingShares = _shareService.GetAsync(asset.Id);
-            var shares = new List<Share>();
-            await incomingShares.Result.ForEachAsync(s => shares.Add(s));
-
-            // add shares to player's portfolio
-            foreach (var share in shares)
-            {
-                if (qty == 0) break;
-                if (share.CurrentOwner == null)
-                {
-                    player.Portfolio.Add(_mapper.Map<Share, ModelReference>(share));
-                    qty--;
-                }
-            }
-
-            try
-            {
-                // update player
-                _playerService.Update(player.Id, player);
-                return player;
-            }
-            catch (Exception e)
-            {
-                return new Player
-                {
-                    Name = "Sumpin went wrong: " + e.Message
-                };
-            }
-        }
         // ***************************************************************
         // PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT
         // ***************************************************************
@@ -151,9 +84,9 @@ namespace RiskGame.API.Controllers
             var isGuid = Guid.TryParse(id, out var incomingId);
             if (!isGuid) return NotFound("Me thinks that Id was not a proper Guid");
 
-            var incoming = _playerService.GetAsync(incomingId);
-            var foundPlayer = new Player();
-            await incoming.Result.ForEachAsync(p => foundPlayer = p);
+            var incoming = _playerService.GetAsync(incomingId).Result;
+            var foundPlayer = new PlayerResource();
+            await incoming.ForEachAsync(p => foundPlayer = p);
 
             if (foundPlayer == null) return NotFound();
 
@@ -161,50 +94,17 @@ namespace RiskGame.API.Controllers
             if (playerIn.Risk == null) playerIn.Risk = foundPlayer.Risk;
             if (playerIn.Safety == null) playerIn.Safety = foundPlayer.Safety;
             var update = _mapper.Map<PlayerIn, Player>(playerIn);
-            // if the player does not have a current portfolio then set the player portfolio to the one passed in
-            if (playerIn.Portfolio == null) update.Portfolio = foundPlayer.Portfolio;
-            // otherwise update player's portfolio with the new info
-            else
-            {
-                foreach (var item in playerIn.Portfolio)
-                {
-                    update.Portfolio.Add(item);
-                }
-            }
-            if (playerIn.Wallet.Count() == 0) update.Wallet = foundPlayer.Wallet;
-            else
-            {
-                foreach (var item in playerIn.Wallet)
-                {
-                    update.Wallet.Add(item);
-                }
-            }
-
             update.Id = incomingId;
             update.ObjectId = foundPlayer.ObjectId;
             try
             {
-                _playerService.Update(incomingId, update);
+                _playerService.Update(incomingId, _mapper.Map<Player,PlayerResource>(update));
                 return NoContent();
             }
             catch (Exception e)
             {
                 return NotFound(e.Message);
             }
-        }
-        [HttpPut("clear-portfolio/{id:length(36)}")]
-        public async Task<ActionResult<string>> ClearPortfolio(string id)
-        {
-            var isGuid = Guid.TryParse(id, out var incomingId);
-            if (!isGuid) return NotFound("Me thinks that Id was not a proper Guid");
-            return await _playerService.EmptyPortfolio(incomingId);
-        }
-        [HttpPut("clear-cash/{id:length(36)}")]
-        public async Task<ActionResult<string>> ClearCash(string id)
-        {
-            var isGuid = Guid.TryParse(id, out var incomingId);
-            if (!isGuid) return NotFound("Me thinks that Id was not a proper Guid");
-            return await _playerService.EmptyWallet(incomingId);
         }
         // **************************************************************
         // DELETE DELETE DELETE DELETE DELETE DELETE DELETE DELETE DELETE

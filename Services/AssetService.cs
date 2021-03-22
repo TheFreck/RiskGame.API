@@ -7,44 +7,75 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
+using RiskGame.API.Models.SharesFolder;
 
 namespace RiskGame.API.Services
 {
-    public class AssetService
+    public class AssetService : IAssetService
     {
-        private readonly IMongoCollection<Asset> _assets;
+        private readonly IMongoCollection<AssetResource> _assets;
         private readonly IMapper _mapper;
-        public AssetService(IDatabaseSettings settings, ShareService shareService, IMapper mapper)
+        private readonly AssetResource CASH;
+        public AssetService(IDatabaseSettings settings, IMapper mapper)
         {
             _mapper = mapper;
             var client = new MongoClient(settings.ConnectionString);
             var database = client.GetDatabase(settings.DatabaseName);
-
-            _assets = database.GetCollection<Asset>(settings.AssetCollectionName);
+            database.DropCollection(settings.AssetCollectionName);
+            database.DropCollection(settings.ShareCollectionName);
+            _assets = database.GetCollection<AssetResource>(settings.AssetCollectionName);
+            CASH = Create(new Asset(ModelTypes.Cash.ToString(), Guid.NewGuid()));
         }
-        public async Task<List<Asset>> GetAsync()
+        public async Task<List<AssetResource>> GetAsync()
         {
-            var foundAsssets = await _assets.FindAsync(asset => true);
+            var foundAsssets = await _assets.FindAsync(a => a.AssetId != "");
             return foundAsssets.ToList();
         }
-
-        public async Task<IAsyncCursor<Asset>> GetAsync(Guid id)
+        public AssetResource GetCash()
         {
-            var asset = await _assets.FindAsync<Asset>(asset => asset.Id == id);
+            return CASH;
+        }
+        public async Task<IAsyncCursor<AssetResource>> GetSharesAsync(Guid id, ModelTypes type) 
+        {
+            var filterBase = Builders<AssetResource>.Filter;
+            var filter = filterBase.Eq("ModelType", type) & filterBase.Eq("_assetId", id);
+            return await _assets.FindAsync(filter);
+        }
+        public async Task<IAsyncCursor<AssetResource>> GetAsync(Guid id)
+        {
+            var asset = await _assets.FindAsync(asset => asset.AssetId == id.ToString());
             return asset;
         }
-        public Guid Create(Asset asset)
+        public AssetResource Create(Asset asset)
         {
-            _assets.InsertOne(asset);
-            return asset.Id;
+            var newAsset = _mapper.Map<Asset, AssetResource>(asset);
+            _assets.InsertOne(newAsset);
+            return newAsset;
         }
-        public void Update(Guid id, Asset assetIn) =>
-            _assets.ReplaceOne(asset => asset.Id == id, assetIn);
-        public void Remove(Asset assetIn) =>
-            _assets.DeleteOne(asset => asset.Id == assetIn.Id);
+        public void Update(Guid id, Asset assetIn)
+        {
+            var assetRes = _mapper.Map<Asset, AssetResource>(assetIn);
+            _assets.ReplaceOne(asset => asset.AssetId == id.ToString(), assetRes);
+        }
+        public void Remove(Asset assetIn)
+        {
+            var assetRes = _mapper.Map<Asset, AssetResource>(assetIn);         
+            _assets.DeleteOne(asset => asset.AssetId.ToString() == assetRes.AssetId);
+        }
         public void Remove(Guid id) =>
-            _assets.DeleteOne(asset => asset.Id == id);
+            _assets.DeleteOne(asset => asset.AssetId == id.ToString());
         public ModelReference ToRef(Asset asset) =>
             _mapper.Map<Asset,ModelReference>(asset);
+    }
+    public interface IAssetService
+    {
+        Task<List<AssetResource>> GetAsync();
+        AssetResource GetCash(); Task<IAsyncCursor<AssetResource>> GetSharesAsync(Guid id, ModelTypes type);
+        Task<IAsyncCursor<AssetResource>> GetAsync(Guid id);
+        AssetResource Create(Asset asset);
+        void Update(Guid id, Asset assetIn);
+        void Remove(Asset assetIn);
+        void Remove(Guid id);
+        ModelReference ToRef(Asset asset);
     }
 }

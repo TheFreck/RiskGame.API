@@ -14,7 +14,6 @@ namespace RiskGame.API.Models.SharesFolder
 {
     public class CashShare
     {
-        private readonly IMapper _mapper;
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
         public string ObjectId { get; set; }
@@ -43,10 +42,6 @@ namespace RiskGame.API.Models.SharesFolder
         public CashShare()
         {
             Id = Guid.NewGuid();
-        }
-        public ModelReference ToRef()
-        {
-            return _mapper.Map<CashShare,ModelReference>(this);
         }
     }
 }

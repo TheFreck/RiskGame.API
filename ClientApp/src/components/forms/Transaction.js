@@ -1,219 +1,243 @@
-﻿import React, { Component } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import InputGroup from 'react-bootstrap/InputGroup';
 import Form from 'react-bootstrap/Form';
+import Button from 'react-bootstrap/Button';
+import ButtonGroup from 'react-bootstrap/ToggleButtonGroup';
+import ToggleButton from 'react-bootstrap/ToggleButton';
 import API from './../../API';
+import TradeTicket from './../../assets/TradeTicket';
+import { ModelReference } from '../../assets/ModelReference';
 
-export class Transaction extends Component {
-    static displayName = Transaction.name;
+export const Transaction = props => {
 
-    constructor(props) {
-        super(props);
-        this.state = {
-            player: {},
+    const [player, SETplayer] = useState({});
+    const [playerCash, SETplayerCash] = useState([]);
+    const [playerShares, SETplayerShares] = useState([]);
+    const [tradeShares, SETtradeShares] = useState(0);
+    const [shareCost, SETshareCost] = useState(0);
+    const [tradeCost, SETtradeCost] = useState(0);
+    const [tradeSharesDisplay, SETtradeSharesDisplay] = useState(false);
+    const [tradeCostDisplay, SETtradeCostDisplay] = useState(false);
+    const [submitDisplay, SETsubmitDisplay] = useState(false);
+    const [tradeTotalDisplay, SETtradeTotalDisplay] = useState(false);
+    const [isBuySwitch, SETisBuySwitch] = useState(true);
+    const [tradeSharesMessage, SETtradeSharesMessage] = useState("How many shares would you like to trade?");
+    const [tradeCostMessage, SETtradeCostMessage] = useState("How much per share?");
+    const [submitMessage, SETsubmitMessage] = useState("");
 
-            tradeShares: 0,
-            tradeCost: 0,
-            totalCost: 0,
+    useEffect(() => {
+        SETplayer(getPlayer());
+        SETplayerCash(getCash());
+        SETplayerShares(getShares());
+        console.log("used Effect");
+    }, [
+        props.retrieveState.player,
+        props.retrieveState.asset,
+    ]);
 
-            playerCash: [],
-            playerShares: [],
-            
-            tradeSharesDisplay: false,
-            tradeCostDisplay: false,
-            submitDisplay: false,
-
-            tradeSharesMessage: "How many shares would you like to trade?",
-            tradeCostMessage: "How much per share are you willing to go?",
-            submitMessage: ""
-        };
-    }
-    componentDidMount = () => {
-        if (this.props.retrieveState.player !== null) {
-            API.player.getPlayer(this.props.retrieveState.player.id).then(player => {
-                this.setState({ player: player });
-
-            });
-        }
-    }
-
-    handleSubmit = event => {
-        if (this.state.assetName && this.state.shareCount) {
-            API.asset.createAsset({
-                "Name": this.state.assetName,
-                "SharesOutstanding": this.state.shareCount,
-                "RateOfReturn": this.state.assetIncome
-            }).then(result => {
-                console.log("result: ", result);
-                console.log("id: ", result.data.id);
-                this.setState({ submitMessage: "submitted successfully", submitDisplay: true, asset: result.data })
-                setTimeout(() => this.setState({ submitDisplay: false }), 3333);
-                this.getShares(result.data.id);
-            });
+    const getPlayer = () => {
+        if (props.retrieveState.player.id) {
+            API.player.getPlayer(props.retrieveState.player.id)
+                .then(player => SETplayer(player.data));
         }
         else {
-            this.setState({ submitMessage: "fill in the missing information", submitDisplay: true });
-            setTimeout(() => this.setState({ submitDisplay: false }), 3333);
+            return null;
         }
     }
-    handleChange = event => {
-        event.preventDefault();
-        const target = event.target;
-        const eventName = target.name;
-        const value = target.value;
+    const getShares = () => {
+        if (props.retrieveState.player.id) {
+            console.log("getting shares player id: ", props.retrieveState.player.id);
+            API.asset.getPlayerShares({id: props.retrieveState.player.id, type: 1})
+                .then(shares => {
+                    console.log("shares data: ", shares.data);
+                    SETplayerShares(shares.data)
+                });
+        }
+        else {
+            return null;
+        }
+    }
+    const getCash = () => {
+        if (props.retrieveState.player.id) {
+            API.asset.getPlayerShares({ id: props.retrieveState.player.id, type: 3 })
+                .then(cash => {
+                    console.log("get cash data: ", cash.data);
+                    SETplayerCash(cash.data)
+                });
+        
+        }
+        else {
+            return null;
+        }
+    }
 
-        this.setState({
-            [eventName]: value
+    const addCashFromWallet = () => {
+        debugger;
+        let cash = [];
+        if (tradeCost * tradeShares > playerCash.length) return "Error: Not enough cash";
+        for (let i = 0; i < shareCost * parseInt(tradeShares); i++) {
+            cash.push(playerCash.pop());
+        }
+        return cash;
+    }
+    const addSharesFromPortfolio = () => {
+        debugger;
+        let shares = [];
+        if (tradeShares > playerShares) return "Error: Not enough shares";
+        for (let i = 0; i < tradeShares; i++) {
+            shares.push(playerShares.pop());
+        }
+        return shares;
+    }
+
+    const handleSubmit = e => {
+        e.preventDefault();
+        console.log("player: ", player);
+        console.log("player[0]; ", player[0]);
+        console.log("shareCost: ", shareCost);
+        console.log("tradeShares: ", tradeShares);
+        let playerRef = <ModelReference
+            name={player[0].name}
+            id={player[0].id}
+            type={player[0].type}
+        />
+        debugger;
+        let tradeTicket = <TradeTicket
+            buyer={isBuySwitch ? playerRef.props : null}
+            seller={isBuySwitch ? null : playerRef.props}
+            cash={isBuySwitch ? addCashFromWallet() : null}
+            shares={isBuySwitch ? null : addSharesFromPortfolio()}
+            cashCount={shareCost * tradeShares}
+            sharesCount={parseInt(tradeShares)}
+        />
+        console.log("trade ticket: ", tradeTicket.props);
+        debugger;
+        API.transactions.submitTrade(tradeTicket.props).then(outcome => {
+            console.log("outcome: ", outcome);
+            console.log("outcome data: ", outcome.data);
+
+            SETplayer(getPlayer());
+            SETplayerShares(getShares());
+            SETplayerCash(getCash());
+            handleReset();
         });
     }
-    handleReset = () => {
-        //Array.from(document.querySelectorAll("input")).forEach(
-        //    input => {
-        //        (input.value = "")
-        //    }
-        //);
-        //Array.from(document.querySelectorAll("textarea")).forEach(
-        //    textarea => {
-        //        (textarea.value = "")
-        //    }
-        //);
-        //this.setState({
-        //    itemvalues: [{}],
-        //    SubmitDisplay: true
-        //});
-        //setTimeout(() => this.setState({ SubmitDisplay: false }), 3333);
+    const handleCashChange = event => {
+        event.preventDefault();
+        SETshareCost(event.target.value);
+        console.log("share cost: ", shareCost);
+        if (tradeCost > 0)  SETtradeCostDisplay(true) 
+        else  SETtradeCostDisplay(false);
+    }
+    const handleShareChange = event => {
+        event.preventDefault();
+        SETtradeShares(event.target.value);
+        SETtradeCost(event.target.value * shareCost);
+        console.log("trade shares: ", tradeShares);
+        if (shareCost > 0) SETtradeSharesDisplay(true)
+        else SETtradeSharesDisplay(false);
+    }
+    const handleReset = () => {
+        Array.from(document.querySelectorAll("input")).forEach(
+            input => {
+                (input.value = "")
+            }
+        );
+        Array.from(document.querySelectorAll("textarea")).forEach(
+            textarea => {
+                (textarea.value = "")
+            }
+        );
+        SETsubmitDisplay(true);
+        SETtradeShares();
+        SETshareCost();
+        SETtradeCost();
+        setTimeout(() => SETsubmitDisplay(false), 3333);
     };
-    handleBlur = event => {
+    const handleBlur = event => {
         event.preventDefault();
         const target = event.target;
         const eventName = target.name;
         const value = target.value;
 
-        switch (eventName) {
-            case "assetName":
-                // validate name
-                if (!this.state.assetName) {
-                    this.setState({
-                        assetNameDisplay: true
-                    });
-                }
-                else {
-                    this.setState({
-                        assetNameDisplay: false
-                    })
-                }
-                break;
-            case "assetIncome":
-                // if no incom ask if they wanna add income
-                if (!this.state.assetIncome) {
-                    this.setState({
-                        assetIncomeDisplay: true
-                    });
-                }
-                else {
-                    this.setState({
-                        assetIncomeDisplay: false
-                    });
-                }
-                break;
-            case "shareCount":
-                // make sure there's a shareCount
-                if (!this.state.shareCount) {
-                    this.setState({
-                        shareCountDisplay: true
-                    });
-                }
-                else {
-                    this.setState({
-                        shareCountDisplay: false
-                    });
-                }
-                break;
-            default:
-            // don't do anything
-        }
+        
     };
-    getShares = id => {
-        console.log("get shares: ", id);
-        console.log("the asset: ", this.state.asset);
-        API.asset.getShares(this.state.asset.id).then(shares => {
-            console.log("shares: ", shares);
-            console.log("shares data: ", shares.data);
-            this.setState({ shares: shares.data });
-        })
-    };
-    totalCost = () => this.state.tradeShares * this.state.tradeCost;
-
-    render() {
-        return (
-            <div>
-                <InputGroup className="mb-3">
-                    <InputGroup.Prepend>
-                        <InputGroup.Text id="trade-shares">Shares: </InputGroup.Text>
-                    </InputGroup.Prepend>
-                    <Form.Control
-                        placeholder="Number of shares"
-                        aria-label="TradeShares"
-                        aria-describedby="trade-shares"
-                        onChange={this.handleChange}
-                        name="tradeShares"
-                        onBlur={this.handleBlur}
-                    />
-                </InputGroup>
-                <p className={this.state.tradeSharesDisplay ? 'show tradeShares-message' : 'hide tradeShares-message'}>{this.state.tradeSharesMessage}</p>
-
-                <InputGroup className="mb-3">
-                    <InputGroup.Prepend>
-                        <InputGroup.Text id="trade-cash">Cash: </InputGroup.Text>
-                    </InputGroup.Prepend>
-                    <Form.Control
-                        placeholder="Price Per Share"
-                        aria-label="TradeCash"
-                        aria-describedby="trade-cash"
-                        onChange={this.handleChange}
-                        name="tradeCash"
-                        onBlur={this.handleBlur}
-                    />
-                </InputGroup>
-                <p className={this.state.tradeCashDisplay ? 'show tradeCash-message' : 'hide tradeCash-message'}>{this.state.tradeCashMessage}</p>
-
-                <button id="submit" onClick={this.handleSubmit}>Submit</button>
-                <p className={this.state.submitDisplay ? 'show submit-message' : 'hide submit-message'}>{this.state.submitMessage}</p>
-
-                <hr />
-
-                <InputGroup className="mb-3">
-                    <InputGroup.Prepend>
-                        <InputGroup.Text id="assetIncome">Cash: </InputGroup.Text>
-                    </InputGroup.Prepend>
-                    <Form.Control
-                        placeholder="Asset Income"
-                        aria-label="AssetIncome"
-                        aria-describedby="assetIncome"
-                        onChange={this.handleChange}
-                        name="assetIncome"
-                        onBlur={this.handleBlur}
-                    />
-                </InputGroup>
-                <p className={this.state.assetIncomeDisplay ? 'show assetIncome-message' : 'hide assetIncome-message'}>{this.state.assetIncomeMessage}</p>
-
-                <InputGroup className="mb-3">
-                    <InputGroup.Prepend>
-                        <InputGroup.Text id="assetIncome">Cash: </InputGroup.Text>
-                    </InputGroup.Prepend>
-                    <Form.Control
-                        placeholder="Asset Income"
-                        aria-label="AssetIncome"
-                        aria-describedby="assetIncome"
-                        onChange={this.handleChange}
-                        name="assetIncome"
-                        onBlur={this.handleBlur}
-                    />
-                </InputGroup>
-                <p className={this.state.assetIncomeDisplay ? 'show assetIncome-message' : 'hide assetIncome-message'}>{this.state.assetIncomeMessage}</p>
-                
-            </div>
-        );
+    const handleBuySell = isBuy => {
+        let switchNumber = `${isBuy}Switch`;
+        this.setState({ [switchNumber]: isBuy });
     }
+    const calculatedTotalCost = () => tradeShares && tradeCost ? tradeShares * tradeCost : "";
+    const buySellToggle = e => {
+        e.preventDefault();
+        SETisBuySwitch(!isBuySwitch);
+    }
+
+    return (
+        <div>
+            <ButtonGroup toggle name="name" className="mb-2">
+            <ToggleButton
+                    type="checkbox"
+                    variant={isBuySwitch ? "secondary" : "light"}
+                    checked={isBuySwitch}
+                    value="isBuy"
+                    name="isBuy"
+                    onClick={(e) => buySellToggle(e)}
+            >
+                {isBuySwitch ? "Buy" : "Sell"}
+                </ToggleButton>
+                </ButtonGroup>
+            <InputGroup className="mb-3">
+                <InputGroup.Prepend>
+                    <InputGroup.Text id="trade-shares">Shares: </InputGroup.Text>
+                </InputGroup.Prepend>
+                <Form.Control
+                    placeholder="Number of shares"
+                    aria-label="TradeShares"
+                    aria-describedby="trade-shares"
+                    onChange={event => handleShareChange(event)}
+                    name="tradeShares"
+                    onBlur={event => handleBlur(event)}
+                />
+            </InputGroup>
+            <p className={tradeSharesDisplay ? 'show tradeShares-message' : 'hide tradeShares-message'}>{tradeSharesMessage}</p>
+
+            <InputGroup className="mb-3">
+                <InputGroup.Prepend>
+                    <InputGroup.Text id="share-cost">Price per share: </InputGroup.Text>
+                </InputGroup.Prepend>
+                <Form.Control
+                    placeholder="Price Per Share"
+                    aria-label="ShareCost"
+                    aria-describedby="share-cost"
+                    onChange={event => handleCashChange(event)}
+                    name="shareCost"
+                    onBlur={event => handleBlur(event)}
+                />
+            </InputGroup>
+            <p className={tradeTotalDisplay ? 'show tradeTotal-message' : 'hide tradeTotal-message'}>{"Total cost of trade: " + calculatedTotalCost()}</p>
+            <br />
+            <p className={tradeCostDisplay ? 'show tradeCash-message' : 'hide tradeCash-message'}>{tradeCostMessage}</p>
+            <br />
+            <button id="submit" onClick={(e) => handleSubmit(e)}>Submit</button>
+            <p className={submitDisplay ? 'show submit-message' : 'hide submit-message'}>{submitMessage}</p>
+
+            <hr />
+
+            <InputGroup className="mb-3">
+                <InputGroup.Prepend>
+                    <InputGroup.Text id="portfolio">Portfolio: </InputGroup.Text>
+                </InputGroup.Prepend>
+                <div>{playerShares ? playerShares.length : 0}</div>
+            </InputGroup>
+
+            <InputGroup className="mb-3">
+                <InputGroup.Prepend>
+                    <InputGroup.Text id="wallet">Wallet: </InputGroup.Text>
+                </InputGroup.Prepend>
+                <div>{playerCash ? playerCash.length : 0}</div>
+            </InputGroup>
+        </div>
+    );
 }
 
 export default Transaction;

@@ -11,15 +11,12 @@ namespace RiskGame.API.Entities
 {
     public class TradeTicket
     {
-        [Required]
         public ModelReference Buyer { get; set; }
-        //[Required]
         public ModelReference Seller { get; set; }
-        [Required]
         public List<ModelReference> Shares { get; set; }
-        [Required]
+        public int SharesCount { get; set; }
         public List<ModelReference> Cash { get; set; }
-        [Required]
+        public int CashCount { get; set; }
         public DateTime TradeTime { get; set; }
         public bool SuccessfulTrade { get; set; }
         public string Message { get; set; }

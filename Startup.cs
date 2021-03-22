@@ -18,6 +18,7 @@ using RiskGame.API.Persistence;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
+using RiskGame.API.Logic;
 
 namespace RiskGame.API
 {
@@ -33,13 +34,14 @@ namespace RiskGame.API
             services.Configure<DatabaseSettings>(
                 Configuration?.GetSection("RiskGameDatabaseSettings"));
 
-            services.AddSingleton<TransactionService>();
+            services.AddSingleton<ITransactionService,TransactionService>();
             services.AddSingleton<IDatabaseSettings>(sp =>
                 sp.GetRequiredService<IOptions<DatabaseSettings>>().Value);
 
-            services.AddSingleton<PlayerService>();
-            services.AddSingleton<AssetService>();
-            services.AddSingleton<ShareService>();
+            services.AddSingleton<IPlayerService,PlayerService>();
+            services.AddSingleton<IAssetService,AssetService>();
+            services.AddSingleton<IShareService,ShareService>();
+            services.AddSingleton<ITransactionLogic,TransactionLogic>();
 
             services.AddControllersWithViews();
 

@@ -2,10 +2,10 @@
 }
 
 .show{
-    display: initial;
+    display: initial !important;
 }
 .hide{
-    display: none;
+    display: none !important;
 }
 
 .asset-create-header {

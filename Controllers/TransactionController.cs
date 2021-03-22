@@ -16,10 +16,10 @@ namespace RiskGame.API.Controllers
     [Produces("application/json")]
     public class TransactionController : ControllerBase
     {
-        private readonly TransactionService _transactionService;
+        private readonly ITransactionService _transactionService;
         private readonly IMapper _mapper;
 
-        public TransactionController(TransactionService transactionService, IMapper mapper)
+        public TransactionController(ITransactionService transactionService, IMapper mapper)
         {
             _transactionService = transactionService;
             _mapper = mapper;
@@ -28,17 +28,25 @@ namespace RiskGame.API.Controllers
         // GET GET GET GET GET GET GET GET GET GET GET GET GET GET GET GET
         // ***************************************************************
         [HttpGet]
-        public ActionResult<string> Get()
-        {
-            return "you are connected to the transactions controller";
-        }
+        public ActionResult<string> Get() => Ok("you are connected to the transactions controller");
         // ****************************************************************
         // POST POST POST POST POST POST POST POST POST POST POST POST POST
         // ****************************************************************
         [HttpPost]
         public async Task<ActionResult<TradeTicket>> Trade(TradeTicket trade)
         {
-            return await _transactionService.Transact(trade);
+            try
+            {
+                var outcome = new TradeTicket();
+                outcome = await _transactionService.Transact(trade);
+                if (outcome.SuccessfulTrade) return Ok(outcome);
+                else return NotFound(outcome);
+
+            }
+            catch (Exception e)
+            {
+                return NotFound(e.Message);
+            }
         }
         // ***************************************************************
         // PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT

@@ -11,8 +11,8 @@ export class AssetCreate extends Component {
         super(props);
         this.state = {
             assetName: "",
-            assetIncome: 0,
             shareCount: 0,
+            cashCount: 0,
 
             assetNameMessage: "Required: All assets must have a name.",
             assetIncomeMessage: "Optional: Would you like this asset to pay income?",
@@ -23,64 +23,87 @@ export class AssetCreate extends Component {
             assetIncomeDisplay: false,
             shareCountDisplay: false,
             submitDisplay: false,
+            assetCreated: false,
+            cashCreated: false,
 
             asset: {},
             cash: {},
-            shares: []
+            assetShares: [],
+            cashShares: [],
+
         };
     }
 
     componentDidMount = () => {
+        this.getShares(null, gotShares => {
+            this.setState({ cash: gotShares.data.asset });
+        });
     }
 
     handleSubmit = event => {
-        if (this.state.assetName && this.state.shareCount) {
-            API.asset.createAsset({
-                "Name": this.state.assetName,
-                "SharesOutstanding": this.state.shareCount,
-                "RateOfReturn": this.state.assetIncome
-            }).then(result => {
-                console.log("result: ", result);
-                console.log("id: ", result.data.id);
-                this.setState({ submitMessage: "submitted successfully", submitDisplay: true, asset: result.data })
-                setTimeout(() => this.setState({ submitDisplay: false }), 3333);
-                this.getShares(result.data.id);
+        if (this.state.cashCount > 0) {
+            console.log("submit cash Id: ", this.state.cash.id);
+            console.log("submit cash count: ", this.state.cashCount);
+            API.asset.addShares(this.state.cash.id, this.state.cashCount).then(result => {
+                console.log("house cash: ", result.data.shares.length)
             });
+        }
+        if (this.state.assetName && this.state.shareCount && !this.state.assetCreated) {
+                    setTimeout(() => this.setState({ submitDisplay: false }), 3333);
+            this.createAsset(this.state.assetName, result => {
+                console.log("result: ", result);
+                if (result.status === 200) {
+                    this.setState({ assetCreated: true });
+                    this.setState({ submitMessage: "submitted successfully", submitDisplay: true, asset: result.data })
+                    this.getShares(result.data.id, sharesResults => {
+                        console.log("shares: ", sharesResults.data);
+                    });
+                }
+                else {
+                    this.setState({ assetCreated: false });
+                    console.log("didn't get it");
+                }
+            })
         }
         else {
             this.setState({ submitMessage: "fill in the missing information", submitDisplay: true });
             setTimeout(() => this.setState({ submitDisplay: false }), 3333);
         }
     }
-    setCashAndAsset = () => {
-        this.props.updateState({ asset: this.state.asset });
+    createAsset = (asset, cb) => {
+        API.asset.createAsset({
+            "Name": this.state.assetName,
+            "SharesOutstanding": this.state.shareCount
+        }).then(result => cb(result));
     }
+    setGlobalAsset = () => this.props.updateState({ asset: this.state.asset });
+
     handleChange = event => {
         event.preventDefault();
         const target = event.target;
         const eventName = target.name;
         const value = target.value;
-
+        console.log(eventName, value);
         this.setState({
             [eventName]: value
         });
     }
     handleReset = () => {
-        //Array.from(document.querySelectorAll("input")).forEach(
-        //    input => {
-        //        (input.value = "")
-        //    }
-        //);
-        //Array.from(document.querySelectorAll("textarea")).forEach(
-        //    textarea => {
-        //        (textarea.value = "")
-        //    }
-        //);
-        //this.setState({
-        //    itemvalues: [{}],
-        //    SubmitDisplay: true
-        //});
-        //setTimeout(() => this.setState({ SubmitDisplay: false }), 3333);
+        Array.from(document.querySelectorAll("input")).forEach(
+            input => {
+                (input.value = "")
+            }
+        );
+        Array.from(document.querySelectorAll("textarea")).forEach(
+            textarea => {
+                (textarea.value = "")
+            }
+        );
+        this.setState({
+            itemvalues: [{}],
+            SubmitDisplay: true
+        });
+        setTimeout(() => this.setState({ SubmitDisplay: false }), 3333);
     };
     handleBlur = event => {
         event.preventDefault();
@@ -102,19 +125,6 @@ export class AssetCreate extends Component {
                     })
                 }
                 break;
-            case "assetIncome":
-                // if no incom ask if they wanna add income
-                if (!this.state.assetIncome) {
-                    this.setState({
-                        assetIncomeDisplay: true
-                    });
-                }
-                else {
-                    this.setState({
-                        assetIncomeDisplay: false
-                    });
-                }
-                break;
             case "shareCount":
                 // make sure there's a shareCount
                 if (!this.state.shareCount) {
@@ -128,20 +138,22 @@ export class AssetCreate extends Component {
                     });
                 }
                 break;
+                case "cashCount":
+                if (!this.state.cashCount) {
+                    this.setState({
+                        cashCountDisplay: true
+                    });
+                }
+                else {
+                    this.setState({
+                        cashCountDisplay: false
+                    });
+                }
             default:
             // don't do anything
         }
     };
-    getShares = id => {
-        console.log("get shares: ", id);
-        console.log("the asset: ", this.state.asset);
-        API.asset.getShares(this.state.asset.id).then(shares => {
-            console.log("shares: ", shares);
-            console.log("shares data: ", shares.data);
-            this.setState({ shares: shares.data });
-            this.setCashAndAsset();
-        })
-    };
+    getShares = (id, cb) => API.asset.getShares(id).then(shares => cb(shares));
 
     render() {
         return (
@@ -157,24 +169,10 @@ export class AssetCreate extends Component {
                         onChange={this.handleChange}
                         name="assetName"
                         onBlur={this.handleBlur}
+                        type="text"
                     />
                 </InputGroup>
                 <p className={this.state.assetNameDisplay ? 'show assetName-message' : 'hide assetName-message'}>{this.state.assetNameMessage}</p>
-
-                <InputGroup className="mb-3">
-                    <InputGroup.Prepend>
-                        <InputGroup.Text id="assetIncome">Asset Income: </InputGroup.Text>
-                    </InputGroup.Prepend>
-                    <Form.Control
-                        placeholder="Asset Income"
-                        aria-label="AssetIncome"
-                        aria-describedby="assetIncome"
-                        onChange={this.handleChange}
-                        name="assetIncome"
-                        onBlur={this.handleBlur}
-                    />
-                </InputGroup>
-                <p className={this.state.assetIncomeDisplay ? 'show assetIncome-message' : 'hide assetIncome-message'}>{this.state.assetIncomeMessage}</p>
 
                 <InputGroup className="mb-3">
                     <InputGroup.Prepend>
@@ -187,6 +185,23 @@ export class AssetCreate extends Component {
                         onChange={this.handleChange}
                         name="shareCount"
                         onBlur={this.handleBlur}
+                        type="number"
+                    />
+                </InputGroup>
+                <p className={this.state.shareCountDisplay ? 'show shareCount-message' : 'hide shareCount-message'}>{this.state.shareCountMessage}</p>
+
+                <InputGroup className="mb-3">
+                    <InputGroup.Prepend>
+                        <InputGroup.Text id="cashCount">House Cash: </InputGroup.Text>
+                    </InputGroup.Prepend>
+                    <Form.Control
+                        placeholder="How much cash for the house?"
+                        aria-label="cashCount"
+                        aria-describedby="cashCount"
+                        onChange={this.handleChange}
+                        name="cashCount"
+                        onBlur={this.handleBlur}
+                        type="number"
                     />
                 </InputGroup>
                 <p className={this.state.shareCountDisplay ? 'show shareCount-message' : 'hide shareCount-message'}>{this.state.shareCountMessage}</p>
@@ -194,16 +209,6 @@ export class AssetCreate extends Component {
                 <button id="submit" onClick={this.handleSubmit}>Submit</button>
                 <p className={this.state.submitDisplay ? 'show submit-message' : 'hide submit-message'}>{this.state.submitMessage}</p>
 
-                {/*<div className="asset-create-header">*/}
-                {/*    <h2>Asset Name: <span><h3>{this.state.asset.name}</h3></span></h2>*/}
-                {/*    <h2>Income: <span><h3>{this.state.asset.rateOfReturn}</h3></span></h2>*/}
-                {/*    <h2>Shares Outstanding: <span><h3>{this.state.asset.sharesOutstanding}</h3></span></h2>*/}
-                {/*</div>*/}
-                {/*<div>*/}
-                {/*    <SharesResults*/}
-                {/*        shares={this.state.shares}*/}
-                {/*    />*/}
-                {/*</div>*/}
             </div>
         );
     }
