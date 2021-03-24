@@ -8,17 +8,20 @@ using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using RiskGame.API.Models.SharesFolder;
+using RiskGame.API.Models.PlayerFolder;
 
 namespace RiskGame.API.Services
 {
     public class AssetService : IAssetService
     {
         private readonly IMongoCollection<AssetResource> _assets;
+        private readonly IPlayerService _playerService;
         private readonly IMapper _mapper;
         private readonly AssetResource CASH;
-        private readonly IDatabaseSettings dbSettings;
-        public AssetService(IDatabaseSettings settings, IMapper mapper)
+        private readonly IDatabaseSettings dbSettings; // remove this when you remove Initialize
+        public AssetService(IDatabaseSettings settings, IMapper mapper, IPlayerService playerService)
         {
+            _playerService = playerService;
             dbSettings = settings;
             _mapper = mapper;
             var client = new MongoClient(settings.ConnectionString);
@@ -28,14 +31,16 @@ namespace RiskGame.API.Services
             _assets = database.GetCollection<AssetResource>(settings.AssetCollectionName);
             CASH = Create(new Asset(ModelTypes.Cash.ToString(), Guid.NewGuid()));
         }
+        //
+        // Drops the Asset Collection and recreates CASH
         public string Initialize()
         {
             try
             {
                 _assets.Database.DropCollection(dbSettings.AssetCollectionName);
-                _assets.Database.DropCollection(dbSettings.PlayerCollectionName);
                 _assets.Database.DropCollection(dbSettings.ShareCollectionName);
-                return "Tabula Rasa";
+                var cash = Create(_mapper.Map<AssetResource,Asset>(CASH));
+                return "Asset Tabula Rasa";
             }
             catch (Exception e)
             {

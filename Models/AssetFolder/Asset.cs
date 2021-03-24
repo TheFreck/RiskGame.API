@@ -23,19 +23,38 @@ namespace RiskGame.API.Models.AssetFolder
         [BsonElement("Name")]
         [JsonProperty("Name")]
         public string Name { get; set; }
-        public int BookValue { get; set; }
-        public int RateOfReturn { get; set; }
         public int SharesOutstanding { get; set; }
         public string Message { get; set; }
         //
         // model type is used to convert this class to a ModelReference
         // it is automatically set and cannot be overridden
         public readonly ModelTypes ModelType = ModelTypes.Asset;
-        public Asset(string name, int rateOfReturn, int sharesOutstanding, Guid id)
+        //
+        // Trading attributes
+        //
+        // Int between 0:75
+        public int Leverage { get; set; }
+        //
+        // Int between -100:100
+        public int AnimalSpirits { get; set; }
+        //
+        // Income is determined by a logistics formula
+        // L = 5.2
+        // k = -.4
+        // x0 = 10
+        // x = random number
+        public int Income { get; set; }
+        //
+        // Int between 0:100
+        public int RiskStrategy { get; set; }
+        //
+        // Int between -100:100
+        public int Cyclicality { get; set; }
+        public Asset(string name, int sharesOutstanding, Guid id)
         {
             Name = name;
-            RateOfReturn = rateOfReturn;
             Id = id;
+            AssetId = Id.ToString();
             SharesOutstanding = sharesOutstanding;
         }
         public Asset(string name, Guid id)
@@ -47,6 +66,7 @@ namespace RiskGame.API.Models.AssetFolder
         public Asset() 
         {
             Id = Guid.NewGuid();
+            AssetId = Id.ToString();
         }
     }
 }

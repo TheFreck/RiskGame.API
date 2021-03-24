@@ -66,8 +66,8 @@ namespace RiskGame.API.Services
             try
             {
                 // Transfer ownership of cash and assets
-                _transactionLogic.TransferShares(buyer, tradeShares);
-                _transactionLogic.TransferShares(seller, tradeCash);
+                _transactionLogic.TransferShares(buyer, tradeShares, trade.CashCount);
+                _transactionLogic.TransferShares(seller, tradeCash, trade.CashCount);
                 // complete the trade ticket
                 trade.Message = $"Shares: {_shareService.UpdateShares(tradeShares).Result.Message}; Cash: {_shareService.UpdateShares(tradeCash)}";
                 trade.TradeTime = DateTime.Now;

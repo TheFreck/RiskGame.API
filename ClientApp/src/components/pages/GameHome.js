@@ -1,4 +1,4 @@
-﻿import React, { Component } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import AssetCreate from '../forms/AssetCreate';
 import PlayerCreate from './../forms/PlayerCreate';
 import Transaction from './../forms/Transaction';
@@ -6,103 +6,125 @@ import API from './../../API';
 import './../../game.css';
 import Button from 'react-bootstrap/Button';
 
-export class GameHome extends Component {
-    static displayName = GameHome.name;
+export const GameHome = props => {
 
-    constructor(props) {
-        super(props);
-        this.state = {
-            player: {},
-            cash: {},
-            asset: {},
+    const [player, SETplayer] = useState({ player: {} });
+    const [cash, SETcash] = useState({ cash: {} });
+    const [asset, SETasset] = useState({ asset: {} });
+    const [showPane, SETshowPane] = useState("");
+    const [gotEm, SETgotEm] = useState(false);
+    const [tradeButtonMessageDisplay, SETtradeButtonMessageDisplay] = useState(false);
+    const [tradeButtonMessage, SETtradeButtonMessage] = useState("");
+    const [viewPane, SETviewPane] = useState(<></>);
 
-            gotEm: false,
-            tradeTicket: false,
-            tradeButtonMessageDisplay: false,
+    let state = {
+        player: [player, SETplayer],
+        cash: [cash, SETcash],
+        asset: [asset, SETasset]
+    };
 
-            tradeButtonMessage: "",
-        };
-    }
-
-    componentDidMount() {
-    }
-
-    updateState = changeSet => {
+    // **********
+    // GO GETTERS
+    // **********
+    const updateState = changeSet => {
         let gotEm = false;
-        if ((this.state.player || changeSet.player) && (this.state.cash || changeSet.cash) && (this.state.asset || changeSet.asset)) {
+        if ((player || changeSet.player) && (cash || changeSet.cash) && (asset || changeSet.asset)) {
             gotEm = true;
         }
-        console.log("state set");
-        this.setState({
-            player: changeSet.player ? changeSet.player : this.state.player,
-            cash: changeSet.cash ? changeSet.cash : this.state.cash,
-            asset: changeSet.asset ? changeSet.asset : this.state.asset,
-            gotEm
-        });
+        console.log("state set: ", changeSet);
+        SETplayer({ player: changeSet.player ? changeSet.player : player })
+        SETcash({ cash: changeSet.csh ? changeSet.csh : cash });
+        SETasset({ asset: changeSet.asst ? changeSet.asst : asset });
+        SETgotEm(gotEm);
     };
-    tradeButtonClick = () => this.setState({ tradeTicket: !this.state.tradeTicket });
-    tradeButtonMouseEnter = () => {
-        console.log("enter");
-        this.setState({ tradeButtonMessage: "Create an asset and a player to start" });
-        setTimeout(() => this.setState({ tradeButtonMessage: "" }), 3333);
-    }
-    tradeButtonMouseLeave = () => {
-        console.log("exit");
-        this.setState({ tradeButtonMessage: "" });
-    }
-    hoverMessage = () => {
+
+    // ********
+    // SERVICES
+    // ********
+    const hoverMessage = () => {
         setTimeout(() => {
-            if (this.state.tradeButtonMessageDisplay) {
+            if (tradeButtonMessageDisplay) {
                 return ""
-            }},3000)
-        
+            }
+        }, 3000)
+
     }
-    TradeButton = gotEm => {
+
+    // **************
+    // EVENT HANDLING
+    // **************
+    const handleReset = () => {
+        Array.from(document.querySelectorAll("input")).forEach(
+            input => {
+                (input.value = "");
+            }
+        );
+        Array.from(document.querySelectorAll("textarea")).forEach(
+            textarea => {
+                (textarea.value = "");
+            }
+        );
+    };
+    const selfDestruct = () => {
+        console.log(API.initialize("Playa101"));
+        SETplayer({ player: {} });
+        SETcash({ cash: {} });
+        SETasset({ asset: {} });
+        SETgotEm(false);
+        SETtradeButtonMessageDisplay(false);
+        SETtradeButtonMessage("");
+    }
+    const assetButtonClick = () => SETviewPane(<AssetCreate updateState={updateState} retrieveState={state} />);
+    const playerButtonClick = () => SETviewPane(<PlayerCreate updateState={updateState} retrieveState={state} />);
+    const tradeButtonClick = () => SETviewPane(<Transaction updateState={updateState} retrieveState={state} />);
+    const tradeButtonMouseEnter = () => {
+        console.log("enter");
+        SETtradeButtonMessage("Create an asset and a player to start");
+        setTimeout(() => SETtradeButtonMessage(""), 3333);
+    }
+    const tradeButtonMouseLeave = () => {
+        console.log("exit");
+        SETtradeButtonMessage("");
+    }
+
+    // *********************
+    // FUNCTIONAL COMPONENTS
+    // *********************
+    let initStyle = {
+        "borderRadius": "50%",
+        "borderColor": "darkred",
+        "borderWidth": "5px"
+    }
+    const SelfDestructButton = () => <Button
+        onClick={selfDestruct}
+        style={initStyle}
+        variant="danger"
+    >Don't<br /> Press!<br />Or Else!!!</Button>;
+    const TradeButton = gotEm => {
         if (gotEm.gotEm) {
-            return <Button onClick={this.tradeButtonClick} variant="dark">Place a Trade</Button>;
+            return <Button onClick={tradeButtonClick} variant="dark">Place a Trade</Button>;
         }
         else {
-            return <Button onMouseEnter={this.tradeButtonMouseEnter} variant="secondary" disabled>Place a Trade</Button>;
+            return <Button onMouseEnter={tradeButtonMouseEnter} variant="secondary" disabled>Place a Trade</Button>;
         }
     }
-    selfDestruct = () => {
-        API.initialize('playa101').then(answer => {
-            console.log(answer);
-            console.log(answer.data);
-        })
-    }
+    const AssetButton = () => <Button
+        onClick={assetButtonClick}
+        variant="light"
+    >Create an Asset</Button>
+    const PlayerButton = () => <Button
+        onClick={playerButtonClick}
+        variant="light"
+    >Create a Player</Button>
 
-    render = () => {
 
-        return (
-            <>
-                <Button onClick={this.selfDestruct} variant="danger">Don't<br/> Press!</Button>
-                <AssetCreate
-                    updateState={this.updateState}
-                    retrieveState={this.state}
-                />
-                <hr />
-                <hr />
-                <PlayerCreate
-                    updateState={this.updateState}
-                    retrieveState={this.state}
-                />
-                <hr />
-                <hr />
-                <hr />
-                <hr />
-                <this.TradeButton
-                    gotEm={this.state.gotEm}
-                />
-                {this.state.tradeButtonMessage}
-                {this.state.tradeTicket ?
-                    <Transaction
-                    updateState={() => this.updateState}
-                    retrieveState={this.state}
-                    />
-                    : ""}
-                
-            </>
-        );
-    }
+    return (
+        <>
+            <SelfDestructButton />
+            <AssetButton />
+            <PlayerButton />
+            <TradeButton gotEm={gotEm} />
+            <div>{viewPane}</div>
+        </>
+    );
 }

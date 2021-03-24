@@ -25,19 +25,79 @@ export class PlayerCreate extends Component {
             cash: {},
             cashShares: [],
             shares: [],
+            allPlayers: [],
+            resultsCollumns: ["Name", "Cash", "Shares", "Id"],
+            resultsItems: []
         };
     }
 
+    componentDidMount = () => {
+        this.getPlayers();
+        console.log("got players: ", this.state.allPlayers);
+    }
+    // **********
+    // GO GETTERS
+    // **********
+    getCash = () => {
+        API.asset.getPlayerShares({ id: this.state.player.id, type: 3, qty: 0 }).then(cash => {
+            this.setState({ cashShares: cash.data });
+            this.setPlayerAndCash(cash.data[0]);
+            this.getShares();
+        })
+    };
+    getShares = () => {
+        API.asset.getPlayerShares({ id: this.state.player.id, type: 1, qty: 0 }).then(shares => {
+            this.setState({ shares: shares.data });
+        })
+    }
+    getPlayers = () => {
+        API.player.getPlayers().then(players => {
+            let items = [];
+            for (let player of players.data) {
+                items.push({ body: [player.name, player.cash, player.shares, player.id] });
+            }
+            this.setState({
+                allPlayers: items
+            });
+            console.log("got players' headers: ", this.state.resultsCollumns);
+            console.log("got players: ", items);
+        });
+    }
+
+    // ********
+    // SERVICES
+    // ********
+    addCash = (id, qty) => {
+        API.player.getPlayer(id).then(player => {
+            this.setState({ cashShares: player.data.wallet });
+        })
+    };
+    setPlayerAndCash = cash => {
+        this.props.updateState({
+            cash: cash,
+            player: this.state.player
+        });
+    };
+
+    // **************
+    // EVENT HANDLING
+    // **************
     handleSubmit = event => {
         if (this.state.playerName && this.state.playerCash) {
             API.player.createPlayer({
                 Name: this.state.playerName,
                 Cash: this.state.playerCash
             }).then(result => {
-                this.setState({ submitMessage: "submitted successfully", submitDisplay: true, player: result.data })
+                this.setState({
+                    submitMessage: "submitted successfully",
+                    submitDisplay: true,
+                    player: result.data
+                })
+                this.getPlayers();
                 setTimeout(() => this.setState({ submitDisplay: false }), 3333);
                 this.addCash(result.data.id, this.state.playerCash);
                 this.getCash();
+                this.setPlayerAndCash();
             });
         }
         else {
@@ -55,23 +115,6 @@ export class PlayerCreate extends Component {
             [eventName]: value
         });
     }
-    handleReset = () => {
-        Array.from(document.querySelectorAll("input")).forEach(
-            input => {
-                (input.value = "")
-            }
-        );
-        Array.from(document.querySelectorAll("textarea")).forEach(
-            textarea => {
-                (textarea.value = "")
-            }
-        );
-        this.setState({
-            itemvalues: [{}],
-            SubmitDisplay: true
-        });
-        setTimeout(() => this.setState({ SubmitDisplay: false }), 3333);
-    };
     handleBlur = event => {
         event.preventDefault();
         const target = event.target;
@@ -109,30 +152,7 @@ export class PlayerCreate extends Component {
             // don't do anything
         }
     };
-    addCash = (id, qty) => {
-        API.player.getPlayer(id).then(player => {
-            this.setState({ cashShares: player.data.wallet });
-        })
-    };
-    setPlayerAndCash = cash => {
-        this.props.updateState({
-            cash: cash,
-            player: this.state.player
-        });
-    };
-    getCash = () => {
-        console.log("this.state.player.id: ", this.state.player.id);
-        API.asset.getPlayerShares({ id: this.state.player.id, type: 3 }).then(cash => {
-            this.setState({ cashShares: cash.data });
-            this.setPlayerAndCash(cash.data[0]);
-            this.getAssets();
-        })
-    };
-    getAssets = () => {
-        API.asset.getPlayerShares({ id: this.state.player.id, type: 1}).then(shares => {
-            this.setState({ shares: shares.data });
-        })
-    }
+
 
     render() {
         return (
@@ -171,9 +191,22 @@ export class PlayerCreate extends Component {
 
                 <button id="submit" onClick={this.handleSubmit}>Submit</button>
                 <p className={this.state.submitDisplay ? 'show submit-message' : 'hide submit-message'}>{this.state.submitMessage}</p>
+
+                <h3>Players</h3>
+                <SharesResults
+                    columns={this.state.resultsCollumns}
+                    items={this.state.allPlayers}
+                />
             </div>
         );
     }
 }
 
 export default PlayerCreate;
+
+//let theProps = {
+//    columns: ["string"],
+//    items: [{
+//        body: ["string"]
+//    }]
+//}

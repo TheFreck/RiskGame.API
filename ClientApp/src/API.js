@@ -3,41 +3,42 @@
 export default {
     asset: {
         // Get
-        getAssets: () =>  axios.get('api/asset'),
+        getAssets: () => axios.get('api/asset'),
+        getCash: () => axios.get('api/asset/cash'),
         getAsset: query => {
-            console.log("getAsset query: ", query);
+            //console.log("getAsset query: ", query);
             if (!query) return this.messages.badInput;
             return axios.get(`api/asset/${query}`);
         },
         getShares: query => {
-            console.log("getShares query: ", query ? query : "cash");
+            //console.log("getShares query: ", query ? query : "cash");
             return axios.get(query ? `api/asset/shares/${query}` : 'api/asset/shares');
         },
         getPlayerShares: query => {
             console.log("getPlayerShares query: ", query);
             if (!query) return this.messages.badInput;
-            return axios.get(`api/asset/player-shares/${query.id}/${query.type}`);
+            return axios.get(`api/asset/player-shares/${query.id}/${query.type}/${query.qty}`);
         },
         // Post
         createAsset: query => {
-            console.log("createAsset query: ", query);
+            //console.log("createAsset query: ", query);
             if (!query) return this.messages.badInput;
             return axios.post(`api/asset`, query);
         },
         addShares: query => {
-            console.log("addShares query: ", query);
+            //console.log("addShares query: ", query);
             if (!query) return this.messages.badInput;
-            return axios.post(`api/asset/${query.id}/${query.qty}`)
+            return axios.post(`api/asset/add-shares/${query.id}/${query.qty}`)
         },
         // Put
         updateAsset: query => {
-            console.log("updateAsset query: ", query);
+            //console.log("updateAsset query: ", query);
             if (!query) return this.messages.badInput;
             return axios.put(`api/asset/${query.id}`, query.changeSet);
         },
         // Delete
         deleteAsset: query => {
-            console.log("deleteAsset query: ", query);
+            //console.log("deleteAsset query: ", query);
             if (!query) return this.messages.badInput;
             return axios.delete(`api/asset/${query}`);
         }
@@ -46,40 +47,40 @@ export default {
         // Get
         getPlayers: () => axios.get('api/player'),
         getPlayer: query => {
-            console.log("getPlayer query: ", query);
+            //console.log("getPlayer query: ", query);
             if (!query) return this.messages.badInput;
             return axios.get(`api/player/${query}`);
         },
         // Post
         createPlayer: query => {
-            console.log("createPlayer query: ", query);
+            //console.log("createPlayer query: ", query);
             if (!query) return this.messages.badInput;
             return axios.post('api/player/', query);
         },
         addSharesToPlayer: query => {
-            console.log("add shares query: ", query);
+            //console.log("add shares query: ", query);
             if (!query) return this.messages.badInput;
             return axios.post(`api/player/${query.playerId}/${query.assetId}/${query.qty}`, query.changeSet);
         },
         // Put
         updatePlayer: query => {
-            console.log("updatePlayer query: ", query);
+            //console.log("updatePlayer query: ", query);
             if (!query) return this.messages.badInput;
             return axios.put(`api/player/${query.id}`, query.changeSet);
         },
         clearPortfolio: query => {
-            console.log("clearPortfolio query: ", query);
+            //console.log("clearPortfolio query: ", query);
             if (!query) return this.messages.badInput;
             return axios.put(`api/player/${query}`);
         },
         clearWallet: query => {
-            console.log("clearWallet query: ", query);
+            //console.log("clearWallet query: ", query);
             if (!query) return this.messages.badInput;
             return axios.put(`api/player/${query}`);
         },
         // Delete
         deletePlayer: query => {
-            console.log("deletePlayer query: ", query);
+            //console.log("deletePlayer query: ", query);
             if (!query) return this.messages.badInput;
             return axios.delete(`api/player/${query}`);
         }
@@ -92,8 +93,17 @@ export default {
         }
     },
     initialize: secretCode => {
-        console.log("secretCode query: ", secretCode);
-        return axios.post('api/asset/game/start/initialize', secretCode);
+        axios.delete(`api/asset/game/start/initialize/${secretCode}`).then(assetDrop => {
+            console.log(assetDrop);
+            if (assetDrop.status == 200) {
+                return (axios.delete(`api/player/game/start/initialize/${secretCode}`).then(playerDrop => {
+                    console.log(playerDrop.data);
+                }));
+            }
+            else {
+                return assetDrop;
+            }
+        })
     },
     messages: {
         badInput: "Huh? Didn't hear that"

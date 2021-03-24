@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
+using RiskGame.API.Entities;
 using RiskGame.API.Models;
 using RiskGame.API.Models.PlayerFolder;
 using RiskGame.API.Models.SharesFolder;
@@ -28,7 +29,7 @@ namespace RiskGame.API.Logic
         {
             var hausRef = _playerService.GetHAUSRef();
             var cashGuids = new List<Guid>();
-            var hausCash = _shareService.GetPlayerCash(hausRef).Result;
+            var hausCash = _shareService.GetPlayerShares(hausRef, ModelTypes.Cash).Result;
             var haus = _playerService.GetHAUS();
             if (cashRefs?.Count > 0)
             {
@@ -54,7 +55,7 @@ namespace RiskGame.API.Logic
         {
             var shareGuids = new List<Guid>();
             var hausRef = _playerService.GetHAUSRef();
-            var hausPort = _shareService.GetPlayerShares(hausRef).Result;
+            var hausPort = _shareService.GetPlayerShares(hausRef,ModelTypes.Share).Result;
             if (shareRefs?.Count > 0)
             {
                 foreach(var id in shareRefs)
@@ -79,11 +80,29 @@ namespace RiskGame.API.Logic
             incomingShares.ForEach(s => tradeShares.Add(s));
             return tradeShares;
         }
-        public void TransferShares(PlayerResource receiver, List<ShareResource> shares)
+        public void TransferShares(PlayerResource receiver, List<ShareResource> shares, int price)
         {
-            foreach(var share in shares)
+            if(shares[0].ModelType == ModelTypes.Share)
             {
-                share.CurrentOwner = _playerService.ResToRef(receiver);
+                foreach(var share in shares)
+                {
+                    share.History.Add(new TradeRecord
+                    {
+                        Buyer = _playerService.ResToRef(receiver),
+                        Asset = _shareService.ResToRef(share),
+                        ShareId = Guid.Parse(share.ShareId),
+                        Price = price,
+                        TradeTime = DateTime.Now
+                    });
+                    share.CurrentOwner = _playerService.ResToRef(receiver);
+                }
+            }
+            else if(shares[0].ModelType == ModelTypes.Cash)
+            {
+                foreach(var share in shares)
+                {
+                    share.CurrentOwner = _playerService.ResToRef(receiver);
+                }
             }
         }
     }
@@ -91,6 +110,6 @@ namespace RiskGame.API.Logic
     {
         Task<List<ShareResource>> GetCash(List<ModelReference> cashRefs, int qty);
         Task<List<ShareResource>> GetShares(List<ModelReference> shareRefs, int qty);
-        void TransferShares(PlayerResource receiver, List<ShareResource> shares);
+        void TransferShares(PlayerResource receiver, List<ShareResource> shares, int price);
     }
 }

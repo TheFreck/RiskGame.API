@@ -122,5 +122,12 @@ namespace RiskGame.API.Controllers
             _playerService.Remove(incomingId);
             return NoContent();
         }
+
+        [HttpDelete("game/start/initialize/{secretPassword}")]
+        public ActionResult<string> Initialize(string secretPassword)
+        {
+            if (secretPassword == "Playa101") return Ok(_playerService.Initialize());
+            else return Unauthorized("no way doood!");
+        }
     }
 }

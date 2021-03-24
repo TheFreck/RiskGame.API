@@ -10,116 +10,167 @@ import { ModelReference } from '../../assets/ModelReference';
 
 export const Transaction = props => {
 
-    const [player, SETplayer] = useState({});
-    const [playerCash, SETplayerCash] = useState([]);
-    const [playerShares, SETplayerShares] = useState([]);
-    const [tradeShares, SETtradeShares] = useState(0);
-    const [shareCost, SETshareCost] = useState(0);
-    const [tradeCost, SETtradeCost] = useState(0);
+    const [player, SETplayer] = useState({ player: {} });
+    const [playerCash, SETplayerCash] = useState({ playerCash: [] }); // The cash from the player's wallet used to make the trade
+    const [playerShares, SETplayerShares] = useState({ playerShares: [] }); // The shares from the player's portfolio used to make the trade
+    const [tradeShares, SETtradeShares] = useState({ tradeShares: 0 }); // The number of shares being traded
+    const [shareCost, SETshareCost] = useState({ shareCost: 0 }); // The cost per share
+    const [tradeCost, SETtradeCost] = useState({ tradeCost: 0 }); // The total cost of the trade
     const [tradeSharesDisplay, SETtradeSharesDisplay] = useState(false);
     const [tradeCostDisplay, SETtradeCostDisplay] = useState(false);
     const [submitDisplay, SETsubmitDisplay] = useState(false);
-    const [tradeTotalDisplay, SETtradeTotalDisplay] = useState(false);
     const [isBuySwitch, SETisBuySwitch] = useState(true);
     const [tradeSharesMessage, SETtradeSharesMessage] = useState("How many shares would you like to trade?");
-    const [tradeCostMessage, SETtradeCostMessage] = useState("How much per share?");
     const [submitMessage, SETsubmitMessage] = useState("");
 
+    const modelTypes = {
+        Asset: 0,
+        Share: 1,
+        Player: 2,
+        Cash: 3
+    }
+
     useEffect(() => {
-        SETplayer(getPlayer());
-        SETplayerCash(getCash());
-        SETplayerShares(getShares());
-        console.log("used Effect");
+        getPlayer();
     }, [
         props.retrieveState.player,
         props.retrieveState.asset,
     ]);
 
+    // **********
+    // GO GETTERS
+    // **********
     const getPlayer = () => {
         if (props.retrieveState.player.id) {
             API.player.getPlayer(props.retrieveState.player.id)
-                .then(player => SETplayer(player.data));
-        }
-        else {
-            return null;
-        }
-    }
-    const getShares = () => {
-        if (props.retrieveState.player.id) {
-            API.asset.getPlayerShares({id: props.retrieveState.player.id, type: 1})
-                .then(shares => {
-                    SETplayerShares(shares.data)
+                .then(player => {
+                    console.log("get player: player: ", player);
+                    SETplayer({ player: player.data[0] })
                 });
         }
         else {
             return null;
         }
     }
-    const getCash = () => {
-        if (props.retrieveState.player.id) {
-            API.asset.getPlayerShares({ id: props.retrieveState.player.id, type: 3 })
-                .then(cash => {
-                    SETplayerCash(cash.data)
-                });
-        
-        }
-        else {
-            return null;
-        }
-    }
-
-    const addCashFromWallet = () => {
-        debugger;
-        let cash = [];
-        if (tradeCost * tradeShares > playerCash.length) return "Error: Not enough cash";
-        for (let i = 0; i < shareCost * parseInt(tradeShares); i++) {
-            cash.push(playerCash.pop());
-        }
-        return cash;
-    }
-    const addSharesFromPortfolio = () => {
-        debugger;
-        let shares = [];
-        if (tradeShares > playerShares) return "Error: Not enough shares";
-        for (let i = 0; i < tradeShares; i++) {
-            shares.push(playerShares.pop());
-        }
-        return shares;
-    }
-
-    const handleSubmit = e => {
-        e.preventDefault();
-        let playerRef = <ModelReference
-            name={player[0].name}
-            id={player[0].id}
-            type={player[0].type}
-        />
-        let tradeTicket = <TradeTicket
-            buyer={isBuySwitch ? playerRef.props : null}
-            seller={isBuySwitch ? null : playerRef.props}
-            cash={isBuySwitch ? addCashFromWallet() : null}
-            shares={isBuySwitch ? null : addSharesFromPortfolio()}
-            cashCount={shareCost * tradeShares}
-            sharesCount={parseInt(tradeShares)}
-        />
-        API.transactions.submitTrade(tradeTicket.props).then(outcome => {
-            SETplayer(getPlayer());
-            SETplayerShares(getShares());
-            SETplayerCash(getCash());
-            handleReset();
+    const getShares = cb => {
+        API.asset.getPlayerShares({
+            id: props.retrieveState.player.id,
+            type: modelTypes.Share,
+            qty: tradeShares
+        }).then(shares => {
+            SETplayerShares({ playerShares: shares.data })
+            cb(shares.data);
         });
+    }
+    const getCash = cb => {
+        console.log("transaction get cash");
+        API.asset.getPlayerShares({
+            id: props.retrieveState.player.id,
+            type: modelTypes.Cash,
+            qty: tradeCost.tradeCost
+        }).then(cash => {
+            console.log("transaction got cash: ", cash);
+            debugger;
+            SETplayerCash({ playerCash: cash.data });
+            cb(cash.data);
+        });
+    }
+
+    // ********
+    // SERVICES
+    // ********
+    const addCashFromWallet = cb => {
+        getCash(cash => {
+            console.log("add cash from wallet: ", cash);
+            debugger;
+            if (tradeCost.tradeCost * tradeShares.tradeShares > cash.length) return "Error: Not enough cash";
+            for (let i = 0; i < shareCost.shareCost * tradeShares.tradeShares; i++) {
+                cash.push(cash.pop());
+            }
+            cb(cash);
+        });
+    }
+    const addSharesFromPortfolio = (cb) => {
+        getShares(shares => {
+            console.log("add shares from portfolio: ", shares);
+            debugger;
+            if (tradeShares > shares.length) return "Error: Not enough shares";
+            for (let i = 0; i < tradeShares; i++) {
+                shares.push(shares.pop());
+            }
+            SETplayerShares(shares);
+            cb(shares);
+        });
+    }
+    const calculatedTotalCost = () => tradeShares.tradeShares && tradeCost.tradeCost ? tradeShares.tradeShares * tradeCost.tradeCost : "";
+    const getCashOrShares = cb => {
+        if (isBuySwitch) addCashFromWallet(cash => {
+            cb(cash);
+        })
+        else addSharesFromPortfolio(shares => {
+            cb(shares);
+        })
+    }
+    const updateTradeCost = () => SETtradeCost({ tradeCost: tradeShares.tradeShares * shareCost.shareCost });
+
+    // ********
+    // SWITCHES
+    // ********
+    const buySellToggle = e => {
+        e.preventDefault();
+        SETisBuySwitch(!isBuySwitch);
+    }
+
+    // **************
+    // EVENT HANDLING
+    // **************
+    const handleSubmit = e => {
+        debugger;
+        e.preventDefault();
+        console.log("handling submit: player: ", player);
+        let playerRef = <ModelReference
+            name={player.player.name}
+            id={player.player.id}
+            type={modelTypes.Player}
+        />
+        // get cash
+        getCashOrShares(items => {
+            let tradeTicket = <TradeTicket
+                buyer={isBuySwitch ? playerRef.props : null}
+                seller={isBuySwitch ? null : playerRef.props}
+                cash={isBuySwitch ? items : null}
+                shares={isBuySwitch ? null : items}
+                cashCount={tradeCost.tradeCost * tradeShares.tradeShares}
+                sharesCount={parseInt(tradeShares.tradeShares)}
+            />
+            console.log("tradeTicket.props: ", tradeTicket.props);
+            API.transactions.submitTrade(tradeTicket.props).then(outcome => {
+                getPlayer();
+                SETplayerShares({ playerShares: getShares() });
+                SETplayerCash({ playerCash: getCash() });
+                SETsubmitMessage("Trade Submitted");
+                SETsubmitDisplay(true);
+                handleReset();
+                setTimeout(SETsubmitDisplay(false), 3333);
+            });
+        })
+
     }
     const handleCashChange = event => {
         event.preventDefault();
-        SETshareCost(event.target.value);
-        if (tradeCost > 0)  SETtradeCostDisplay(true) 
-        else  SETtradeCostDisplay(false);
+        console.log("event target value: ", parseInt(event.target.value));
+        console.log("shareCost: ", shareCost.shareCost);
+        console.log("cash::SETtradeCost", parseInt(event.target.value) * shareCost.shareCost);
+        SETshareCost({ shareCost: parseInt(event.target.value) });
+        if (tradeCost.tradeCost > 0) SETtradeCostDisplay(true)
+        else SETtradeCostDisplay(false);
     }
     const handleShareChange = event => {
         event.preventDefault();
-        SETtradeShares(event.target.value);
-        SETtradeCost(event.target.value * shareCost);
-        if (shareCost > 0) SETtradeSharesDisplay(true)
+        console.log(parseInt(event.target.value));
+        console.log("shares::SETtradeCost", parseInt(event.target.value) * shareCost.shareCost);
+        SETtradeShares({ tradeShares: parseInt(event.target.value) });
+        if (shareCost.shareCost > 0) SETtradeSharesDisplay(true)
         else SETtradeSharesDisplay(false);
     }
     const handleReset = () => {
@@ -144,31 +195,24 @@ export const Transaction = props => {
         const target = event.target;
         const eventName = target.name;
         const value = target.value;
+        console.log("unblur: ", shareCost.shareCost * tradeShares.tradeShares);
+        updateTradeCost();
     };
-    const handleBuySell = isBuy => {
-        let switchNumber = `${isBuy}Switch`;
-        this.setState({ [switchNumber]: isBuy });
-    }
-    const calculatedTotalCost = () => tradeShares && tradeCost ? tradeShares * tradeCost : "";
-    const buySellToggle = e => {
-        e.preventDefault();
-        SETisBuySwitch(!isBuySwitch);
-    }
 
     return (
         <div>
             <ButtonGroup toggle name="name" className="mb-2">
-            <ToggleButton
+                <ToggleButton
                     type="checkbox"
                     variant={isBuySwitch ? "secondary" : "light"}
                     checked={isBuySwitch}
                     value="isBuy"
                     name="isBuy"
                     onClick={(e) => buySellToggle(e)}
-            >
-                {isBuySwitch ? "Buy" : "Sell"}
+                >
+                    {isBuySwitch ? "Buy" : "Sell"}
                 </ToggleButton>
-                </ButtonGroup>
+            </ButtonGroup>
             <InputGroup className="mb-3">
                 <InputGroup.Prepend>
                     <InputGroup.Text id="trade-shares">Shares: </InputGroup.Text>
@@ -197,9 +241,7 @@ export const Transaction = props => {
                     onBlur={event => handleBlur(event)}
                 />
             </InputGroup>
-            <p className={tradeTotalDisplay ? 'show tradeTotal-message' : 'hide tradeTotal-message'}>{"Total cost of trade: " + calculatedTotalCost()}</p>
-            <br />
-            <p className={tradeCostDisplay ? 'show tradeCash-message' : 'hide tradeCash-message'}>{tradeCostMessage}</p>
+            <p className={tradeCostDisplay ? 'show tradeTotal-message' : 'hide tradeTotal-message'}>{"Total cost of trade: " + calculatedTotalCost()}</p>
             <br />
             <button id="submit" onClick={(e) => handleSubmit(e)}>Submit</button>
             <p className={submitDisplay ? 'show submit-message' : 'hide submit-message'}>{submitMessage}</p>
@@ -210,14 +252,14 @@ export const Transaction = props => {
                 <InputGroup.Prepend>
                     <InputGroup.Text id="portfolio">Portfolio: </InputGroup.Text>
                 </InputGroup.Prepend>
-                <div>{playerShares ? playerShares.length : 0}</div>
+                <div>{playerShares.playerShares ? playerShares.playerShares.length : 0}</div>
             </InputGroup>
 
             <InputGroup className="mb-3">
                 <InputGroup.Prepend>
                     <InputGroup.Text id="wallet">Wallet: </InputGroup.Text>
                 </InputGroup.Prepend>
-                <div>{playerCash ? playerCash.length : 0}</div>
+                {/*<div>{playerCash ? playerCash.playerCash.length : 0}</div>*/}
             </InputGroup>
         </div>
     );

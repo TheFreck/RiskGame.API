@@ -45,9 +45,9 @@ namespace RiskGame.API.Controllers
             var asset = new AssetResource();
             await incoming.ForEachAsync(a => asset = a);
             if (asset.AssetId == Guid.Empty.ToString()) NotFound("couldn't find it with that Id");
-            return _mapper.Map<AssetResource,Asset>(asset);
+            return _mapper.Map<AssetResource, Asset>(asset);
         }
-        [HttpGet("shares/")]
+        [HttpGet("cash")]
         public ActionResult<AssetWithShares> GetCash()
         {
             var cash = _assetService.GetCash();
@@ -74,7 +74,7 @@ namespace RiskGame.API.Controllers
             var returnShares = new List<Share>();
             foreach (var share in shares)
             {
-                var updateShare = _mapper.Map<ShareResource,Share>(share);
+                var updateShare = _mapper.Map<ShareResource, Share>(share);
                 updateShare.Id = Guid.Parse(updateShare.ShareId);
                 returnShares.Add(updateShare);
             }
@@ -84,44 +84,56 @@ namespace RiskGame.API.Controllers
                 Shares = returnShares
             });
         }
-        [HttpGet("player-shares/{id:length(36)}/{int}")]
-        public async Task<ActionResult<List<ModelReference>>> GetPlayerShares(string id, int type) // playerId
+        [HttpGet("player-shares/{id:length(36)}/{type}/{qty}")]
+        public async Task<ActionResult<List<ModelReference>>> GetPlayerShares(string id, int type, int qty) // playerId
         {
+            Console.WriteLine("Get shares: " + type);
             var modelType = (ModelTypes)type;
             var isGuid = Guid.TryParse(id, out var incomingId);
             if (!isGuid) return NotFound("Me thinks that Id was not a Guid");
             var incomingPlayer = await _playerService.GetAsync(incomingId);
             var playerRes = new PlayerResource();
             await incomingPlayer.ForEachAsync(p => playerRes = p);
-            var allShares = _mapper.Map<List<ShareResource>,List<ModelReference>>(await _shareService.GetPlayerShares(_playerService.ResToRef(playerRes)));
-            return Ok(allShares.Where(s => s.ModelType == modelType));
+            var playerRef = _playerService.ResToRef(playerRes);
+            var shareType = await _shareService.GetPlayerShares(playerRef,modelType);
+
+            var allShares = _mapper.Map<List<ShareResource>, List<ModelReference>>(shareType);
+            var allOrNone = 0;
+            if (qty == 0) allOrNone = allShares.Count;
+            else allOrNone = qty;
+            var output = allShares.Take(allOrNone).Where(s => s.ModelType == modelType);
+            return Ok(output);
         }
         // ****************************************************************
         // POST POST POST POST POST POST POST POST POST POST POST POST POST
         // ****************************************************************
-        [HttpPost("game/start/initialize")]
-        public ActionResult<string> Initialize([FromBody]string id)
-        {
-            Console.WriteLine("initialize: " + id);
-            if (id == "Playa101") return Ok(_assetService.Initialize());
-            else return Unauthorized("no way doood!");
-        }
         [HttpPost]
         public async Task<ActionResult<AssetIn>> Create([FromBody] AssetIn assetIn)
         {
-            var asset = new Asset();
-            asset = _mapper.Map<AssetIn, Asset>(assetIn);
+            // Income variables
+            var L = 5.2;
+            var k = -.4;
+            var x0 = 10;
+
+            // Build Asset
+            var randy = new Random();
+            var asset = _mapper.Map<AssetIn, Asset>(assetIn);
+            asset.Leverage = randy.Next(76);
+            asset.AnimalSpirits = randy.Next(-100, 100);
+            asset.Income = (int)Math.Floor(L / (1 + Math.Pow(Math.E, -k * (randy.Next(101) - x0))));
+            asset.RiskStrategy = randy.Next(101);
+            asset.Cyclicality = randy.Next(-100, 100);
             asset.Id = Guid.NewGuid();
             asset.AssetId = asset.Id.ToString();
+
+            // Create Asset
             var assetId = _assetService.Create(asset);
-            var haus = _playerService.GetHAUS();
             var hausRef = _playerService.GetHAUSRef();
+
+            // Create Shares
             var theShares = await _shareService.CreateShares(_mapper.Map<Asset, ModelReference>(asset), asset.SharesOutstanding, hausRef, ModelTypes.Share);
             var cashAsset = _assetService.GetCash();
             var cashShares = await _shareService.CreateShares(_mapper.Map<AssetResource, ModelReference>(cashAsset), asset.SharesOutstanding, hausRef, ModelTypes.Cash);
-            //haus.Portfolio.AddRange(theShares);
-            //var hausUpdate = new Player(haus.Id) { Portfolio = haus.Portfolio };
-            //var hausResult = await _playerService.UpdateHaus(hausUpdate);
             return _mapper.Map<Asset, AssetIn>(asset);
         }
         [HttpPost("add-shares/{id:length(36)}/{qty}")]
@@ -134,7 +146,7 @@ namespace RiskGame.API.Controllers
             var asset = new ModelReference();
             await incoming.ForEachAsync(a => asset = _mapper.Map<AssetResource, ModelReference>(a));
             if (asset.Id == Guid.Empty) NotFound("couldn't find it with that Id");
-            return await _shareService.CreateShares(asset, qty, _playerService.ToRef(haus), ModelTypes.Share);
+            return Ok(await _shareService.CreateShares(asset, qty, _playerService.ToRef(haus), ModelTypes.Share));
         }
         // ***************************************************************
         // PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT
@@ -149,8 +161,6 @@ namespace RiskGame.API.Controllers
             if (foundAsset == null) return NotFound();
 
             if (assetIn.Name == null) assetIn.Name = foundAsset.Name;
-            if (assetIn.BookValue == null) assetIn.BookValue = foundAsset.BookValue;
-            if (assetIn.RateOfReturn == null) assetIn.RateOfReturn = foundAsset.RateOfReturn;
 
             var update = _mapper.Map<AssetIn, Asset>(assetIn);
             update.Id = incomingId;
@@ -179,6 +189,13 @@ namespace RiskGame.API.Controllers
             }
             _assetService.Remove(incomingId);
             return NoContent();
+        }
+
+        [HttpDelete("game/start/initialize/{secretPassword}")]
+        public ActionResult<string> Initialize(string secretPassword)
+        {
+            if (secretPassword == "Playa101") return Ok(_assetService.Initialize());
+            else return Unauthorized("no way doood!");
         }
     }
 }

@@ -23,7 +23,7 @@ namespace RiskGame.API.Models.SharesFolder
         public string Name { get; set; }
         //
         // the history will eventually preserve a record of each trade this share has been a part of
-        public List<TradeTicket> History { get; set; }
+        public List<TradeRecord> History { get; set; }
         public ModelReference CurrentOwner { get; set; }
         //
         // model type is used to convert this class to a ModelReference

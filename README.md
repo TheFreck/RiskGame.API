@@ -30,3 +30,7 @@ Built onto the front end and wired up state transfer between the components.
 There is also a form to create a **Player** and an amount of cash for them.  
 Once both an **Asset** and a **Player** have been created the **Place a Trade** button becomes active. This opens the **Trading Component**.  
 Trading is basically done between the player and the House who acts as the "Specialist Post" like in the NY Stock Exchange.
+
+3/24/21
+**Muches and** muches of time spent troubleshooting the front end components. Muches less time spent troubleshooting the back.  
+I added a cool new component that takes an arbitrary number of column headings and an array of objects with the data and it presents the data. Currently it is pinned to the bottom of the Player Create form. The idea is to present a dropdown list of player options in case I decide not to create new players.  
