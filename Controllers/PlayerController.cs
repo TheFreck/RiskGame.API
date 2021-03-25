@@ -70,6 +70,8 @@ namespace RiskGame.API.Controllers
             var cash = _assetService.GetCash();
             var playerRef = _playerService.ToRef(player);
             var outcome = await _shareService.CreateShares(_mapper.Map<AssetResource, ModelReference>(cash), player.Cash, playerRef, ModelTypes.Cash);
+            cash.SharesOutstanding += player.Cash;
+            _assetService.Update(Guid.Parse(cash.AssetId), _mapper.Map<AssetResource, Asset>(cash));
             _playerService.Create(player);
             playerIn.Id = player.Id;
             return Ok(playerIn);

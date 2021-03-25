@@ -3,13 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace RiskGame.API.Models
+namespace RiskGame.API.Entities.Enums
 {
-    public enum ModelTypes
+    public enum Direction
     {
-        Asset,
-        Share,
-        Player,
-        Cash
+        Up = 1,
+        Down = -1
     }
 }

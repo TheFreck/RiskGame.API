@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using RiskGame.API.Entities;
+using RiskGame.API.Entities.Enums;
 using RiskGame.API.Models;
 using RiskGame.API.Models.PlayerFolder;
 using RiskGame.API.Models.SharesFolder;
@@ -9,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+
 
 namespace RiskGame.API.Logic
 {
@@ -25,6 +27,7 @@ namespace RiskGame.API.Logic
             _assetService = assetService;
             _mapper = mapper;
         }
+
         public async Task<List<ShareResource>> GetCash(List<ModelReference> cashRefs, int qty)
         {
             var hausRef = _playerService.GetHAUSRef();

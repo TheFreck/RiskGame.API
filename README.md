@@ -25,12 +25,16 @@ Wired up a React front
 Ironed out the logic to Trade between players.
 Built onto the front end and wired up state transfer between the components. 
 
-3/21/21
-**Separated out** some processes and cleaned up some server code. The front end consists of a form to create an **Asset**, the number of **Shares** and the amount of **Cash** for the house.  
+**3/21/21
+Separated out** some processes and cleaned up some server code. The front end consists of a form to create an **Asset**, the number of **Shares** and the amount of **Cash** for the house.  
 There is also a form to create a **Player** and an amount of cash for them.  
 Once both an **Asset** and a **Player** have been created the **Place a Trade** button becomes active. This opens the **Trading Component**.  
 Trading is basically done between the player and the House who acts as the "Specialist Post" like in the NY Stock Exchange.
 
-3/24/21
-**Muches and** muches of time spent troubleshooting the front end components. Muches less time spent troubleshooting the back.  
+**3/23/21
+Muches and** muches of time spent troubleshooting the front end components. Muches less time spent troubleshooting the back.  
 I added a cool new component that takes an arbitrary number of column headings and an array of objects with the data and it presents the data. Currently it is pinned to the bottom of the Player Create form. The idea is to present a dropdown list of player options in case I decide not to create new players.  
+
+**3/24/21
+Started working** on the economy today. Essentially there are 6 industries: ROY G BV. Each asset now has a company asset which is the Enterprise company. This Enterprise company is in one of the 6 industries. It also has a Cyclicality metric between -1 and 1 which tells how strongly correlated this company is with its industry. The economy has a SET metric called MarketTrendiness which is a value from 0-9. Each round the economy calculates a growth rate for each industry and also calculates a random number from 0-10. If the random number is greater than the Market Trendiness then that particular industry will grow in the opposite direction it had previously been growing.
+I also fixed some stuff with the Generalized Results template to make it more generalizeable.

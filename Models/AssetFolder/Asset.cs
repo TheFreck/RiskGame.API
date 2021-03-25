@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using AutoMapper;
 using System.Linq;
 using System.Threading.Tasks;
+using RiskGame.API.Entities.Enums;
 
 namespace RiskGame.API.Models.AssetFolder
 {
@@ -24,32 +25,15 @@ namespace RiskGame.API.Models.AssetFolder
         [JsonProperty("Name")]
         public string Name { get; set; }
         public int SharesOutstanding { get; set; }
+        public int LastBuyPrice { get; set; }
+        public int LastSellPrice { get; set; }
         public string Message { get; set; }
         //
         // model type is used to convert this class to a ModelReference
         // it is automatically set and cannot be overridden
         public readonly ModelTypes ModelType = ModelTypes.Asset;
-        //
-        // Trading attributes
-        //
-        // Int between 0:75
-        public int Leverage { get; set; }
-        //
-        // Int between -100:100
-        public int AnimalSpirits { get; set; }
-        //
-        // Income is determined by a logistics formula
-        // L = 5.2
-        // k = -.4
-        // x0 = 10
-        // x = random number
-        public int Income { get; set; }
-        //
-        // Int between 0:100
-        public int RiskStrategy { get; set; }
-        //
-        // Int between -100:100
-        public int Cyclicality { get; set; }
+        public CompanyAsset CompanyAssets { get; set; }
+        public int Earnings { get; set; }
         public Asset(string name, int sharesOutstanding, Guid id)
         {
             Name = name;

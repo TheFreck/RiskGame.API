@@ -12,6 +12,8 @@ using AutoMapper;
 using RiskGame.API.Models.PlayerFolder;
 using Microsoft.AspNetCore.Mvc;
 using System.Reflection.Metadata;
+using RiskGame.API.Entities;
+using RiskGame.API.Entities.Enums;
 
 namespace RiskGame.API.Services
 {

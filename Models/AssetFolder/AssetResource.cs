@@ -1,6 +1,8 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using Newtonsoft.Json;
+using RiskGame.API.Entities;
+using RiskGame.API.Entities.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,12 +19,17 @@ namespace RiskGame.API.Models.AssetFolder
         [BsonElement("Name")]
         [JsonProperty("Name")]
         public string Name { get; set; }
-        public int BookValue { get; set; }
-        public int RateOfReturn { get; set; }
         public int SharesOutstanding { get; set; }
+        public int LastBuyPrice { get; set; }
+        public int LastSellPrice { get; set; }
         //
         // model type is used to convert this class to a ModelReference
         // it is automatically set and cannot be overridden
         public readonly ModelTypes ModelType = ModelTypes.Asset;
+        public int Leverage { get; set; }
+        public int AnimalSpirits { get; set; }
+        public int Income { get; set; }
+        public int RiskStrategy { get; set; }
+        public int Cyclicality { get; set; }
     }
 }

@@ -27,6 +27,12 @@ export const AssetCreate = props => {
     const [cashCreated, SETcashCreated] = useState(false);
     const [cashCountDisplay, SETcashCountDisplay] = useState(false);
 
+    const modelTypes = {
+        Asset: 0,
+        Share: 1,
+        Player: 2,
+        Cash: 3
+    }
 
     useEffect(() => {
         API.asset.getCash().then(cashReturn => {
@@ -55,8 +61,11 @@ export const AssetCreate = props => {
     // **************
     const handleSubmit = event => {
         if (cashCount > 0) {
-            API.asset.addShares({ id: cash.id, qty: cashCount }).then(result => {
+            console.log("counting cash: ", cashCount);
+            API.asset.addShares({ id: cash.id, qty: cashCount, type: modelTypes.Cash }).then(result => {
+                console.log("setting cash: ", result);
                 SETcashCreated(true);
+                debugger;
             });
         }
         if (assetName && shareCount && !assetCreated) {

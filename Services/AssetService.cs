@@ -9,6 +9,8 @@ using System.Threading.Tasks;
 using AutoMapper;
 using RiskGame.API.Models.SharesFolder;
 using RiskGame.API.Models.PlayerFolder;
+using RiskGame.API.Entities;
+using RiskGame.API.Entities.Enums;
 
 namespace RiskGame.API.Services
 {

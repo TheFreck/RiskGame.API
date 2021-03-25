@@ -7,6 +7,8 @@ using MongoDB.Bson.Serialization.Attributes;
 using Newtonsoft.Json;
 using RiskGame.API.Models.AssetFolder;
 using RiskGame.API.Services;
+using RiskGame.API.Entities;
+using RiskGame.API.Entities.Enums;
 
 namespace RiskGame.API.Models.PlayerFolder
 {
@@ -25,8 +27,7 @@ namespace RiskGame.API.Models.PlayerFolder
         [JsonProperty("Name")]
         public string Name { get; set; }
         public int Cash { get; set; }
-        public int Risk { get; set; }
-        public int Safety { get; set; }
+        public int RiskTolerance { get; set; }
         //
         // model type is used to convert this class to a ModelReference
         // it is automatically set and cannot be overridden

@@ -27,8 +27,9 @@ export default {
         },
         addShares: query => {
             //console.log("addShares query: ", query);
+            console.log("API: ", `api/asset/add-shares/${query.id}/${query.qty}/${query.type}`);
             if (!query) return this.messages.badInput;
-            return axios.post(`api/asset/add-shares/${query.id}/${query.qty}`)
+            return axios.post(`api/asset/add-shares/${query.id}/${query.qty}/${query.type}`)
         },
         // Put
         updateAsset: query => {

@@ -136,8 +136,8 @@ namespace RiskGame.API.Controllers
             var cashShares = await _shareService.CreateShares(_mapper.Map<AssetResource, ModelReference>(cashAsset), asset.SharesOutstanding, hausRef, ModelTypes.Cash);
             return _mapper.Map<Asset, AssetIn>(asset);
         }
-        [HttpPost("add-shares/{id:length(36)}/{qty}")]
-        public async Task<ActionResult<List<ModelReference>>> AddShares(string id, int qty) // assetId, number of shares
+        [HttpPost("add-shares/{id:length(36)}/{qty}/{type}")]
+        public async Task<ActionResult<List<ModelReference>>> AddShares(string id, int qty, int type) // assetId, number of shares
         {
             var isGuid = Guid.TryParse(id, out var incomingId);
             if (!isGuid) return NotFound("Me thinks that Id was not a Guid");
@@ -146,7 +146,7 @@ namespace RiskGame.API.Controllers
             var asset = new ModelReference();
             await incoming.ForEachAsync(a => asset = _mapper.Map<AssetResource, ModelReference>(a));
             if (asset.Id == Guid.Empty) NotFound("couldn't find it with that Id");
-            return Ok(await _shareService.CreateShares(asset, qty, _playerService.ToRef(haus), ModelTypes.Share));
+            return Ok(await _shareService.CreateShares(asset, qty, _playerService.ToRef(haus), (ModelTypes)type));
         }
         // ***************************************************************
         // PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT

@@ -27,7 +27,7 @@ export const PlayerCreate = props => {
 
     useEffect(() => {
         getPlayers();
-    })
+    },[])
 
     // **********
     // GO GETTERS
@@ -106,28 +106,20 @@ export const PlayerCreate = props => {
         switch (eventName) {
             case "playerName":
                 // validate name
-                if (!this.state.playerName) {
-                    this.setState({
-                        playerNameDisplay: true
-                    });
+                if (!playerName) {
+                    SETplayerNameDisplay(true);
                 }
                 else {
-                    this.setState({
-                        playerNameDisplay: false
-                    })
+                    SETplayerNameDisplay(false);
                 }
                 break;
             case "playerCash":
                 // validate cash
-                if (!this.state.playerCash) {
-                    this.setState({
-                        playerCashDisplay: true
-                    });
+                if (!playerCash) {
+                    SETplayerCashDisplay(true);
                 }
                 else {
-                    this.setState({
-                        playerCashDisplay: false
-                    });
+                    SETplayerCashDisplay(false);
                 }
                 break;
             default:
@@ -146,7 +138,7 @@ export const PlayerCreate = props => {
                     placeholder="Player Name"
                     aria-label="PlayerName"
                     aria-describedby="playerName"
-                    onChange={() => SETplayerName(this.value)}
+                    onChange={(event) => SETplayerName(event.target.value)}
                     name="playerName"
                     onBlur={handleBlur}
                     type="text"
@@ -162,7 +154,7 @@ export const PlayerCreate = props => {
                     placeholder="Player Cash"
                     aria-label="PlayerCash"
                     aria-describedby="playerCash"
-                    onChange={() => SETplayerCash(this.value)}
+                    onChange={(event) => SETplayerCash(event.target.value)}
                     name="playerCash"
                     onBlur={handleBlur}
                     type="number"
