@@ -2,7 +2,7 @@
 import InputGroup from 'react-bootstrap/InputGroup';
 import Form from 'react-bootstrap/Form';
 import API from './../../API';
-import SharesResults from './SharesResults';
+import SharesResults from './ListResults';
 import { useEffect } from 'react';
 
 export const AssetCreate = props => {

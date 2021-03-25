@@ -1,65 +1,58 @@
-﻿import React, { Component } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import InputGroup from 'react-bootstrap/InputGroup';
 import Form from 'react-bootstrap/Form';
 import API from './../../API';
-import SharesResults from './SharesResults';
+import ListResults from './ListResults';
 
-export class PlayerCreate extends Component {
-    static displayName = PlayerCreate.name;
+export const PlayerCreate = props => {
 
-    constructor(props) {
-        super(props);
-        this.state = {
-            playerName: "",
-            playerCash: 0,
+    const [playerName, SETplayerName] = useState("");
+    const [playerCash, SETplayerCash] = useState(0);
+    const [playerNameMessage, SETplayerNameMessage] = useState("Required: All players must have a name.");
+    const [playerCashMessage, SETplayerCashMessage] = useState("Required: Must have cash to play?");
+    const [submitMessage, SETsubmitMessage] = useState("");
 
-            playerNameMessage: "Required: All players must have a name.",
-            playerCashMessage: "Required: Must have cash to play?",
-            submitMessage: "",
+    const [playerNameDisplay, SETplayerNameDisplay] = useState(false);
+    const [playerCashDisplay, SETplayerCashDisplay] = useState(false);
+    const [submitDisplay, SETsubmitDisplay] = useState(false);
+    const [gotPlayers, SETgotPlayers] = useState(false);
+    const [player, SETplayer] = useState({});
+    const [cash, SETcash] = useState({});
+    const [cashShares, SETcashShares] = useState([]);
+    const [shares, SETshares] = useState([]);
+    const [allPlayers, SETallPlayers] = useState([]);
+    const [resultsColumns, SETresultsColumns] = useState(["Name", "Cash", "Shares", "Id"]);
+    const [resultsItems, SETresultsItems] = useState([]);
+    const [resultsStyle, SETresultsStyle] = useState({});
 
-            playerNameDisplay: false,
-            playerCashDisplay: false,
-            submitDisplay: false,
+    useEffect(() => {
+        getPlayers();
+    })
 
-            player: {},
-            cash: {},
-            cashShares: [],
-            shares: [],
-            allPlayers: [],
-            resultsCollumns: ["Name", "Cash", "Shares", "Id"],
-            resultsItems: []
-        };
-    }
-
-    componentDidMount = () => {
-        this.getPlayers();
-        console.log("got players: ", this.state.allPlayers);
-    }
     // **********
     // GO GETTERS
     // **********
-    getCash = () => {
-        API.asset.getPlayerShares({ id: this.state.player.id, type: 3, qty: 0 }).then(cash => {
-            this.setState({ cashShares: cash.data });
-            this.setPlayerAndCash(cash.data[0]);
-            this.getShares();
+    const getCash = () => {
+        API.asset.getPlayerShares({ id: player.id, type: 3, qty: 0 }).then(cash => {
+            SETcashShares(cash.data);
+            setPlayerAndCash(cash.data[0]);
+            getShares();
         })
     };
-    getShares = () => {
-        API.asset.getPlayerShares({ id: this.state.player.id, type: 1, qty: 0 }).then(shares => {
-            this.setState({ shares: shares.data });
+    const getShares = () => {
+        API.asset.getPlayerShares({ id: player.id, type: 1, qty: 0 }).then(shares => {
+            SETshares(shares.data);
         })
-    }
-    getPlayers = () => {
+    };
+    const getPlayers = () => {
         API.player.getPlayers().then(players => {
             let items = [];
-            for (let player of players.data) {
-                items.push({ body: [player.name, player.cash, player.shares, player.id] });
+            for (let plyr of players.data) {
+                console.log("player of get players data: ", plyr);
+                items.push({ body: [plyr.name, plyr.cash ? plyr.cash : 0, plyr.shares ? plyr.shares : 0, plyr.id] });
             }
-            this.setState({
-                allPlayers: items
-            });
-            console.log("got players' headers: ", this.state.resultsCollumns);
+            SETallPlayers(items);
+            SETgotPlayers(true);
             console.log("got players: ", items);
         });
     }
@@ -67,55 +60,44 @@ export class PlayerCreate extends Component {
     // ********
     // SERVICES
     // ********
-    addCash = (id, qty) => {
+    const addCash = (id, qty) => {
         API.player.getPlayer(id).then(player => {
-            this.setState({ cashShares: player.data.wallet });
+            SETcashShares(player.data.wallet);
         })
     };
-    setPlayerAndCash = cash => {
-        this.props.updateState({
+    const setPlayerAndCash = cash => {
+        props.updateState({
             cash: cash,
-            player: this.state.player
+            player: player
         });
     };
 
     // **************
     // EVENT HANDLING
     // **************
-    handleSubmit = event => {
-        if (this.state.playerName && this.state.playerCash) {
+    const handleSubmit = event => {
+        if (playerName && playerCash) {
             API.player.createPlayer({
-                Name: this.state.playerName,
-                Cash: this.state.playerCash
+                Name: playerName,
+                Cash: playerCash
             }).then(result => {
-                this.setState({
-                    submitMessage: "submitted successfully",
-                    submitDisplay: true,
-                    player: result.data
-                })
-                this.getPlayers();
-                setTimeout(() => this.setState({ submitDisplay: false }), 3333);
-                this.addCash(result.data.id, this.state.playerCash);
-                this.getCash();
-                this.setPlayerAndCash();
+                SETsubmitMessage("submitted successfully");
+                SETsubmitDisplay(true);
+                SETplayer(result.data);
+                getPlayers();
+                setTimeout(() => SETsubmitDisplay(false), 3333);
+                addCash(result.data.id, playerCash);
+                getCash();
+                setPlayerAndCash();
             });
         }
         else {
-            this.setState({ submitMessage: "fill in the missing information", submitDisplay: true });
-            setTimeout(() => this.setState({ submitDisplay: false }), 3333);
+            SETsubmitMessage("fill in the missing information");
+            SETsubmitDisplay(true);
         }
+        setTimeout(() => SETsubmitDisplay(false), 3333);
     }
-    handleChange = event => {
-        event.preventDefault();
-        const target = event.target;
-        const eventName = target.name;
-        const value = target.value;
-
-        this.setState({
-            [eventName]: value
-        });
-    }
-    handleBlur = event => {
+    const handleBlur = event => {
         event.preventDefault();
         const target = event.target;
         const eventName = target.name;
@@ -154,52 +136,57 @@ export class PlayerCreate extends Component {
     };
 
 
-    render() {
-        return (
-            <div>
-                <InputGroup className="mb-3">
-                    <InputGroup.Prepend>
-                        <InputGroup.Text id="playerName">Player Name: </InputGroup.Text>
-                    </InputGroup.Prepend>
-                    <Form.Control
-                        placeholder="Player Name"
-                        aria-label="PlayerName"
-                        aria-describedby="playerName"
-                        onChange={this.handleChange}
-                        name="playerName"
-                        onBlur={this.handleBlur}
-                        type="text"
-                    />
-                </InputGroup>
-                <p className={this.state.playerNameDisplay ? 'show playerName-message' : 'hide playerName-message'}>{this.state.playerNameMessage}</p>
-
-                <InputGroup className="mb-3">
-                    <InputGroup.Prepend>
-                        <InputGroup.Text id="playerCash">Player Cash: </InputGroup.Text>
-                    </InputGroup.Prepend>
-                    <Form.Control
-                        placeholder="Player Cash"
-                        aria-label="PlayerCash"
-                        aria-describedby="playerCash"
-                        onChange={this.handleChange}
-                        name="playerCash"
-                        onBlur={this.handleBlur}
-                        type="number"
-                    />
-                </InputGroup>
-                <p className={this.state.playerCashDisplay ? 'show playerCash-message' : 'hide playerCash-message'}>{this.state.playerCashMessage}</p>
-
-                <button id="submit" onClick={this.handleSubmit}>Submit</button>
-                <p className={this.state.submitDisplay ? 'show submit-message' : 'hide submit-message'}>{this.state.submitMessage}</p>
-
-                <h3>Players</h3>
-                <SharesResults
-                    columns={this.state.resultsCollumns}
-                    items={this.state.allPlayers}
+    return (
+        <div>
+            <InputGroup className="mb-3">
+                <InputGroup.Prepend>
+                    <InputGroup.Text id="playerName">Player Name: </InputGroup.Text>
+                </InputGroup.Prepend>
+                <Form.Control
+                    placeholder="Player Name"
+                    aria-label="PlayerName"
+                    aria-describedby="playerName"
+                    onChange={() => SETplayerName(this.value)}
+                    name="playerName"
+                    onBlur={handleBlur}
+                    type="text"
                 />
-            </div>
-        );
-    }
+            </InputGroup>
+            <p className={playerNameDisplay ? 'show playerName-message' : 'hide playerName-message'}>{playerNameMessage}</p>
+
+            <InputGroup className="mb-3">
+                <InputGroup.Prepend>
+                    <InputGroup.Text id="playerCash">Player Cash: </InputGroup.Text>
+                </InputGroup.Prepend>
+                <Form.Control
+                    placeholder="Player Cash"
+                    aria-label="PlayerCash"
+                    aria-describedby="playerCash"
+                    onChange={() => SETplayerCash(this.value)}
+                    name="playerCash"
+                    onBlur={handleBlur}
+                    type="number"
+                />
+            </InputGroup>
+            <p className={playerCashDisplay ? 'show playerCash-message' : 'hide playerCash-message'}>{playerCashMessage}</p>
+
+            <button id="submit" onClick={handleSubmit}>Submit</button>
+            <p className={submitDisplay ? 'show submit-message' : 'hide submit-message'}>{submitMessage}</p>
+
+            {
+                gotPlayers ?
+                    <div>
+                        <h3>Players</h3>
+                        <ListResults
+                            columns={resultsColumns}
+                            items={allPlayers}
+                            tableName="players-table"
+                            style={resultsStyle}
+                        />
+                    </div> : <p>nuttin to see here</p>
+            }
+        </div>
+    );
 }
 
 export default PlayerCreate;
