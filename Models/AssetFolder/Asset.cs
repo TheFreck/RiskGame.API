@@ -32,7 +32,7 @@ namespace RiskGame.API.Models.AssetFolder
         // model type is used to convert this class to a ModelReference
         // it is automatically set and cannot be overridden
         public readonly ModelTypes ModelType = ModelTypes.Asset;
-        public CompanyAsset CompanyAssets { get; set; }
+        public CompanyAsset CompanyAsset { get; set; }
         public int Earnings { get; set; }
         public Asset(string name, int sharesOutstanding, Guid id)
         {

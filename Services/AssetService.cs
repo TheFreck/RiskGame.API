@@ -55,6 +55,13 @@ namespace RiskGame.API.Services
             var foundAsssets = await _assets.FindAsync(a => a.AssetId != "");
             return foundAsssets.ToList();
         }
+        public async Task<List<CompanyAsset>> GetCompanyAssetsAsync()
+        {
+            var companyAssets = new List<CompanyAsset>();
+            var foundAssets = await _assets.FindAsync(a => a.CompanyAsset != null);
+            await foundAssets.ForEachAsync(a => companyAssets.Add(a.CompanyAsset));
+            return companyAssets;
+        }
         public AssetResource GetCash()
         {
             return CASH;
@@ -95,6 +102,7 @@ namespace RiskGame.API.Services
     {
         string Initialize();
         Task<List<AssetResource>> GetAsync();
+        Task<List<CompanyAsset>> GetCompanyAssetsAsync();
         AssetResource GetCash(); Task<IAsyncCursor<AssetResource>> GetSharesAsync(Guid id, ModelTypes type);
         Task<IAsyncCursor<AssetResource>> GetAsync(Guid id);
         AssetResource Create(Asset asset);

@@ -33,7 +33,13 @@ namespace RiskGame.API.Services
 
         public async Task<TradeTicket> Transact(TradeTicket trade)
         {
-            // get the buyer and seller
+            // early outs
+            if(trade.Buyer == null & trade.Seller == null)
+            {
+                trade.Message = "If there's no buyer and no seller is there even a trade? Asking for an existential friend...";
+                trade.SuccessfulTrade = false;
+                return trade;
+            } // OUT no buyer or seller
             if(trade.Buyer != null && trade.Cash == null)
             {
                 trade.Message = "No cash was included in the ticket";
@@ -57,15 +63,15 @@ namespace RiskGame.API.Services
             var seller = new PlayerResource();
             if (trade.Seller != null) await _playerService.GetAsync(trade.Seller.Id).Result.ForEachAsync(s => seller = s);
             else seller = _mapper.Map<Player, PlayerResource>(haus);
-            // get Refs
+            // get References
             var sellerRef = _playerService.ResToRef(seller);
             var buyerRef = _playerService.ResToRef(buyer);
-            // get the cash and shares
+            // get cash and shares
             var tradeCash = _transactionLogic.GetCash(trade.Cash, trade.CashCount).Result;
             var tradeShares = _transactionLogic.GetShares(trade.Shares, trade.SharesCount).Result;
             try
             {
-                // Transfer ownership of cash and assets
+                // Transfer ownership of cash and shares
                 _transactionLogic.TransferShares(buyer, tradeShares, trade.CashCount);
                 _transactionLogic.TransferShares(seller, tradeCash, trade.CashCount);
                 // complete the trade ticket

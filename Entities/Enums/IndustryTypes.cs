@@ -12,6 +12,7 @@ namespace RiskGame.API.Entities.Enums
         Yellow,
         Green,
         Blue,
-        Violet
+        Violet,
+        Average
     }
 }

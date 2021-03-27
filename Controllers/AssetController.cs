@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
 using RiskGame.API.Entities;
+using RiskGame.API.Entities.Enums;
 using RiskGame.API.Models;
 using RiskGame.API.Models.AssetFolder;
 using RiskGame.API.Models.PlayerFolder;
@@ -118,13 +119,14 @@ namespace RiskGame.API.Controllers
             // Build Asset
             var randy = new Random();
             var asset = _mapper.Map<AssetIn, Asset>(assetIn);
-            asset.Leverage = randy.Next(76);
-            asset.AnimalSpirits = randy.Next(-100, 100);
-            asset.Income = (int)Math.Floor(L / (1 + Math.Pow(Math.E, -k * (randy.Next(101) - x0))));
-            asset.RiskStrategy = randy.Next(101);
-            asset.Cyclicality = randy.Next(-100, 100);
             asset.Id = Guid.NewGuid();
             asset.AssetId = asset.Id.ToString();
+            asset.CompanyAsset = new CompanyAsset
+            {
+                Cyclicality = randy.Next(-100, 100),
+                Industry = (IndustryTypes)randy.Next(5),
+                Value = asset.SharesOutstanding
+            };
 
             // Create Asset
             var assetId = _assetService.Create(asset);

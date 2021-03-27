@@ -13,6 +13,7 @@ using RiskGame.API.Models;
 using RiskGame.API.Persistence;
 using RiskGame.API.Models.AssetFolder;
 using RiskGame.API.Models.SharesFolder;
+using RiskGame.API.Entities.Enums;
 
 namespace RiskGame.API.Controllers
 {
@@ -93,8 +94,6 @@ namespace RiskGame.API.Controllers
             if (foundPlayer == null) return NotFound();
 
             if (playerIn.Name == null) playerIn.Name = foundPlayer.Name;
-            if (playerIn.Risk == null) playerIn.Risk = foundPlayer.Risk;
-            if (playerIn.Safety == null) playerIn.Safety = foundPlayer.Safety;
             var update = _mapper.Map<PlayerIn, Player>(playerIn);
             update.Id = incomingId;
             update.ObjectId = foundPlayer.ObjectId;

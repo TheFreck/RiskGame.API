@@ -22,14 +22,9 @@ namespace RiskGame.API.Models.AssetFolder
         public int SharesOutstanding { get; set; }
         public int LastBuyPrice { get; set; }
         public int LastSellPrice { get; set; }
-        //
-        // model type is used to convert this class to a ModelReference
-        // it is automatically set and cannot be overridden
+        public string Message { get; set; }
         public readonly ModelTypes ModelType = ModelTypes.Asset;
-        public int Leverage { get; set; }
-        public int AnimalSpirits { get; set; }
-        public int Income { get; set; }
-        public int RiskStrategy { get; set; }
-        public int Cyclicality { get; set; }
+        public CompanyAsset CompanyAsset { get; set; }
+        public int Earnings { get; set; }
     }
 }

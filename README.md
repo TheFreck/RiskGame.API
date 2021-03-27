@@ -38,3 +38,6 @@ I added a cool new component that takes an arbitrary number of column headings a
 **3/24/21
 Started working** on the economy today. Essentially there are 6 industries: ROY G BV. Each asset now has a company asset which is the Enterprise company. This Enterprise company is in one of the 6 industries. It also has a Cyclicality metric between -1 and 1 which tells how strongly correlated this company is with its industry. The economy has a SET metric called MarketTrendiness which is a value from 0-9. Each round the economy calculates a growth rate for each industry and also calculates a random number from 0-10. If the random number is greater than the Market Trendiness then that particular industry will grow in the opposite direction it had previously been growing.
 I also fixed some stuff with the Generalized Results template to make it more generalizeable.
+
+**3/26/21
+Created a** few new entities and a new controller to turn the game on and off. One new entity is called Agenda which basically progresses the game forward. Right now it takes all the assets and applies a growth formula on them depending on their industry, cyclicality and random numbers. So far it generates the data. Next step is to capture that data and do sumpin widit.

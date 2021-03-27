@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using RiskGame.API.Engine;
 using RiskGame.API.Entities;
 using RiskGame.API.Entities.Enums;
 using RiskGame.API.Models.AssetFolder;
@@ -54,7 +55,23 @@ namespace RiskGame.API.Logic
                 default:
                     break;
             }
+            
             return company;
+        }
+        public static long digPow(int n, int p)
+        {
+            // your code
+
+            string nStr = n.ToString();
+            int product = 0;
+            foreach (var digit in nStr)
+            {
+                var itIs = Int32.Parse(digit.ToString());
+                product += (int)Math.Pow(itIs, p);
+                p++;
+            }
+            if (product % n == 0) return product / n;
+            return -1;
         }
     }
 }
