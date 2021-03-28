@@ -123,8 +123,8 @@ namespace RiskGame.API.Controllers
             asset.AssetId = asset.Id.ToString();
             asset.CompanyAsset = new CompanyAsset
             {
-                Cyclicality = randy.Next(-100, 100),
-                Industry = (IndustryTypes)randy.Next(5),
+                PrimaryIndustry = (IndustryTypes)randy.Next(5),
+                SecondaryIndustry = (IndustryTypes)randy.Next(5),
                 Value = asset.SharesOutstanding
             };
 

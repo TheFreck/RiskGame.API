@@ -93,18 +93,24 @@ export default {
             return axios.post('api/transaction', query);
         }
     },
-    initialize: secretCode => {
-        axios.delete(`api/asset/game/start/initialize/${secretCode}`).then(assetDrop => {
-            console.log(assetDrop);
-            if (assetDrop.status == 200) {
-                return (axios.delete(`api/player/game/start/initialize/${secretCode}`).then(playerDrop => {
-                    console.log(playerDrop.data);
-                }));
-            }
-            else {
-                return assetDrop;
-            }
-        })
+    gamePlay: {
+        initialize: secretCode => {
+            axios.delete(`api/asset/game/start/initialize/${secretCode}`).then(assetDrop => {
+                console.log(assetDrop);
+                if (assetDrop.status == 200) {
+                    return (axios.delete(`api/player/game/start/initialize/${secretCode}`).then(playerDrop => {
+                        console.log(playerDrop.data);
+                    }));
+                }
+                else {
+                    return assetDrop;
+                }
+            })
+        },
+        isGameOn: () => axios.get("api/starting-and-stopping/get-game-status"),
+        getData: () => {
+            return axios.get("api/starting-and-stopping/get-records");
+        }
     },
     messages: {
         badInput: "Huh? Didn't hear that"

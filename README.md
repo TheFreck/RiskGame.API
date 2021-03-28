@@ -41,3 +41,6 @@ I also fixed some stuff with the Generalized Results template to make it more ge
 
 **3/26/21
 Created a** few new entities and a new controller to turn the game on and off. One new entity is called Agenda which basically progresses the game forward. Right now it takes all the assets and applies a growth formula on them depending on their industry, cyclicality and random numbers. So far it generates the data. Next step is to capture that data and do sumpin widit.
+
+**3/27/21
+Built a** time series chart today. Right now it lacks axis labels of any kind but it displays the value of a single asset over time.

@@ -10,6 +10,7 @@ namespace RiskGame.API.Persistence
         public string PlayerCollectionName { get; set; }
         public string AssetCollectionName { get; set; }
         public string ShareCollectionName { get; set; }
+        public string EconomyCollectionName { get; set; }
         public string ConnectionString { get; set; }
         public string DatabaseName { get; set; }
     }
@@ -19,6 +20,7 @@ namespace RiskGame.API.Persistence
         string PlayerCollectionName { get; set; }
         string AssetCollectionName { get; set; }
         string ShareCollectionName { get; set; }
+        string EconomyCollectionName { get; set; }
         string ConnectionString { get; set; }
         string DatabaseName { get; set; }
     }

@@ -8,8 +8,8 @@ namespace RiskGame.API.Entities
 {
     public class CompanyAsset
     {
-        public int Cyclicality { get; set; }
-        public IndustryTypes Industry { get; set; }
+        public IndustryTypes PrimaryIndustry { get; set; }
+        public IndustryTypes SecondaryIndustry { get; set; }
         public double Value { get; set; }
     }
 }

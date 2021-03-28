@@ -5,12 +5,14 @@ import Transaction from './../forms/Transaction';
 import API from './../../API';
 import './../../game.css';
 import Button from 'react-bootstrap/Button';
+import Chart from './../pageComponents/Chart';
 
 export const GameHome = props => {
 
     const [player, SETplayer] = useState({ player: {} });
     const [cash, SETcash] = useState({ cash: {} });
     const [asset, SETasset] = useState({ asset: {} });
+    const [xSeries, SETxSeries] = useState({ xSeries: [] });
     const [showPane, SETshowPane] = useState("");
     const [gotEm, SETgotEm] = useState(false);
     const [tradeButtonMessageDisplay, SETtradeButtonMessageDisplay] = useState(false);
@@ -37,6 +39,27 @@ export const GameHome = props => {
         SETasset({ asset: changeSet.asst ? changeSet.asst : asset });
         SETgotEm(gotEm);
     };
+    const getChartData = cb => {
+        API.gamePlay.isGameOn().then(gameOn => {
+            console.log("gameon: ", gameOn);
+            if (!gameOn.data) {
+                API.gamePlay.getData().then(data => {
+                    if (data.status === 200) SETxSeries({ xSeries: data.data });
+                    console.log("data: ", data);
+                    console.log("data.data: ", data.data);
+                    let series = [];
+                    for (let point of data.data) {
+                        series.push(point.assets[0].value);
+                    }
+                    console.log("gameon series: ", series);
+                    cb(series);
+                })
+            }
+            else {
+                cb([]);
+            }
+        })
+    }
 
     // ********
     // SERVICES
@@ -66,7 +89,7 @@ export const GameHome = props => {
         );
     };
     const selfDestruct = () => {
-        console.log(API.initialize("Playa101"));
+        console.log(API.gamePlay.initialize("Playa101"));
         SETplayer({ player: {} });
         SETcash({ cash: {} });
         SETasset({ asset: {} });
@@ -77,6 +100,12 @@ export const GameHome = props => {
     const assetButtonClick = () => SETviewPane(<AssetCreate updateState={updateState} retrieveState={state} />);
     const playerButtonClick = () => SETviewPane(<PlayerCreate updateState={updateState} retrieveState={state} />);
     const tradeButtonClick = () => SETviewPane(<Transaction updateState={updateState} retrieveState={state} />);
+    const chartButtonClick = () => {
+        getChartData(series => {
+            console.log("chartButtonClick series: ", series);
+            SETviewPane(<Chart xSeries={series} height={high} width={wide} />);
+        })
+    }
     const tradeButtonMouseEnter = () => {
         console.log("enter");
         SETtradeButtonMessage("Create an asset and a player to start");
@@ -116,7 +145,12 @@ export const GameHome = props => {
         onClick={playerButtonClick}
         variant="light"
     >Create a Player</Button>
-
+    const ChartButton = () => <Button
+        onClick={chartButtonClick}
+        variant="light"
+    >ViewChart</Button>
+    var wide = window.visualViewport.width * .8;
+    var high = window.visualViewport.height * .8;
 
     return (
         <>
@@ -124,6 +158,7 @@ export const GameHome = props => {
             <AssetButton />
             <PlayerButton />
             <TradeButton gotEm={gotEm} />
+            <ChartButton />
             <div>{viewPane}</div>
         </>
     );

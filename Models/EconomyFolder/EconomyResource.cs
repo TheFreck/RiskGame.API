@@ -1,13 +1,25 @@
-﻿using RiskGame.API.Entities.Enums;
+﻿using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
+using Newtonsoft.Json;
+using RiskGame.API.Entities;
+using RiskGame.API.Entities.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace RiskGame.API.Entities
+namespace RiskGame.API.Models.EconomyFolder
 {
-    public class EconMetrics
+    public class EconomyResource
     {
+
+        [BsonId]
+        [BsonRepresentation(BsonType.ObjectId)]
+        public string ObjectId { get; set; }
+        public string AssetId { get; set; }
+        [BsonElement("SequenceNumber")]
+        [JsonProperty("SequenceNumber")]
+        public int SequenceNumber { get; set; }
         public double Red { get; set; }
         public Direction RedDirection;
         public double Orange { get; set; }

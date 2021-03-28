@@ -3,6 +3,7 @@ using RiskGame.API.Engine;
 using RiskGame.API.Entities;
 using RiskGame.API.Entities.Enums;
 using RiskGame.API.Models.AssetFolder;
+using RiskGame.API.Models.EconomyFolder;
 using RiskGame.API.Services;
 using System;
 using System.Collections.Generic;
@@ -32,46 +33,28 @@ namespace RiskGame.API.Logic
         public CompanyAsset CompanyTurn(CompanyAsset company)
         {
             var metrics = _economy.GetMetrics();
-            switch (company.Industry)
-            {
-                case IndustryTypes.Red:
-                    company.Value = metrics.Red * company.Cyclicality;
-                    break;
-                case IndustryTypes.Orange:
-                    company.Value = metrics.Orange * company.Cyclicality;
-                    break;
-                case IndustryTypes.Yellow:
-                    company.Value = metrics.Yellow * company.Cyclicality;
-                    break;
-                case IndustryTypes.Green:
-                    company.Value = metrics.Green * company.Cyclicality;
-                    break;
-                case IndustryTypes.Blue:
-                    company.Value = metrics.Blue * company.Cyclicality;
-                    break;
-                case IndustryTypes.Violet:
-                    company.Value = metrics.Violet * company.Cyclicality;
-                    break;
-                default:
-                    break;
-            }
-            
+            company.Value *= IndustryGrowth(company.PrimaryIndustry, metrics) * IndustryGrowth(company.SecondaryIndustry, metrics);
             return company;
         }
-        public static long digPow(int n, int p)
+        private double IndustryGrowth(IndustryTypes industry, EconMetrics metrics)
         {
-            // your code
-
-            string nStr = n.ToString();
-            int product = 0;
-            foreach (var digit in nStr)
+            switch (industry)
             {
-                var itIs = Int32.Parse(digit.ToString());
-                product += (int)Math.Pow(itIs, p);
-                p++;
+                case IndustryTypes.Red:
+                    return metrics.Red;
+                case IndustryTypes.Orange:
+                    return metrics.Orange;
+                case IndustryTypes.Yellow:
+                    return metrics.Yellow;
+                case IndustryTypes.Green:
+                    return metrics.Green;
+                case IndustryTypes.Blue:
+                    return metrics.Blue;
+                case IndustryTypes.Violet:
+                    return metrics.Violet;
+                default:
+                    return (metrics.Red + metrics.Orange + metrics.Yellow + metrics.Green + metrics.Blue + metrics.Violet) / 6;
             }
-            if (product % n == 0) return product / n;
-            return -1;
         }
     }
 }

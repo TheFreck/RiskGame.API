@@ -7,10 +7,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace RiskGame.API.Engine
+namespace RiskGame.API.Models.EconomyFolder
 {
     public class Economy
     {
+        public int SequenceNumber { get; set; }
         private int MarketTrendiness; // 0-9
         public double Red { get; set; }
         public Direction RedDirection;
@@ -28,32 +29,33 @@ namespace RiskGame.API.Engine
         public Player[] Players { get; set; }
         public Economy(int marketTrendiness, CompanyAsset[] assets, EconMetrics yester, Random randy)
         {
-            RedDirection = yester.RedDirection;
-            OrangeDirection = yester.OrangeDirection;
-            YellowDirection = yester.YellowDirection;
-            GreenDirection = yester.GreenDirection;
-            BlueDirection = yester.BlueDirection;
-            VioletDirection = yester.VioletDirection;
-
+            SequenceNumber = yester.SequenceNumber + 1;
             Assets = assets;
             MarketTrendiness = marketTrendiness;
-            if (randy.Next(10) > MarketTrendiness) RedDirection = (Direction)((int)RedDirection * -1);
+            if (randy.Next(10) > marketTrendiness) RedDirection = (Direction)((int)yester.RedDirection * -1);
+            else RedDirection = yester.RedDirection;
             Red = randy.NextDouble() * (int)RedDirection;
-            if (randy.Next(10) > MarketTrendiness) OrangeDirection = (Direction)((int)OrangeDirection * -1);
+            if (randy.Next(10) > marketTrendiness) OrangeDirection = (Direction)((int)yester.OrangeDirection * -1);
+            else OrangeDirection = yester.OrangeDirection;
             Orange = randy.NextDouble() * (int)OrangeDirection;
-            if (randy.Next(10) > MarketTrendiness) YellowDirection = (Direction)((int)YellowDirection * -1);
+            if (randy.Next(10) > marketTrendiness) YellowDirection = (Direction)((int)yester.YellowDirection * -1);
+            else YellowDirection = yester.YellowDirection;
             Yellow = randy.NextDouble() * (int)YellowDirection;
-            if (randy.Next(10) > MarketTrendiness) GreenDirection = (Direction)((int)GreenDirection * -1);
+            if (randy.Next(10) > marketTrendiness) GreenDirection = (Direction)((int)yester.GreenDirection * -1);
+            else GreenDirection = yester.GreenDirection;
             Green = randy.NextDouble() * (int)GreenDirection;
-            if (randy.Next(10) > MarketTrendiness) BlueDirection = (Direction)((int)BlueDirection * -1);
+            if (randy.Next(10) > marketTrendiness) BlueDirection = (Direction)((int)yester.BlueDirection * -1);
+            else BlueDirection = yester.BlueDirection;
             Blue = randy.NextDouble() * (int)BlueDirection;
-            if (randy.Next(10) > MarketTrendiness) VioletDirection = (Direction)((int)VioletDirection * -1);
+            if (randy.Next(10) > marketTrendiness) VioletDirection = (Direction)((int)yester.VioletDirection * -1);
+            else VioletDirection = yester.VioletDirection;
             Violet = randy.NextDouble() * (int)VioletDirection;
         }
         public EconMetrics GetMetrics()
         {
             return new EconMetrics
             {
+                SequenceNumber = SequenceNumber,
                 Red = Red,
                 Orange = Orange,
                 Yellow = Yellow,
@@ -66,12 +68,19 @@ namespace RiskGame.API.Engine
         {
             return new EconMetrics
             {
+                SequenceNumber = SequenceNumber,
                 Red = Red,
+                RedDirection = RedDirection,
                 Orange = Orange,
+                OrangeDirection = OrangeDirection,
                 Yellow = Yellow,
+                YellowDirection = YellowDirection,
                 Green = Green,
+                GreenDirection = GreenDirection,
                 Blue = Blue,
+                BlueDirection = BlueDirection,
                 Violet = Violet,
+                VioletDirection = VioletDirection,
                 Assets = assets
             };
         }
