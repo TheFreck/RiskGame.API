@@ -66,10 +66,8 @@ export const PlayerCreate = props => {
         })
     };
     const setPlayerAndCash = cash => {
-        props.updateState({
-            cash: cash,
-            player: player
-        });
+        props.state.SETcash(cash);
+        props.state.SETplayer(player);
     };
 
     // **************

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using RiskGame.API.Engine;
+using RiskGame.API.Entities;
 using RiskGame.API.Models.EconomyFolder;
 using RiskGame.API.Services;
 using System;
@@ -29,7 +30,15 @@ namespace RiskGame.API.Controllers
         public bool GameStatus() => _agendaService.IsRunning();
         [HttpGet("get-records")]
         public async Task<List<EconMetrics>> GetRecords() => await _agendaService.GetRecords();
-
+        [HttpGet("next/{frames}/{trendiness}")]
+        public List<EconMetrics> Next(int frames, int trendiness) => _agendaService.Motion(frames, trendiness);
+        [HttpGet("add-assets")]
+        public void LoadAssets() => _agendaService.LoadAssets();
+        [HttpGet("get-company-assets")]
+        public List<CompanyAsset> GetCompanyAssets()
+        {
+            return _agendaService.GetCompanyAssets();
+        }
         // ****
         // POST
         // ****
@@ -37,18 +46,15 @@ namespace RiskGame.API.Controllers
         public string OnOrOff()
         {
             var result = "";
-            if (!_agendaService.AddAssets())
+            if (_agendaService.IsRunning())
             {
-                if (_agendaService.IsRunning())
-                {
-                    result = "off";
-                    _agendaService.Stop();
-                }
-                else
-                {
-                    result = "on and running";
-                    _agendaService.Start(100, 8);
-                }
+                result = "off";
+                _agendaService.Stop();
+            }
+            else
+            {
+                result = "on and running";
+                _agendaService.Start(100, 8);
             }
             return result;
         }

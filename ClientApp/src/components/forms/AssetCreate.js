@@ -35,9 +35,11 @@ export const AssetCreate = props => {
     }
 
     useEffect(() => {
-        API.asset.getCash().then(cashReturn => {
-            SETcash(cashReturn.data.asset);
-        })
+        console.log("asset state: ", props.state);
+        console.log("assets: ", props.state.assets);
+        //API.asset.getCash().then(cashReturn => {
+        //    SETcash(cashReturn.data.asset);
+        //})
     },[]);
 
     // **********
@@ -48,7 +50,9 @@ export const AssetCreate = props => {
     // ********
     // SERVICES
     // ********
-    const setGlobalAsset = (asst, csh) => props.updateState({ asst, csh });
+    const setGlobalAsset = assets => {
+        props.state.assets[1]({ assets: assets });
+    }
     const createAsset = (asset, cb) => {
         API.asset.createAsset({
             "Name": assetName,
@@ -65,7 +69,6 @@ export const AssetCreate = props => {
             API.asset.addShares({ id: cash.id, qty: cashCount, type: modelTypes.Cash }).then(result => {
                 console.log("setting cash: ", result);
                 SETcashCreated(true);
-                debugger;
             });
         }
         if (assetName && shareCount && !assetCreated) {
@@ -76,7 +79,9 @@ export const AssetCreate = props => {
                     SETsubmitMessage("submitted successfully");
                     SETsubmitDisplay(true);
                     SETasset(result.data);
-                    setGlobalAsset(result.data,cash);
+                    let assets = props.state.assets[0].assets;
+                    assets.push(result.data);
+                    setGlobalAsset(assets);
                 }
                 else {
                     SETassetCreated(false );
@@ -89,6 +94,7 @@ export const AssetCreate = props => {
             SETsubmitDisplay(true);
             setTimeout(() => SETsubmitDisplay(false), 3333);
         }
+        //API.gamePlay.addAssets();
     }
 
     const handleNameChange = event => {

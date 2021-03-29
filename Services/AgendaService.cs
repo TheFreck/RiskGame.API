@@ -20,10 +20,9 @@ namespace RiskGame.API.Services
         private readonly Agenda _agenda;
         private readonly Random randy;
         private readonly IMapper _mapper;
-        private readonly Asset[] Assets;
+        private CompanyAsset[] Assets;
         private readonly IMongoCollection<EconomyResource> _economies;
         public bool isRunning { get; set; }
-        public bool hasAssets { get; set; }
 
         public AgendaService(IDatabaseSettings settings, IAssetService assetService, IMapper mapper)
         {
@@ -35,6 +34,7 @@ namespace RiskGame.API.Services
             _economies = database.GetCollection<EconomyResource>(settings.EconomyCollectionName);
             _assetService = assetService;
             _agenda = new Agenda();
+            Assets = _assetService.GetCompanyAssets().Result.ToArray();
         }
         public async Task<List<EconMetrics>> GetRecords()
         {
@@ -43,12 +43,11 @@ namespace RiskGame.API.Services
             await incomingEcons.ForEachAsync(e => econs.Add(_mapper.Map<EconomyResource,EconMetrics>(e)));
             return econs.OrderBy(e => e.SequenceNumber).ToList();
         }
-        public bool AddAssets()
+        public void LoadAssets()
         {
             Console.WriteLine("make assets like they're baybays");
-            _agenda.Assets = _assetService.GetCompanyAssetsAsync().Result.ToArray();
-            hasAssets = !hasAssets;
-            return hasAssets;
+            Assets = _assetService.GetCompanyAssets().Result.ToArray();
+            _agenda.Assets = Assets;
         }
         public void Start(int count, int trendiness)
         {
@@ -60,20 +59,27 @@ namespace RiskGame.API.Services
             isRunning = false;
         }
         public bool IsRunning() => isRunning;
-        public void Motion(int count, int trendiness)
+        public List<EconMetrics> Motion(int count, int trendiness)
         {
+            LoadAssets();
+            var econList = new List<EconMetrics>();
             do
             {
-                var lastEconomy = new Economy(trendiness, _agenda.Assets, _agenda.Economies.LastOrDefault(), randy);
+                // check assets
+                var lastEconomy = new Economy(trendiness, Assets, _agenda.Economies.LastOrDefault(), randy);
                 var lastEconMetrics = lastEconomy.GetMetrics(GrowAssets(lastEconomy.Assets, lastEconomy));
                 var nextEconomy = new Economy(trendiness, _agenda.Assets, lastEconMetrics, randy);
-                
+                var nextEconMetrics = nextEconomy.GetMetrics(GrowAssets(nextEconomy.Assets, nextEconomy));
+                econList.Add(nextEconMetrics);
+                Assets = nextEconMetrics.Assets;
                 _economies.InsertOne(_mapper.Map<Economy,EconomyResource>(nextEconomy));
                 _agenda.Economies.Add(_mapper.Map<Economy,EconMetrics>(nextEconomy));
                 count--;
+
                 // process players' turns
             } while (count > 0);
             Console.WriteLine("Finito");
+            return econList;
         }
         private CompanyAsset[] GrowAssets(CompanyAsset[] assets, Economy economy)
         {
@@ -85,13 +91,19 @@ namespace RiskGame.API.Services
             return assets;
         }
         private double GrowthRate(double value, double primaryIndustryGrowth, double secondaryIndustryGrowth) => (1 + primaryIndustryGrowth * Math.Abs(secondaryIndustryGrowth) / 10000);
+        public List<CompanyAsset> GetCompanyAssets()
+        {
+            return _assetService.GetCompanyAssets().Result;
+        }
     }
     public interface IAgendaService
     {
         Task<List<EconMetrics>> GetRecords();
-        bool AddAssets();
+        public void LoadAssets();
         void Start(int count, int trendiness);
         public void Stop();
         bool IsRunning();
+        List<EconMetrics> Motion(int count, int trendiness);
+        public List<CompanyAsset> GetCompanyAssets();
     }
 }

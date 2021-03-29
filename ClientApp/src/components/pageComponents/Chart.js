@@ -17,12 +17,14 @@ export const Chart = props => {
         }
         return newSeries;
     }
+
     const [xSeries, SETxSeries] = useState(sizeChart);
     const [height, SETheight] = useState(props.height);
     const [width, SETwidth] = useState(props.width);
+
     useEffect(() => {
         console.log("xSeries: ", sizeChart());
-    }, [])
+    }, [xSeries]);
 
 
 
