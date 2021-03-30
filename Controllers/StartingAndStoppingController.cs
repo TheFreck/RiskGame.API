@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using RiskGame.API.Engine;
 using RiskGame.API.Entities;
 using RiskGame.API.Models.EconomyFolder;
+using RiskGame.API.Models.MarketFolder;
 using RiskGame.API.Services;
 using System;
 using System.Collections.Generic;
@@ -15,48 +15,74 @@ namespace RiskGame.API.Controllers
     [Produces("application/json")]
     public class StartingAndStoppingController : ControllerBase
     {
-        private readonly IAgendaService _agendaService;
+        private readonly IMarketService _marketService;
         public bool hasAssets;
-        public StartingAndStoppingController(IAgendaService agendaService)
+        public StartingAndStoppingController(IMarketService marketService)
         {
-            _agendaService = agendaService;
+            _marketService = marketService;
+
         }
         // ***
         // GET
         // ***
         [HttpGet]
-        public string Get() => "you made it";
-        [HttpGet("get-game-status")]
-        public bool GameStatus() => _agendaService.IsRunning();
-        [HttpGet("get-records")]
-        public async Task<List<EconMetrics>> GetRecords() => await _agendaService.GetRecords();
-        [HttpGet("next/{frames}/{trendiness}")]
-        public List<EconMetrics> Next(int frames, int trendiness) => _agendaService.Motion(frames, trendiness);
-        [HttpGet("add-assets")]
-        public void LoadAssets() => _agendaService.LoadAssets();
-        [HttpGet("get-company-assets")]
-        public List<CompanyAsset> GetCompanyAssets()
+        public string Get()
         {
-            return _agendaService.GetCompanyAssets();
+            return "got it";
         }
+        [HttpGet("new-game")]
+        public string NewGame() => _marketService.NewGame().ToString();
+        [HttpGet("get-game-status")]
+        public ActionResult<bool> GameStatus(string gameId)
+        {
+            var isGuid = Guid.TryParse(gameId, out var incomingId);
+            if (!isGuid) return NotFound("Me thinks that Id was not a Guid");
+
+            return Ok(_marketService.IsRunning(incomingId));
+        }
+        [HttpGet("get-records/{gameId:length(36)}")]
+        public async Task<ActionResult<List<MarketMetrics>>> GetRecords(string gameId)
+        {
+            var isGuid = Guid.TryParse(gameId, out var incomingId);
+            if (!isGuid) return NotFound("Me thinks that Id was not a Guid");
+
+            return Ok(await _marketService.GetRecords(incomingId));
+        }
+        [HttpGet("get-company-assets")]
+        public ActionResult<List<CompanyAsset>> GetCompanyAssets(string gameId)
+        {
+            var isGuid = Guid.TryParse(gameId, out var incomingId);
+            if (!isGuid) return NotFound("Me thinks that Id was not a Guid");
+
+            return _marketService.GetCompanyAssets(incomingId);
+        }
+
         // ****
         // POST
         // ****
         [HttpPost]
-        public string OnOrOff()
+        public ActionResult<string> OnOff([FromBody]string gameId)
         {
-            var result = "";
-            if (_agendaService.IsRunning())
-            {
-                result = "off";
-                _agendaService.Stop();
-            }
-            else
-            {
-                result = "on and running";
-                _agendaService.Start(100, 8);
-            }
-            return result;
+            var isGuid = Guid.TryParse(gameId, out var incomingId);
+            if (!isGuid) return NotFound("Me thinks that Id was not a Guid");
+            _marketService.StartStop(incomingId);
+            return Ok("Started//Stopped game " + gameId);
         }
+
+        // ***
+        // PUT
+        // ***
+        [HttpPut("pixel-trend/{pixel}/{trend}")]
+        public string SetPixelAndTrend(Guid gameId, int pixel, int trend)
+        {
+            _marketService.SetPixelCount(gameId, pixel);
+            _marketService.SetTrendiness(gameId, trend);
+            return "dun did it";
+        }
+
+        // ******
+        // DELETE
+        // ******
+
     }
 }

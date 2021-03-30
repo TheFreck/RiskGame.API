@@ -21,6 +21,7 @@ namespace RiskGame.API.Models.AssetFolder
         // Asset id is automatically set and can be overridden
         public  Guid Id { get; set; }
         public string AssetId { get; set; }
+        public Guid GameId { get; set; }
         [BsonElement("Name")]
         [JsonProperty("Name")]
         public string Name { get; set; }

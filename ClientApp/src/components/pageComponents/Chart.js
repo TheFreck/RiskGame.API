@@ -30,7 +30,8 @@ export const Chart = props => {
 
     let style = {
         background: "darkgrey",
-        width: `${width}px`,
+        //width: `${width}px`,
+        width: "100vw",
         height: `${height}px`,
         position: "relative",
         padding: 0,

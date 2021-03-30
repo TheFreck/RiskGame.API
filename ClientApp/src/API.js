@@ -109,7 +109,10 @@ export default {
         },
         isGameOn: () => axios.get("api/starting-and-stopping/get-game-status"),
         getData: () => axios.get("api/starting-and-stopping/get-records"),
-        next: query => axios.get(`api/starting-and-stopping/next/${query.frames}/${query.trendiness}`),
+        next: query => {
+            console.log(`api/starting-and-stopping/next/${query.frames}/${query.trendiness}`);
+            axios.get(`api/starting-and-stopping/next/${query.frames}/${query.trendiness}`)
+        },
         addAssets: () => axios.get("api/starting-and-stopping/add-assets"),
     },
     messages: {

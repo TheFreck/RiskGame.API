@@ -19,6 +19,7 @@ export const GameHome = props => {
     const [tradeButtonMessage, SETtradeButtonMessage] = useState("");
     const [viewPane, SETviewPane] = useState(<></>);
     const [isRunning, SETisRunning] = useState({ isRunning: false });
+    const [chartPane, SETchartPane] = useState(<div />);
 
     let state = {
         player: [player, SETplayer],
@@ -38,6 +39,8 @@ export const GameHome = props => {
     };
     const getChartData = cb => {
         API.gamePlay.getData().then(data => {
+            console.log("game play get data: ", data);
+            debugger;
             if (data.status === 200) SETxSeries({ xSeries: data.data });
             let series = [];
             for (let point of data.data) {
@@ -46,7 +49,13 @@ export const GameHome = props => {
             cb(series);
         })
     }
-    const moveNext = cb => API.gamePlay.next({ frames: 5, trendiness: 5 }).then(data => cb(data.data));
+    const moveNext = cb => {
+        API.gamePlay.next({ frames: 5, trendiness: 5 }).then(data => {
+            console.log("move next data: ", data);
+            debugger;
+            cb(data.data)
+        });
+    }
     const getCash = cb => API.asset.getCash().then(data => cb(data.data));
     useEffect(() => getCash(cash => SETcash({ cash: cash.asset })),[]);
 
@@ -90,30 +99,34 @@ export const GameHome = props => {
     const playerButtonClick = () => SETviewPane(<PlayerCreate updateState={updateState} state={state} />);
     const tradeButtonClick = () => SETviewPane(<Transaction updateState={updateState} state={state} />);
     const chartButtonClick = () => {
-        getChartData(series => SETviewPane(<Chart xSeries={series} height={high} width={wide} state={state} />));
+        getChartData(series => SETchartPane(<Chart xSeries={series} height={high} width={wide} state={state} />));
     }
     const startButtonCLick = () => {
         SETisRunning({ isRunning: !isRunning.isRunning });
         console.log("start button: ", isRunning.isRunning);
+        let count = 1000;
         do {
             console.log("pre-data");
             setTimeout(() => moveNext(data => {
                 console.log("data: ", data);
+                console.log("time: ", Date.now);
+                count--;
             }),1000)
-        } while (isRunning.isRunning);
+        } while (isRunning.isRunning || count < 0);
         console.log("done");
     }
-    const updateSeries = () => {
-        console.log("asking");
-        moveNext(series => {
-            var newSeries = xSeries.xSeries;
-            for (let entry of series) {
-                newSeries.push(entry);
-            }
-            console.log("newSeries: ", newSeries);
-        });
-
-    }
+    //const updateSeries = () => {
+    //    console.log("asking");
+    //    moveNext(series => {
+    //        var newSeries = xSeries.xSeries;
+    //        console.log("newSeries: ", newSeries);
+    //        debugger;
+    //        for (let entry of series) {
+    //            newSeries.push(entry);
+    //        }
+    //        console.log("newSeries: ", newSeries);
+    //    });
+    //}
 
     const tradeButtonMouseEnter = () => {
         console.log("enter");
@@ -174,6 +187,7 @@ export const GameHome = props => {
             <ChartButton />
             <StartButton />
             <div>{viewPane}</div>
+            {chartPane}
         </>
     );
 }

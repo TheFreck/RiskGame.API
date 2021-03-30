@@ -44,3 +44,6 @@ Created a** few new entities and a new controller to turn the game on and off. O
 
 **3/27/21
 Built a** time series chart today. Right now it lacks axis labels of any kind but it displays the value of a single asset over time.
+
+**3/29/21
+Reworked a** lot of the logic of the progression of the market. Added Thread.Sleep to control the speed of the progression. Renamed the Agenda class to Economy and Economy to Market. Agenda was a dumb name from the start! So a new game is a new instance of an Economy. It sends its id back to the client so that assets, players and transactions can occur within a game. Made a better start and stop switch and also cleaned up some obsolete methods.

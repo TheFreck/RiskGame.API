@@ -1,9 +1,9 @@
 ﻿using AutoMapper;
-using RiskGame.API.Engine;
 using RiskGame.API.Entities;
 using RiskGame.API.Entities.Enums;
 using RiskGame.API.Models.AssetFolder;
 using RiskGame.API.Models.EconomyFolder;
+using RiskGame.API.Models.MarketFolder;
 using RiskGame.API.Services;
 using System;
 using System.Collections.Generic;
@@ -36,7 +36,7 @@ namespace RiskGame.API.Logic
             company.Value *= IndustryGrowth(company.PrimaryIndustry, metrics) * IndustryGrowth(company.SecondaryIndustry, metrics);
             return company;
         }
-        private double IndustryGrowth(IndustryTypes industry, EconMetrics metrics)
+        private double IndustryGrowth(IndustryTypes industry, MarketMetrics metrics)
         {
             switch (industry)
             {

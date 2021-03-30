@@ -5,9 +5,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace RiskGame.API.Models.EconomyFolder
+namespace RiskGame.API.Models.MarketFolder
 {
-    public class EconMetrics
+    public class MarketMetrics
     {
         public int SequenceNumber { get; set; }
         public double Red { get; set; }

@@ -1,4 +1,5 @@
 ﻿using RiskGame.API.Models.EconomyFolder;
+using RiskGame.API.Models.MarketFolder;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -11,7 +12,7 @@ namespace RiskGame.API.Mappings
     {
         public int Compare(object x, object y)
         {
-            return (new CaseInsensitiveComparer()).Compare(((EconMetrics)x).SequenceNumber, ((EconMetrics)y).SequenceNumber);
+            return (new CaseInsensitiveComparer()).Compare(((MarketMetrics)x).SequenceNumber, ((MarketMetrics)y).SequenceNumber);
         }
     }
 }

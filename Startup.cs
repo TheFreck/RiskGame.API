@@ -19,7 +19,6 @@ using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
 using RiskGame.API.Logic;
-using RiskGame.API.Engine;
 
 namespace RiskGame.API
 {
@@ -43,7 +42,7 @@ namespace RiskGame.API
             services.AddSingleton<IAssetService,AssetService>();
             services.AddSingleton<IShareService,ShareService>();
             services.AddSingleton<ITransactionLogic,TransactionLogic>();
-            services.AddSingleton<IAgendaService, AgendaService>();
+            services.AddSingleton<IMarketService, MarketService>();
 
             services.AddControllersWithViews();
 

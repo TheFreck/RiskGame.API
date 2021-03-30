@@ -121,6 +121,7 @@ namespace RiskGame.API.Controllers
             var asset = _mapper.Map<AssetIn, Asset>(assetIn);
             asset.Id = Guid.NewGuid();
             asset.AssetId = asset.Id.ToString();
+            asset.GameId = Guid.Parse(assetIn.GameId);
             asset.CompanyAsset = new CompanyAsset
             {
                 PrimaryIndustry = (IndustryTypes)randy.Next(5),

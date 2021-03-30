@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using RiskGame.API.Models.EconomyFolder;
+using RiskGame.API.Models.MarketFolder;
 using AutoMapper;
-using RiskGame.API.Entities;
+using RiskGame.API.Models.EconomyFolder;
 
 namespace RiskGame.API.Mappings
 {
@@ -15,39 +15,11 @@ namespace RiskGame.API.Mappings
             CreateMap<Economy, EconomyResource>();
         }
     }
-    public class EconomyResourceToEconomy : Profile
+    public class EconomyResourceToEconomy: Profile
     {
         public EconomyResourceToEconomy()
         {
             CreateMap<EconomyResource, Economy>();
-        }
-    }
-    public class EconMetricsToEconomyResource : Profile
-    {
-        public EconMetricsToEconomyResource()
-        {
-            CreateMap<EconMetrics, EconomyResource>();
-        }
-    }
-    public class EconomyResourceToEconMetrics : Profile
-    {
-        public EconomyResourceToEconMetrics()
-        {
-            CreateMap<EconomyResource, EconMetrics>();
-        }
-    }
-    public class EconomyToEconMetrics : Profile
-    {
-        public EconomyToEconMetrics()
-        {
-            CreateMap<Economy, EconMetrics>();
-        }
-    }
-    public class EconMetricsToEconomy : Profile
-    {
-        public EconMetricsToEconomy()
-        {
-            CreateMap<EconMetrics, Economy>();
         }
     }
 }
