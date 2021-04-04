@@ -19,7 +19,6 @@ namespace RiskGame.API.Services
         private readonly IMongoCollection<AssetResource> _assets;
         private readonly IPlayerService _playerService;
         private readonly IMapper _mapper;
-        private readonly AssetResource CASH;
         private readonly IDatabaseSettings dbSettings; // remove this when you remove Initialize
         public AssetService(IDatabaseSettings settings, IMapper mapper, IPlayerService playerService)
         {
@@ -31,25 +30,24 @@ namespace RiskGame.API.Services
             database.DropCollection(settings.AssetCollectionName);
             database.DropCollection(settings.ShareCollectionName);
             _assets = database.GetCollection<AssetResource>(settings.AssetCollectionName);
-            CASH = Create(new Asset(ModelTypes.Cash.ToString(), Guid.NewGuid()));
         }
         //
         // Drops the Asset Collection and recreates CASH
-        public string Initialize()
-        {
-            try
-            {
-                _assets.Database.DropCollection(dbSettings.AssetCollectionName);
-                _assets.Database.DropCollection(dbSettings.ShareCollectionName);
-                var cash = Create(_mapper.Map<AssetResource,Asset>(CASH));
-                return "Asset Tabula Rasa";
-            }
-            catch (Exception e)
-            {
-                return "Error: " + e.Message;
-            }
+        //public string Initialize()
+        //{
+        //    try
+        //    {
+        //        _assets.Database.DropCollection(dbSettings.AssetCollectionName);
+        //        _assets.Database.DropCollection(dbSettings.ShareCollectionName);
+        //        var cash = Create(_mapper.Map<AssetResource,Asset>(CASH));
+        //        return "Asset Tabula Rasa";
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        return "Error: " + e.Message;
+        //    }
 
-        }
+        //}
         public async Task<List<AssetResource>> GetAsync()
         {
             var foundAsssets = await _assets.FindAsync(a => a.AssetId != "");
@@ -57,17 +55,19 @@ namespace RiskGame.API.Services
         }
         public async Task<List<CompanyAsset>> GetCompanyAssets(Guid gameId)
         {
-            return TakeCompanyAsset(await _assets.FindAsync(a => a.GameId == gameId));
+            var anything = await _assets.FindAsync(a => a.GameId == gameId);
+            return TakeCompanyAsset(anything);
         }
-        private List<CompanyAsset> TakeCompanyAsset(IAsyncCursor<AssetResource> foundAssets)
+        public List<CompanyAsset> TakeCompanyAsset(IAsyncCursor<AssetResource> foundAssets)
         {
             var companyAssets = new List<CompanyAsset>();
-            foundAssets.ForEachAsync(a => companyAssets.Add(a.CompanyAsset));
+            foundAssets.ForEachAsync(a => {if(a.CompanyAsset != null) companyAssets.Add(a.CompanyAsset); });
             return companyAssets;
         }
-        public AssetResource GetCash()
+        public async Task<IAsyncCursor<AssetResource>> GetCashAsync(Guid gameId)
         {
-            return CASH;
+            var cash = await _assets.FindAsync(cash => cash.Name == ModelTypes.Cash.ToString() && cash.GameId == gameId);
+            return cash;
         }
         public async Task<IAsyncCursor<AssetResource>> GetSharesAsync(Guid id, ModelTypes type) 
         {
@@ -80,13 +80,18 @@ namespace RiskGame.API.Services
             var asset = await _assets.FindAsync(asset => asset.AssetId == id.ToString());
             return asset;
         }
+        public async Task<IAsyncCursor<AssetResource>> GetGameAssetsAsync(Guid id)
+        {
+            var asset = await _assets.FindAsync(asset => asset.GameId == id);
+            return asset;
+        }
         public AssetResource Create(Asset asset)
         {
             var newAsset = _mapper.Map<Asset, AssetResource>(asset);
             _assets.InsertOne(newAsset);
             return newAsset;
         }
-        public void Update(Guid id, Asset assetIn)
+        public void Replace(Guid id, Asset assetIn)
         {
             var assetRes = _mapper.Map<Asset, AssetResource>(assetIn);
             _assets.ReplaceOne(asset => asset.AssetId == id.ToString(), assetRes);
@@ -103,13 +108,16 @@ namespace RiskGame.API.Services
     }
     public interface IAssetService
     {
-        string Initialize();
+        //string Initialize();
         Task<List<AssetResource>> GetAsync();
+        Task<IAsyncCursor<AssetResource>> GetGameAssetsAsync(Guid id);
         Task<List<CompanyAsset>> GetCompanyAssets(Guid gameId);
-        AssetResource GetCash(); Task<IAsyncCursor<AssetResource>> GetSharesAsync(Guid id, ModelTypes type);
+        List<CompanyAsset> TakeCompanyAsset(IAsyncCursor<AssetResource> foundAssets);
+        Task<IAsyncCursor<AssetResource>> GetCashAsync(Guid gameId);
+        Task<IAsyncCursor<AssetResource>> GetSharesAsync(Guid id, ModelTypes type);
         Task<IAsyncCursor<AssetResource>> GetAsync(Guid id);
         AssetResource Create(Asset asset);
-        void Update(Guid id, Asset assetIn);
+        void Replace(Guid id, Asset assetIn);
         void Remove(Asset assetIn);
         void Remove(Guid id);
         ModelReference ToRef(Asset asset);

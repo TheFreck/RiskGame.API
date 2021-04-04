@@ -11,6 +11,7 @@ namespace RiskGame.API.Entities
 {
     public class TradeTicket
     {
+        public Guid GameId { get; set; }
         public ModelReference Buyer { get; set; }
         public ModelReference Seller { get; set; }
         public List<ModelReference> Shares { get; set; }

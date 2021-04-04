@@ -13,7 +13,8 @@ namespace RiskGame.API.Models.MarketFolder
     public class Market
     {
         public int SequenceNumber { get; set; }
-        private int MarketTrendiness; // 0-9
+        public Guid GameId { get; set; }
+        public int MarketTrendiness; // 0-9
         public double Red { get; set; }
         public Direction RedDirection;
         public double Orange { get; set; }
@@ -28,28 +29,31 @@ namespace RiskGame.API.Models.MarketFolder
         public Direction VioletDirection;
         public CompanyAsset[] Assets { get; set; }
         public Player[] Players { get; set; }
-        public Market(int marketTrendiness, CompanyAsset[] assets, MarketMetrics yester, Random randy)
+        public Player HAUS { get; set; }
+        public Asset CASH { get; set; }
+        public Market(Guid gameId, CompanyAsset[] assets, MarketMetrics yester, Random randy)
         {
-            SequenceNumber = yester.SequenceNumber + 1;
+            SequenceNumber = yester != null ? yester.SequenceNumber + 1 : 0;
+            GameId = gameId;
             Assets = assets;
-            MarketTrendiness = marketTrendiness;
-            if (randy.Next(10) > marketTrendiness) RedDirection = (Direction)((int)yester.RedDirection * -1);
-            else RedDirection = yester.RedDirection;
+            MarketTrendiness = randy.Next(9);
+            if (randy.Next(10) > MarketTrendiness) RedDirection = yester != null ? (Direction)((int)yester.RedDirection * -1) : Direction.Up;
+            else RedDirection = yester != null ? yester.RedDirection : Direction.Up;
             Red = randy.NextDouble() * (int)RedDirection;
-            if (randy.Next(10) > marketTrendiness) OrangeDirection = (Direction)((int)yester.OrangeDirection * -1);
-            else OrangeDirection = yester.OrangeDirection;
+            if (randy.Next(10) > MarketTrendiness) OrangeDirection = yester != null ? (Direction)((int)yester.OrangeDirection * -1) : Direction.Up;
+            else OrangeDirection = yester != null ? yester.OrangeDirection : Direction.Up;
             Orange = randy.NextDouble() * (int)OrangeDirection;
-            if (randy.Next(10) > marketTrendiness) YellowDirection = (Direction)((int)yester.YellowDirection * -1);
-            else YellowDirection = yester.YellowDirection;
+            if (randy.Next(10) > MarketTrendiness) YellowDirection = yester != null ? (Direction)((int)yester.YellowDirection * -1) : Direction.Up;
+            else YellowDirection = yester != null ? yester.YellowDirection : Direction.Up;
             Yellow = randy.NextDouble() * (int)YellowDirection;
-            if (randy.Next(10) > marketTrendiness) GreenDirection = (Direction)((int)yester.GreenDirection * -1);
-            else GreenDirection = yester.GreenDirection;
+            if (randy.Next(10) > MarketTrendiness) GreenDirection = yester != null ? (Direction)((int)yester.GreenDirection * -1) : Direction.Up;
+            else GreenDirection = yester != null ? yester.GreenDirection : Direction.Up;
             Green = randy.NextDouble() * (int)GreenDirection;
-            if (randy.Next(10) > marketTrendiness) BlueDirection = (Direction)((int)yester.BlueDirection * -1);
-            else BlueDirection = yester.BlueDirection;
+            if (randy.Next(10) > MarketTrendiness) BlueDirection = yester != null ? (Direction)((int)yester.BlueDirection * -1) : Direction.Up;
+            else BlueDirection = yester != null ? yester.BlueDirection : Direction.Up;
             Blue = randy.NextDouble() * (int)BlueDirection;
-            if (randy.Next(10) > marketTrendiness) VioletDirection = (Direction)((int)yester.VioletDirection * -1);
-            else VioletDirection = yester.VioletDirection;
+            if (randy.Next(10) > MarketTrendiness) VioletDirection = yester != null ? (Direction)((int)yester.VioletDirection * -1) : Direction.Up;
+            else VioletDirection = yester != null ? yester.VioletDirection : Direction.Up;
             Violet = randy.NextDouble() * (int)VioletDirection;
         }
         public MarketMetrics GetMetrics()
@@ -120,13 +124,5 @@ namespace RiskGame.API.Models.MarketFolder
                 VioletDirection
             };
         }
-    }
-    public interface IEconomy
-    {
-        MarketMetrics GetMetrics();
-        MarketMetrics GetMetrics(CompanyAsset[] assets);
-        double GetMetric();
-        double GetMetric(IndustryTypes type);
-        Direction[] GetDirections();
     }
 }

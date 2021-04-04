@@ -8,6 +8,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using RiskGame.API.Models.SharesFolder;
 using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
 
 namespace RiskGame.API.Services
 {
@@ -16,7 +17,7 @@ namespace RiskGame.API.Services
         private readonly IShareService _shareService;
         private readonly IMapper _mapper;
         private readonly IMongoCollection<PlayerResource> _players;
-        private readonly PlayerResource HAUS;
+        //private readonly PlayerResource HAUS;
         private readonly IDatabaseSettings dbSettings; // remove this when you remove Initialize
         public PlayerService(IDatabaseSettings settings, IShareService shareService, IMapper mapper)
         {
@@ -27,32 +28,19 @@ namespace RiskGame.API.Services
             _players = database.GetCollection<PlayerResource>(settings.PlayerCollectionName);
             _shareService = shareService;
             _mapper = mapper;
-
-            HAUS = Create(new Player("HAUS",Guid.NewGuid()));
         }
-        public string Initialize()
+        public async Task<Player> GetHAUS(Guid gameId)
         {
-            try
-            {
-                _players.Database.DropCollection(dbSettings.PlayerCollectionName);
-                var cash = Create(_mapper.Map<PlayerResource, Player>(HAUS));
-                return "Player Tabula Rasa";
-            }
-            catch (Exception e)
-            {
-                return "Error: " + e.Message;
-            }
-
+            var filterBase = Builders<PlayerResource>.Filter;
+            var filter = filterBase.Eq("GameId", gameId) & filterBase.Eq("Name","HAUS");
+            var incoming = _players.FindAsync(filter).Result;
+            var haus = new PlayerResource();
+            await incoming.ForEachAsync(p => haus = p);
+            return _mapper.Map<PlayerResource,Player>(haus);
         }
-        //
-        // Get the HAUS player
-        public Player GetHAUS()
+        public ModelReference GetHAUSRef(Guid gameId)
         {
-            return _mapper.Map<PlayerResource,Player>(HAUS);
-        }
-        public ModelReference GetHAUSRef()
-        {
-            return ResToRef(HAUS);
+            return ToRef(GetHAUS(gameId).Result);
         }
         //
         // Gets a list of all players in the DB
@@ -60,9 +48,9 @@ namespace RiskGame.API.Services
             await _players.FindAsync(player => true);
         //
         // Gets the player attached to the given id
-        public async Task<IAsyncCursor<PlayerResource>> GetAsync(Guid id)
+        public async Task<IAsyncCursor<PlayerResource>> GetPlayerAsync(Guid gameId)
         {
-            var anything = await _players.FindAsync(player => player.PlayerId == id.ToString());
+            var anything = await _players.FindAsync(player => player.GameId == gameId);
             return anything;
         }
         //
@@ -96,11 +84,10 @@ namespace RiskGame.API.Services
     }
     public interface IPlayerService
     {
-        string Initialize();
-        Player GetHAUS();
-        ModelReference GetHAUSRef();
+        Task<Player> GetHAUS(Guid gameId);
+        ModelReference GetHAUSRef(Guid gameId);
         Task<IAsyncCursor<PlayerResource>> GetAsync();
-        Task<IAsyncCursor<PlayerResource>> GetAsync(Guid id);
+        Task<IAsyncCursor<PlayerResource>> GetPlayerAsync(Guid id);
         PlayerResource Create(Player player);
         void Update(Guid id, PlayerResource playerIn);
         void Remove(Player playerIn);

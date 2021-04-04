@@ -35,18 +35,20 @@ namespace RiskGame.API.Models.AssetFolder
         public readonly ModelTypes ModelType = ModelTypes.Asset;
         public CompanyAsset CompanyAsset { get; set; }
         public int Earnings { get; set; }
-        public Asset(string name, int sharesOutstanding, Guid id)
+        public Asset(string name, int sharesOutstanding, Guid id, Guid gameId)
         {
             Name = name;
             Id = id;
             AssetId = Id.ToString();
             SharesOutstanding = sharesOutstanding;
+            GameId = gameId;
         }
-        public Asset(string name, Guid id)
+        public Asset(string name, Guid id, Guid gameId)
         {
             Name = name;
             Id = id;
             AssetId = Id.ToString();
+            GameId = gameId;
         }
         public Asset() 
         {

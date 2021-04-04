@@ -21,14 +21,16 @@ namespace RiskGame.API.Services
         private readonly IAssetService _assetService;
         private readonly IShareService _shareService;
         private readonly ITransactionLogic _transactionLogic;
+        private readonly IMarketService _marketService;
         private readonly IMapper _mapper;
-        public TransactionService(IPlayerService playerService, IAssetService assetService, IShareService shareService, IMapper mapper, ITransactionLogic transactionLogic)
+        public TransactionService(IPlayerService playerService, IAssetService assetService, IShareService shareService, IMarketService marketService, IMapper mapper, ITransactionLogic transactionLogic)
         {
             _playerService = playerService;
             _assetService = assetService;
             _shareService = shareService;
             _mapper = mapper;
             _transactionLogic = transactionLogic;
+            _marketService = marketService;
         }
 
         public async Task<TradeTicket> Transact(TradeTicket trade)
@@ -52,23 +54,25 @@ namespace RiskGame.API.Services
                 trade.SuccessfulTrade = false;
                 return trade;
             } // OUT seller has no shares
+            // get Game
+            var game = _marketService.GetGame(trade.GameId);
             // get Haus
-            var hausRef = _playerService.GetHAUSRef();
-            var haus = _playerService.GetHAUS();
+            var hausRef = _playerService.GetHAUSRef(trade.GameId);
+            var haus = _playerService.GetHAUS(trade.GameId).Result;
             // get Buyer
             var buyer = new PlayerResource();
-            if (trade.Buyer != null) await _playerService.GetAsync(trade.Buyer.Id).Result.ForEachAsync(b => buyer = b);
+            if (trade.Buyer != null) await _playerService.GetPlayerAsync(trade.Buyer.Id).Result.ForEachAsync(b => buyer = b);
             else buyer = _mapper.Map<Player,PlayerResource>(haus);
             // get Seller
             var seller = new PlayerResource();
-            if (trade.Seller != null) await _playerService.GetAsync(trade.Seller.Id).Result.ForEachAsync(s => seller = s);
-            else seller = _mapper.Map<Player, PlayerResource>(haus);
+            if (trade.Seller != null) await _playerService.GetPlayerAsync(trade.Seller.Id).Result.ForEachAsync(s => seller = s);
+            else seller = _mapper.Map<Player,PlayerResource>(haus);
             // get References
             var sellerRef = _playerService.ResToRef(seller);
             var buyerRef = _playerService.ResToRef(buyer);
             // get cash and shares
-            var tradeCash = _transactionLogic.GetCash(trade.Cash, trade.CashCount).Result;
-            var tradeShares = _transactionLogic.GetShares(trade.Shares, trade.SharesCount).Result;
+            var tradeCash = _transactionLogic.GetCash(trade.Cash, trade.CashCount, trade.GameId).Result;
+            var tradeShares = _transactionLogic.GetShares(trade.Shares, trade.SharesCount, trade.GameId).Result;
             try
             {
                 // Transfer ownership of cash and shares

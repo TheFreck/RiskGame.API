@@ -41,15 +41,15 @@ namespace RiskGame.API.Controllers
         {
             var incoming = _playerService.GetAsync();
             var players = new List<Player>();
-            await incoming.Result.ForEachAsync(p => players.Add(_mapper.Map<PlayerResource,Player>(p)));
+            await incoming.Result.ForEachAsync(p => players.Add(_mapper.Map<PlayerResource, Player>(p)));
             return players;
         }
-        [HttpGet("{id:length(36)}")]
-        public async Task<ActionResult<Player>> Get(string id)
+        [HttpGet("{gameId:length(36)}")]
+        public async Task<ActionResult<Player>> Get(string gameId)
         {
-            var isGuid = Guid.TryParse(id, out var incomingId);
+            var isGuid = Guid.TryParse(gameId, out var incomingId);
             if (!isGuid) return NotFound("Me thinks that Id was not a Guid");
-            var incoming = _playerService.GetAsync(incomingId);
+            var incoming = _playerService.GetPlayerAsync(incomingId);
             var playerRes = new List<PlayerResource>();
             await incoming.Result.ForEachAsync(p => playerRes.Add(p));
             if (playerRes == null)
@@ -61,21 +61,31 @@ namespace RiskGame.API.Controllers
         // ****************************************************************
         // POST POST POST POST POST POST POST POST POST POST POST POST POST
         // ****************************************************************
-        [HttpPost]
+        [HttpPost("new-player")]
         public async Task<ActionResult<PlayerIn>> Create([FromBody] PlayerIn playerIn)
         {
             var player = _mapper.Map<PlayerIn, Player>(playerIn);
             player.Id = Guid.NewGuid();
             player.PlayerId = player.Id.ToString();
-            // check if a cash asset already exists
-            var cash = _assetService.GetCash();
+            
+            var incomingCash = _assetService.GetCashAsync(player.GameId).Result;
+            var cash = new AssetResource();
+            await incomingCash.ForEachAsync(c => cash = c);
             var playerRef = _playerService.ToRef(player);
             var outcome = await _shareService.CreateShares(_mapper.Map<AssetResource, ModelReference>(cash), player.Cash, playerRef, ModelTypes.Cash);
             cash.SharesOutstanding += player.Cash;
-            _assetService.Update(Guid.Parse(cash.AssetId), _mapper.Map<AssetResource, Asset>(cash));
-            _playerService.Create(player);
-            playerIn.Id = player.Id;
-            return Ok(playerIn);
+            try
+            {
+                _assetService.Replace(Guid.Parse(cash.AssetId), _mapper.Map<AssetResource, Asset>(cash));
+                _playerService.Create(player);
+                playerIn.GameId = player.GameId;
+                playerIn.Id = player.Id;
+                return Ok(playerIn);
+            }
+            catch (Exception e)
+            {
+                return NotFound(e.Message);
+            }
         }
         [HttpPost("add-shares/{playerId:length(36)}/{assetId}/{qty}")]
         // ***************************************************************
@@ -87,7 +97,7 @@ namespace RiskGame.API.Controllers
             var isGuid = Guid.TryParse(id, out var incomingId);
             if (!isGuid) return NotFound("Me thinks that Id was not a proper Guid");
 
-            var incoming = _playerService.GetAsync(incomingId).Result;
+            var incoming = _playerService.GetPlayerAsync(incomingId).Result;
             var foundPlayer = new PlayerResource();
             await incoming.ForEachAsync(p => foundPlayer = p);
 
@@ -115,7 +125,7 @@ namespace RiskGame.API.Controllers
         {
             var isGuid = Guid.TryParse(id, out var incomingId);
             if (!isGuid) return NotFound("Me thinks that Id was not a Guid");
-            var player = _playerService.GetAsync(incomingId);
+            var player = _playerService.GetPlayerAsync(incomingId);
             if (player == null)
             {
                 return NotFound();
@@ -124,11 +134,11 @@ namespace RiskGame.API.Controllers
             return NoContent();
         }
 
-        [HttpDelete("game/start/initialize/{secretPassword}")]
-        public ActionResult<string> Initialize(string secretPassword)
-        {
-            if (secretPassword == "Playa101") return Ok(_playerService.Initialize());
-            else return Unauthorized("no way doood!");
-        }
+        //[HttpDelete("game/start/initialize/{secretPassword}")]
+        //public ActionResult<string> Initialize(string secretPassword)
+        //{
+        //    if (secretPassword == "Playa101") return Ok(_playerService.Initialize());
+        //    else return Unauthorized("no way doood!");
+        //}
     }
 }

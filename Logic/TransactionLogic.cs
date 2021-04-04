@@ -28,12 +28,12 @@ namespace RiskGame.API.Logic
             _mapper = mapper;
         }
 
-        public async Task<List<ShareResource>> GetCash(List<ModelReference> cashRefs, int qty)
+        public async Task<List<ShareResource>> GetCash(List<ModelReference> cashRefs, int qty, Guid gameId)
         {
-            var hausRef = _playerService.GetHAUSRef();
+            var hausRef = _playerService.GetHAUSRef(gameId);
             var cashGuids = new List<Guid>();
             var hausCash = _shareService.GetPlayerShares(hausRef, ModelTypes.Cash).Result;
-            var haus = _playerService.GetHAUS();
+            var haus = _playerService.GetHAUS(gameId);
             if (cashRefs?.Count > 0)
             {
                 Console.WriteLine("cashRefs");
@@ -54,10 +54,10 @@ namespace RiskGame.API.Logic
             incomingCash.ForEach(c => tradeCash.Add(c));
             return tradeCash;
         }
-        public async Task<List<ShareResource>> GetShares(List<ModelReference> shareRefs, int qty)
+        public async Task<List<ShareResource>> GetShares(List<ModelReference> shareRefs, int qty, Guid gameId)
         {
             var shareGuids = new List<Guid>();
-            var hausRef = _playerService.GetHAUSRef();
+            var hausRef = _playerService.GetHAUSRef(gameId);
             var hausPort = _shareService.GetPlayerShares(hausRef,ModelTypes.Share).Result;
             if (shareRefs?.Count > 0)
             {
@@ -111,8 +111,8 @@ namespace RiskGame.API.Logic
     }
     public interface ITransactionLogic
     {
-        Task<List<ShareResource>> GetCash(List<ModelReference> cashRefs, int qty);
-        Task<List<ShareResource>> GetShares(List<ModelReference> shareRefs, int qty);
+        Task<List<ShareResource>> GetCash(List<ModelReference> cashRefs, int qty, Guid gameId);
+        Task<List<ShareResource>> GetShares(List<ModelReference> shareRefs, int qty, Guid gameId);
         void TransferShares(PlayerResource receiver, List<ShareResource> shares, int price);
     }
 }

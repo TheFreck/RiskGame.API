@@ -2,21 +2,23 @@
 import InputGroup from 'react-bootstrap/InputGroup';
 import Form from 'react-bootstrap/Form';
 import API from './../../API';
-import SharesResults from './ListResults';
+import ListResults from './ListResults';
 import { useEffect } from 'react';
 
 export const AssetCreate = props => {
-    const [assetName, SETassetName] = useState("");
-    const [shareCount, SETshareCount] = useState(0);
-    const [cashCount, SETcashCount] = useState(0);
-    const [playerCount, SETplayerCount] = useState(0);
-    const [asset, SETasset] = useState({});
-    const [cash, SETcash] = useState({});
+    const [gameId, SETgameId] = useState({ gameId: props.gameId });
+    const [assetName, SETassetName] = useState("asset");
+    const [shareCount, SETshareCount] = useState(100);
+    const [cashCount, SETcashCount] = useState({ cashCount: 0 });
+    const [playerCount, SETplayerCount] = useState({ player: 0 });
+    const [asset, SETasset] = useState({ asset: {}});
+    const [cash, SETcash] = useState({ cash: {} });
+    const [resultsData, SETresultsData] = useState([]);
 
-    const [assetNameMessage, SETassetNameMessage] = useState("Required: All assets must have a name.");
-    const [shareCountMessage, SETshareCountMessage] = useState("Required: How many shares of this asset are there?");
-    const [playerCountMessage, SETplayerCountMessage] = useState("How many AI players?");
-    const [cashCountMessage, SETcashCountMessage] = useState("How much cash for the House?");
+    const [assetNameMessage, SETassetNameMessage] = useState("");
+    const [shareCountMessage, SETshareCountMessage] = useState("");
+    const [playerCountMessage, SETplayerCountMessage] = useState("");
+    const [cashCountMessage, SETcashCountMessage] = useState("");
     const [submitMessage, SETsubmitMessage] = useState("");
 
     const [assetNameDisplay, SETassetNameDisplay] = useState(false);
@@ -35,17 +37,18 @@ export const AssetCreate = props => {
     }
 
     useEffect(() => {
-        console.log("asset state: ", props.state);
-        console.log("assets: ", props.state.assets);
-        //API.asset.getCash().then(cashReturn => {
-        //    SETcash(cashReturn.data.asset);
-        //})
-    },[]);
+        if (props.gameId !== "" && props.gameId !== undefined && props.gameId !== null) SETgameId(props.gameId);
+    },[props.gameId]);
 
     // **********
     // GO GETTERS
     // **********
     const getShares = (id, cb) => API.asset.getShares(id).then(shares => cb(shares));
+
+    // **********
+    // GO SETTERS
+    // **********
+    const submitAsset = asset => API.asset.createAsset(asset).then(result => console.log(result));
 
     // ********
     // SERVICES
@@ -53,35 +56,41 @@ export const AssetCreate = props => {
     const setGlobalAsset = assets => {
         props.state.assets[1]({ assets: assets });
     }
-    const createAsset = (asset, cb) => {
-        API.asset.createAsset({
-            "Name": assetName,
-            "SharesOutstanding": shareCount
-        }).then(result => cb(result));
+    const createAsset = (asset, cb) => API.asset.createAsset(asset).then(data => cb(data));
+    const ListResultsComponent = () => {
+        if (resultsData && resultsData.length > 0) {
+            return <ListResults
+                columns={resultsColumns}
+                items={resultsData}
+                tableName="assets-table"
+                style={{
+                    background: "rgb(252, 252, 252)"
+                }}
+            />;
+        }
+        else {
+            return "";
+        }
     }
 
     // **************
     // EVENT HANDLING
     // **************
     const handleSubmit = event => {
-        if (cashCount > 0) {
-            console.log("counting cash: ", cashCount);
-            API.asset.addShares({ id: cash.id, qty: cashCount, type: modelTypes.Cash }).then(result => {
-                console.log("setting cash: ", result);
-                SETcashCreated(true);
-            });
-        }
-        if (assetName && shareCount && !assetCreated) {
-                    setTimeout(() => SETsubmitDisplay(false), 3333);
-            createAsset(assetName, result => {
+        if (assetName && shareCount) {
+            createAsset({ Name: assetName, SharesOutstanding: parseInt(shareCount), GameId: gameId }, result => {
                 if (result.status === 200) {
                     SETassetCreated(true);
-                    SETsubmitMessage("submitted successfully");
-                    SETsubmitDisplay(true);
+                    //SETsubmitMessage("submitted successfully");
+                    //SETsubmitDisplay(true);
                     SETasset(result.data);
-                    let assets = props.state.assets[0].assets;
-                    assets.push(result.data);
-                    setGlobalAsset(assets);
+                    let newResults = resultsData;
+                    newResults.push({
+                        body: [result.data.name, result.data.sharesOutstanding, result.data.id]
+                    });
+                    SETresultsData(newResults);
+                    setGlobalAsset(newResults);
+                    SETassetName("");
                 }
                 else {
                     SETassetCreated(false );
@@ -94,7 +103,6 @@ export const AssetCreate = props => {
             SETsubmitDisplay(true);
             setTimeout(() => SETsubmitDisplay(false), 3333);
         }
-        //API.gamePlay.addAssets();
     }
 
     const handleNameChange = event => {
@@ -142,6 +150,12 @@ export const AssetCreate = props => {
             // don't do anything
         }
     };
+    const handleFinished = event => {
+        console.log("props: ", props);
+        props.playerButtonClick(gameId);
+    }
+
+    const resultsColumns = ["Name", "Shares Outstanding", "Asset Id"];
 
     return (
         <div>
@@ -209,9 +223,13 @@ export const AssetCreate = props => {
             </InputGroup>
             <p className={cashCountDisplay ? 'show shareCount-message' : 'hide shareCount-message'}>{cashCountMessage}</p>
 
-            <button id="submit" onClick={handleSubmit}>Submit</button>
+            <button id="submit" onClick={handleSubmit}>Submit Asset</button>
             <p className={submitDisplay ? 'show submit-message' : 'hide submit-message'}>{submitMessage}</p>
 
+            <button id="assets-finshed" onClick={handleFinished}>Finished Adding Assets</button>
+
+            <ListResultsComponent />
+            
         </div>
     );
 }

@@ -1,4 +1,7 @@
-﻿using RiskGame.API.Entities;
+﻿using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
+using Newtonsoft.Json;
+using RiskGame.API.Entities;
 using RiskGame.API.Entities.Enums;
 using RiskGame.API.Models.AssetFolder;
 using RiskGame.API.Models.EconomyFolder;
@@ -14,14 +17,24 @@ namespace RiskGame.API.Models.EconomyFolder
 {
     public class Economy
     {
+        [BsonId]
+        [BsonRepresentation(BsonType.ObjectId)]
+        //
+        // Mongo id
+        public string ObjectId { get; set; }
+        [BsonElement("GameId")]
+        [JsonProperty("GameId")]
         public Guid GameId = Guid.NewGuid();
         public bool isRunning { get; set; }
         public int PixelCount { get; set; }
         public int Trendiness { get; set; }
         public CompanyAsset[] Assets;
         public List<MarketMetrics> Markets;
+        public Player HAUS { get; set; }
+        public Asset CASH { get; set; }
         public Economy()
         {
+            isRunning = false;
             Markets = new List<MarketMetrics> {
                 new MarketMetrics
                 {

@@ -1,8 +1,6 @@
 ﻿import React, { useState } from 'react';
 
 export const ListResults = props => {
-    console.log("listResults props: ", props);
-
     const [tableName, SETtableName] = useState(props.tableName);
     //let item = {
     //    body: ["string"]
@@ -18,8 +16,7 @@ export const ListResults = props => {
             margin: "0 2vw",
         },
         tableData: {
-            //width: props.style.dataWidth ? props.style.dataWidth : "20vw",
-            background: props.style.background ? props.style.background : "rgb(252, 252, 252)",
+            backgroundColor: props.style.background ? props.style.background : "rgb(252, 252, 252)",
             color: props.style.color ? props.style.color : "rgb(23, 31, 16)",
             borderLeft: props.style.borderLeft ? props.style.borderLeft : "inset",
             borderBottom: props.style.borderBottom ? props.style.borderBottom : "inset",
@@ -39,7 +36,6 @@ export const ListResults = props => {
     }
 
     let TableFill = rows => {
-        console.log("tabfill rows: ", rows.rows);
         return(<>
             {
                 rows.rows.map((row, j) =>
@@ -53,7 +49,6 @@ export const ListResults = props => {
     }
 
     let TableRow = row => {
-        console.log("table row row: ", row.row.body);
         return (<>
             {
                 row.row.body.map((data, k) =>

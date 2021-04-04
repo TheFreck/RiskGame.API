@@ -16,10 +16,11 @@ export const ChartPixel = props => {
     const [display, SETdisplay] = useState(0);
 
     useEffect(() => {
-        SETwidth(findWidth());
+        setWidth();
     }, []);
 
-    const findWidth = () =>  props.chartWidth / props.seriesQty;
+    const findWidth = () => props.chartWidth / props.seriesQty;
+    const setWidth = () => SETwidth(findWidth());
 
     let style = {
         pixel: {

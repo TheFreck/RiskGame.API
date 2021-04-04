@@ -5,9 +5,10 @@ import API from './../../API';
 import ListResults from './ListResults';
 
 export const PlayerCreate = props => {
-
-    const [playerName, SETplayerName] = useState("");
-    const [playerCash, SETplayerCash] = useState(0);
+    //console.log("player props: ", props);
+    const [gameId, SETgameId] = useState(props.gameId);
+    const [playerName, SETplayerName] = useState("Charlie");
+    const [playerCash, SETplayerCash] = useState(1000);
     const [playerNameMessage, SETplayerNameMessage] = useState("Required: All players must have a name.");
     const [playerCashMessage, SETplayerCashMessage] = useState("Required: Must have cash to play?");
     const [submitMessage, SETsubmitMessage] = useState("");
@@ -26,34 +27,33 @@ export const PlayerCreate = props => {
     const [resultsStyle, SETresultsStyle] = useState({});
 
     useEffect(() => {
-        getPlayers();
-    },[])
+        if (props.gameId !== "" && props.gameId !== undefined && props.gameId !== null) SETgameId(props.gameId);
+        getPlayers(props.gameId);
+    }, [props.gameId]);
 
     // **********
     // GO GETTERS
     // **********
-    const getCash = () => {
-        API.asset.getPlayerShares({ id: player.id, type: 3, qty: 0 }).then(cash => {
+    const getCash = id => {
+        API.asset.getPlayerShares({ id, type: 3, qty: 0 }).then(cash => {
             SETcashShares(cash.data);
             setPlayerAndCash(cash.data[0]);
-            getShares();
+            getShares(id);
         })
     };
-    const getShares = () => {
-        API.asset.getPlayerShares({ id: player.id, type: 1, qty: 0 }).then(shares => {
+    const getShares = id => {
+        API.asset.getPlayerShares({ id, type: 1, qty: 0 }).then(shares => {
             SETshares(shares.data);
         })
     };
-    const getPlayers = () => {
-        API.player.getPlayers().then(players => {
+    const getPlayers = gameid => {
+        API.player.getPlayers(gameid).then(players => {
             let items = [];
             for (let plyr of players.data) {
-                console.log("player of get players data: ", plyr);
                 items.push({ body: [plyr.name, plyr.cash ? plyr.cash : 0, plyr.shares ? plyr.shares : 0, plyr.id] });
             }
             SETallPlayers(items);
             SETgotPlayers(true);
-            console.log("got players: ", items);
         });
     }
 
@@ -65,9 +65,9 @@ export const PlayerCreate = props => {
             SETcashShares(player.data.wallet);
         })
     };
-    const setPlayerAndCash = cash => {
-        props.state.SETcash(cash);
-        props.state.SETplayer(player);
+    const setPlayerAndCash = player => {
+        //props.state.SETcash(cash);
+        props.state.player[1]({ player: player });
     };
 
     // **************
@@ -77,23 +77,25 @@ export const PlayerCreate = props => {
         if (playerName && playerCash) {
             API.player.createPlayer({
                 Name: playerName,
-                Cash: playerCash
+                Cash: playerCash,
+                GameId: gameId
             }).then(result => {
-                SETsubmitMessage("submitted successfully");
-                SETsubmitDisplay(true);
+                //SETsubmitMessage("submitted successfully");
+                //SETsubmitDisplay(true);
                 SETplayer(result.data);
-                getPlayers();
-                setTimeout(() => SETsubmitDisplay(false), 3333);
+                getPlayers(result.data.gameId);
+                //setTimeout(() => SETsubmitDisplay(false), 3333);
                 addCash(result.data.id, playerCash);
-                getCash();
-                setPlayerAndCash();
+                getCash(result.data.id);
+                setPlayerAndCash(result.data);
+                props.chartButtonClick(result.data.gameId, false);
             });
         }
         else {
-            SETsubmitMessage("fill in the missing information");
-            SETsubmitDisplay(true);
+            //SETsubmitMessage("fill in the missing information");
+            //SETsubmitDisplay(true);
         }
-        setTimeout(() => SETsubmitDisplay(false), 3333);
+        //setTimeout(() => SETsubmitDisplay(false), 3333);
     }
     const handleBlur = event => {
         event.preventDefault();

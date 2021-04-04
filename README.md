@@ -20,8 +20,8 @@ Added controller** functionality. Assets can be created and their shares are aut
 Creating a player requires a {string} Name and the amount of {int} Cash to start with. If this is the first player then it will also create an asset for cash and the number of shares the player starts with. It then adds them to the player's wallet.  
 Wired up a React front  
 
-3/15/21
-**Worked through** the logic to add a player called **HAUS** in PlayerService following similar logic to Cash. As new assets are created the shares are added to HAUS's portfolio.
+**3/15/21
+Worked through** the logic to add a player called **HAUS** in PlayerService following similar logic to Cash. As new assets are created the shares are added to HAUS's portfolio.
 Ironed out the logic to Trade between players.
 Built onto the front end and wired up state transfer between the components. 
 
@@ -47,3 +47,6 @@ Built a** time series chart today. Right now it lacks axis labels of any kind bu
 
 **3/29/21
 Reworked a** lot of the logic of the progression of the market. Added Thread.Sleep to control the speed of the progression. Renamed the Agenda class to Economy and Economy to Market. Agenda was a dumb name from the start! So a new game is a new instance of an Economy. It sends its id back to the client so that assets, players and transactions can occur within a game. Made a better start and stop switch and also cleaned up some obsolete methods.
+
+**4/3/21
+The backend game loop is working well. In the front I am using two funcitons to handle the game loop. One checks with the endpoint to see if the game is running on the server. If so it calls the other which sets a timeout, gets the game data and then calls the other function to restart the cycle. I worked on syncronizing front and back until I started seeing double. But it wasn't until I was seeing multiples of double vision that I turned it off for the night.'

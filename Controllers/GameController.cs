@@ -10,14 +10,14 @@ using System.Threading.Tasks;
 
 namespace RiskGame.API.Controllers
 {
-    [Route("api/starting-and-stopping")]
+    [Route("api/game")]
     [ApiController]
     [Produces("application/json")]
-    public class StartingAndStoppingController : ControllerBase
+    public class GameController : ControllerBase
     {
         private readonly IMarketService _marketService;
         public bool hasAssets;
-        public StartingAndStoppingController(IMarketService marketService)
+        public GameController(IMarketService marketService)
         {
             _marketService = marketService;
 
@@ -32,13 +32,13 @@ namespace RiskGame.API.Controllers
         }
         [HttpGet("new-game")]
         public string NewGame() => _marketService.NewGame().ToString();
-        [HttpGet("get-game-status")]
-        public ActionResult<bool> GameStatus(string gameId)
+        [HttpGet("get-game-status/{gameId:length(36)}")]
+        public async Task<ActionResult<bool>> GameStatus(string gameId)
         {
             var isGuid = Guid.TryParse(gameId, out var incomingId);
             if (!isGuid) return NotFound("Me thinks that Id was not a Guid");
 
-            return Ok(_marketService.IsRunning(incomingId));
+            return Ok(await _marketService.IsRunning(incomingId));
         }
         [HttpGet("get-records/{gameId:length(36)}")]
         public async Task<ActionResult<List<MarketMetrics>>> GetRecords(string gameId)
@@ -60,13 +60,14 @@ namespace RiskGame.API.Controllers
         // ****
         // POST
         // ****
-        [HttpPost]
-        public ActionResult<string> OnOff([FromBody]string gameId)
+        [HttpPost("on-off/{gameId:length(36)}")]
+        public async Task<ActionResult<bool>> OnOff(string gameId)
         {
             var isGuid = Guid.TryParse(gameId, out var incomingId);
             if (!isGuid) return NotFound("Me thinks that Id was not a Guid");
             _marketService.StartStop(incomingId);
-            return Ok("Started//Stopped game " + gameId);
+
+            return await GameStatus(gameId);
         }
 
         // ***

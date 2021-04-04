@@ -4,18 +4,21 @@ export default {
     asset: {
         // Get
         getAssets: () => axios.get('api/asset'),
-        getCash: () => axios.get('api/asset/cash'),
+        getCash: query => {
+            //console.log(`api/asset/cash/${query}`);
+            return axios.get(`api/asset/cash/${query}`);
+        },
         getAsset: query => {
             //console.log("getAsset query: ", query);
             if (!query) return this.messages.badInput;
-            return axios.get(`api/asset/${query}`);
+            return axios.get(`api/asset/${query}`)
         },
         getShares: query => {
             //console.log("getShares query: ", query ? query : "cash");
             return axios.get(query ? `api/asset/shares/${query}` : 'api/asset/shares');
         },
         getPlayerShares: query => {
-            console.log("getPlayerShares query: ", query);
+            //console.log("getPlayerShares query: ", query);
             if (!query) return this.messages.badInput;
             return axios.get(`api/asset/player-shares/${query.id}/${query.type}/${query.qty}`);
         },
@@ -27,7 +30,7 @@ export default {
         },
         addShares: query => {
             //console.log("addShares query: ", query);
-            console.log("API: ", `api/asset/add-shares/${query.id}/${query.qty}/${query.type}`);
+            //console.log("API: ", `api/asset/add-shares/${query.id}/${query.qty}/${query.type}`);
             if (!query) return this.messages.badInput;
             return axios.post(`api/asset/add-shares/${query.id}/${query.qty}/${query.type}`)
         },
@@ -46,7 +49,10 @@ export default {
     },
     player: {
         // Get
-        getPlayers: () => axios.get('api/player'),
+        getPlayers: query => {
+            //console.log(`api/player/${query}`);
+            return axios.get(`api/player/${query}`)
+        },
         getPlayer: query => {
             //console.log("getPlayer query: ", query);
             if (!query) return this.messages.badInput;
@@ -56,7 +62,7 @@ export default {
         createPlayer: query => {
             //console.log("createPlayer query: ", query);
             if (!query) return this.messages.badInput;
-            return axios.post('api/player/', query);
+            return axios.post('api/player/new-player', query);
         },
         addSharesToPlayer: query => {
             //console.log("add shares query: ", query);
@@ -88,7 +94,7 @@ export default {
     },
     transactions: {
         submitTrade: query => {
-            console.log("submit trade query: ", query);
+            //console.log("submit trade query: ", query);
             if (!query) return this.messages.badInput;
             return axios.post('api/transaction', query);
         }
@@ -107,13 +113,15 @@ export default {
                 }
             })
         },
-        isGameOn: () => axios.get("api/starting-and-stopping/get-game-status"),
-        getData: () => axios.get("api/starting-and-stopping/get-records"),
+        newGame: () => axios.get("api/game/new-game"),
+        onOff: gameId => axios.post(`api/game/on-off/${gameId}`),
+        isGameOn: gameId => axios.get(`api/game/get-game-status/${gameId}`),
+        getData: gameId => axios.get(`api/game/get-records/${gameId}`),
         next: query => {
-            console.log(`api/starting-and-stopping/next/${query.frames}/${query.trendiness}`);
-            axios.get(`api/starting-and-stopping/next/${query.frames}/${query.trendiness}`)
+            console.log(`api/game/next/${query.frames}/${query.trendiness}`);
+            axios.get(`api/game/next/${query.frames}/${query.trendiness}`)
         },
-        addAssets: () => axios.get("api/starting-and-stopping/add-assets"),
+        addAssets: () => axios.get("api/game/add-assets"),
     },
     messages: {
         badInput: "Huh? Didn't hear that"

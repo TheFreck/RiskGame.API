@@ -17,6 +17,7 @@ namespace RiskGame.API.Models.PlayerFolder
         //
         // Mongo id
         public string ObjectId { get; set; }
+        public Guid GameId { get; set; }
         public string PlayerId { get; set; }
         [BsonElement("Name")]
         [JsonProperty("Name")]

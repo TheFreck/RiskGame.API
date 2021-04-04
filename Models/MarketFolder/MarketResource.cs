@@ -16,6 +16,7 @@ namespace RiskGame.API.Models.MarketFolder
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
         public string ObjectId { get; set; }
+        public Guid GameId { get; set; }
         public string AssetId { get; set; }
         [BsonElement("SequenceNumber")]
         [JsonProperty("SequenceNumber")]

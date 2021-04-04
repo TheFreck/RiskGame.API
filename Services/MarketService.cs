@@ -13,28 +13,32 @@ using RiskGame.API.Mappings;
 using RiskGame.API.Models.MarketFolder;
 using MongoDB.Bson;
 using System.Threading;
+using RiskGame.API.Entities.Enums;
+using Microsoft.AspNetCore.Mvc;
 
 namespace RiskGame.API.Services
 {
     public class MarketService : IMarketService
     {
         private readonly IAssetService _assetService;
+        private readonly IPlayerService _playerService;
         private readonly Random randy;
         private readonly IMapper _mapper;
         private readonly IMongoCollection<EconomyResource> _economy;
         private readonly IMongoCollection<MarketResource> _market;
         public bool isRunning { get; set; }
 
-        public MarketService(IDatabaseSettings settings, IAssetService assetService, IMapper mapper)
+        public MarketService(IDatabaseSettings settings, IAssetService assetService, IPlayerService playerService, IMapper mapper)
         {
             _mapper = mapper;
             randy = new Random();
             var client = new MongoClient(settings.ConnectionString);
             var database = client.GetDatabase(settings.DatabaseName);
             database.DropCollection(settings.EconomyCollectionName);
-            _market = database.GetCollection<MarketResource>(settings.EconomyCollectionName);
-            _economy = database.GetCollection<EconomyResource>(settings.MarketCollectionName);
+            _market = database.GetCollection<MarketResource>(settings.MarketCollectionName);
+            _economy = database.GetCollection<EconomyResource>(settings.EconomyCollectionName);
             _assetService = assetService;
+            _playerService = playerService;
         }
         public async Task<List<MarketMetrics>> GetRecords(Guid gameId)
         {
@@ -59,6 +63,7 @@ namespace RiskGame.API.Services
             var filter = Builders<EconomyResource>.Filter.Eq("GameId", gameId);
             var incoming = _economy.FindAsync(filter).Result;
             var game = new EconomyResource();
+            
             incoming.ForEachAsync(g => game = g);
             game.isRunning = !game.isRunning;
             var update = Builders<EconomyResource>.Update.Set("isRunning", game.isRunning);
@@ -76,32 +81,39 @@ namespace RiskGame.API.Services
         public Guid NewGame()
         {
             var newGame = new Economy();
+            newGame.HAUS = _mapper.Map<PlayerResource,Player>(_playerService.Create(new Player("HAUS", Guid.NewGuid(), newGame.GameId)));
+            newGame.CASH = _mapper.Map<AssetResource,Asset>(_assetService.Create(new Asset(ModelTypes.Cash.ToString(), Guid.NewGuid(), newGame.GameId)));
             _economy.InsertOneAsync(_mapper.Map<Economy,EconomyResource>(newGame));
             return newGame.GameId;
         }
-        public void Motion(Economy economy)
+        public async void Motion(Economy economy)
         {
-            economy.Assets = _assetService.GetCompanyAssets(economy.GameId).Result.ToArray();
             var keepGoing = false;
             do
             {
+                if (!economy.isRunning) goto LoopEnd;
                 Console.WriteLine("let's go: " + DateTime.Now);
-                // check assets
-                var lastMarket = new Market(economy.Trendiness, economy.Assets, economy.Markets.LastOrDefault(), randy);
+                var lastMarket = new Market(economy.GameId, economy.Assets, economy.Markets.LastOrDefault(), randy);
                 var lastMarketMetrics = lastMarket.GetMetrics(GrowAssets(lastMarket.Assets, lastMarket));
-                var nextMarket = new Market(economy.Trendiness, economy.Assets, economy.Markets.LastOrDefault(), randy);
+                var nextMarket = new Market(economy.GameId, economy.Assets, economy.Markets.LastOrDefault(), randy);
                 var nextMarketMetrics = nextMarket.GetMetrics(GrowAssets(lastMarket.Assets, lastMarket));
-                economy.Assets = nextMarketMetrics.Assets;
                 _market.InsertOne(_mapper.Map<Market,MarketResource>(nextMarket));
                 var filter = Builders<EconomyResource>.Filter.Eq("GameId", economy.GameId);
-                var thisEcon = _economy.FindAsync(filter).Result;
-                var newEconomy = new EconomyResource();
-                thisEcon.ForEachAsync(e => newEconomy = e);
-                keepGoing = newEconomy.isRunning;
+                var incomingEcon = _economy.FindAsync(filter).Result;
+                var newEconomy = new Economy();
+                var newEconomyResource = new EconomyResource();
+                newEconomy = _mapper.Map<EconomyResource, Economy>(newEconomyResource);
+                await incomingEcon.ForEachAsync(e => newEconomyResource = e);
+                newEconomyResource.Assets = nextMarketMetrics.Assets;
+                newEconomyResource.Markets.Add(nextMarketMetrics);
+                _economy.ReplaceOne(filter, newEconomyResource);
                 // process players' turns
-                Thread.Sleep(1000);
+                keepGoing = await IsRunning(economy.GameId);
+                Thread.Sleep(500);
             } while (keepGoing);
+        LoopEnd:
             Console.WriteLine("Finito");
+            return;
         }
         private CompanyAsset[] GrowAssets(CompanyAsset[] assets, Market market)
         {
@@ -110,12 +122,33 @@ namespace RiskGame.API.Services
                 var value = asset.Value * GrowthRate(asset.Value, market.GetMetric(asset.PrimaryIndustry), market.GetMetric(asset.SecondaryIndustry));
                 asset.Value = value;
             }
+            // SAVE ASSETS AFTER UPDATE
             return assets;
         }
         private double GrowthRate(double value, double primaryIndustryGrowth, double secondaryIndustryGrowth) => (1 + primaryIndustryGrowth * Math.Abs(secondaryIndustryGrowth) / 10000);
         public List<CompanyAsset> GetCompanyAssets(Guid gameId)
         {
             return _assetService.GetCompanyAssets(gameId).Result;
+        }
+        public async Task<Economy> GetGame(Guid gameId)
+        {
+            var filter = Builders<EconomyResource>.Filter.Eq("GameId", gameId);
+            var incoming = _economy.FindAsync(filter).Result;
+            var game = new EconomyResource();
+            await incoming.ForEachAsync(g => game = g);
+            return _mapper.Map<EconomyResource,Economy>(game);
+        }
+        public string UpdateGame(Economy game)
+        {
+            var filter = Builders<EconomyResource>.Filter.Eq("GameId", game.GameId);
+            try
+            {
+                return _economy.ReplaceOne(filter,_mapper.Map<Economy,EconomyResource>(game)).ToString();
+            }
+            catch (Exception e)
+            {
+                return e.Message;
+            }
         }
     }
     public interface IMarketService
@@ -127,6 +160,7 @@ namespace RiskGame.API.Services
         Task<bool> IsRunning(Guid gameId);
         Guid NewGame();
         void Motion(Economy economy);
-        public List<CompanyAsset> GetCompanyAssets(Guid gameId);
+        public List<CompanyAsset> GetCompanyAssets(Guid gameId); Task<Economy> GetGame(Guid gameId);
+        string UpdateGame(Economy game);
     }
 }

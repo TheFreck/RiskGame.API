@@ -12,6 +12,7 @@ namespace RiskGame.API.Models.PlayerFolder
     {
         public string Name { get; set; }
         public Guid Id { get; set; }
+        public Guid GameId { get; set; }
         public int Cash { get; set; }
         public int? RiskTolerance { get; set; }
     }
