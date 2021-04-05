@@ -5,38 +5,37 @@ export const Chart = props => {
     console.log("chart props: ", props);
 
     var theProps = {
-        xSeries: props.xSeries,
-        height: props.height,
-        width: props.width,
+        series: props.series,
     }
-    const val = useRef();
+    // *****
+    // STATE
+    // *****
+    // SERIES **********************************
+    const seriesRef = useRef();
+    const [series, SETseries] = useState([]);
     useEffect(
         () => {
-            val.current = props;
-            theProps = val.current;
+            seriesRef.current = props.series;
         },
         [props]
     );
 
-
-    const sizeChart = xseries => {
-        debugger;
-        let xMax = Math.max(...xseries);
-        let xMin = Math.min(...xseries);
+    const sizeChart = series => {
+        let xMax = Math.max(...series);
+        let xMin = Math.min(...series);
         let newSeries = [];
-        for (let x of xseries) {
+        for (let x of series) {
             newSeries.push(Math.floor((x - xMin)/(xMax - xMin)*100));
         }
         return newSeries;
     }
 
-    const [xSeries, SETxSeries] = useState(sizeChart(theProps.xSeries));
-    const [height, SETheight] = useState(theProps.height);
-    const [width, SETwidth] = useState(theProps.width);
+    const [height, SETheight] = useState(window.visualViewport.height * .8);
+    const [width, SETwidth] = useState(window.visualViewport.width * .8);
 
     useEffect(() => {
-        console.log("xSeries size chart: ", sizeChart(xSeries));
-    }, [xSeries]);
+        console.log("series size chart: ", sizeChart(series));
+    }, [series]);
 
     let style = {
         background: "darkgrey",
@@ -50,14 +49,14 @@ export const Chart = props => {
         <>
             <div className="chart-container" style={style}>
                 {
-                    xSeries.map((pixel, i) => 
+                    series.map((pixel, i) => 
                         <ChartPixel
                             key={i}
                             id={i}
                             value={pixel}
                             chartHeight={height}
                             chartWidth={width}
-                            seriesQty={xSeries.length}
+                            seriesQty={series.length}
                         />
                     )
                 }
