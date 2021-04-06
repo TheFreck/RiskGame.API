@@ -35,7 +35,12 @@ export const GameHome = props => {
     const [gameId, SETgameId] = useState();
     useEffect(
         () => {
-            gameIdRef.current = gameId;
+            if (gameId !== gameIdRef.current) {
+                gameIdRef.current = gameId;
+                console.log("gameIdRef.current: ", gameIdRef.current);
+                SETviewPane(<ChartContainer gameId={gameIdRef.current} isRunning={isRunningRef.current} />);
+            }
+            else return;
         },
         [gameId]
     )
@@ -73,7 +78,6 @@ export const GameHome = props => {
     // VIEW PANE ************************************************
     const viewPaneRef = useRef();
     const [viewPane, SETviewPane] = useState(<></>);
-    useEffect(() => viewPaneRef.current = viewPane);
 
     // **********
     // GO SETTERS
@@ -144,9 +148,6 @@ export const GameHome = props => {
             SETgameId(game.data);
         })
     }
-    const startButtonClick = () => {
-        SETisRunning(!isRunningRef.current);
-    }
 
     const tradeButtonMouseEnter = () => {
         console.log("enter");
@@ -187,36 +188,16 @@ export const GameHome = props => {
         onClick={playerButtonClick}
         variant="light"
     >Create a Player</Button>
-    //const ChartButton = () => <Button
-    //    onClick={chartButtonClick}
-    //    variant="light"
-    //>ViewChart</Button>
     const NewGameButton = () => <Button
         onClick={newGameClick}
         variant="light"
     >New Game</Button>
-    const ShowChart = () => {
-        if (gameIdRef.current !== null || gameIdRef.current !== undefined) return <>
-            <NewGameButton />
-            <button id="start-stop" onClick={startButtonClick}>Start/Stop</button>
-            <ChartContainer
-                gameId={gameIdRef.current}
-                isRunning={isRunningRef.current}
-            />
-        </>;
-        else return <NewGameButton />;
-    }
 
     return <>
-        <ShowChart />
-        </>
-
-    //return (
-    //    <>
-    //        {isChartOn ? "" : <NewGameButton />}
-    //        <div>{viewPane}</div>
-    //    </>
-    //);
+        <NewGameButton />
+        <AssetButton />
+        {viewPane}
+    </>
 }
 
 export default GameHome;

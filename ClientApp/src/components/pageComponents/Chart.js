@@ -7,35 +7,33 @@ export const Chart = props => {
     var theProps = {
         series: props.series,
     }
-    // *****
-    // STATE
-    // *****
-    // SERIES **********************************
-    const seriesRef = useRef();
-    const [series, SETseries] = useState([]);
-    useEffect(
-        () => {
-            seriesRef.current = props.series;
-        },
-        [props]
-    );
-
     const sizeChart = series => {
         let xMax = Math.max(...series);
         let xMin = Math.min(...series);
         let newSeries = [];
         for (let x of series) {
-            newSeries.push(Math.floor((x - xMin)/(xMax - xMin)*100));
+            newSeries.push(Math.floor((x - xMin) / (xMax - xMin) * 100));
         }
         return newSeries;
     }
+    // *****
+    // STATE
+    // *****
+    // SERIES **********************************
+    const seriesRef = useRef();
+    const [series, SETseries] = useState(sizeChart(props.series));
+    useEffect(
+        () => {
+            seriesRef.current = sizeChart(props.series);
+            console.log("seriesRef.current: ", seriesRef.current);
+        },
+        [props]
+    );
+
 
     const [height, SETheight] = useState(window.visualViewport.height * .8);
     const [width, SETwidth] = useState(window.visualViewport.width * .8);
 
-    useEffect(() => {
-        console.log("series size chart: ", sizeChart(series));
-    }, [series]);
 
     let style = {
         background: "darkgrey",

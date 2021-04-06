@@ -29,20 +29,22 @@ export const ChartPixel = props => {
             display: "inline-block",
             position: "absolute",
             bottom: 0,
-            left: `${id * width}px`
+            left: `${id * width}px`,
         },
         pixelTop: {
-            height: "2px",
+            height: `${width}px`,
             top: 0,
             background: "blue",
             width: `${width}px`,
+            maxHeight: `${window.visualViewport.height / 3}px`
         },
         pixelBottom: {
             height: `100%`,
             width: `${width}px`,
             bottom: 0,
-            background: "orange",
+            //background: "orange",
             opacity: .9,
+            borderLeft: "groove",
         }
     }
 

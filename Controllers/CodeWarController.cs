@@ -17,29 +17,44 @@ namespace RiskGame.API.Controllers
             return Ok("Yup. You made it here");
         }
         [HttpPost]
-        public int Post([FromBody] int[][] matrix)
+        public List<string> Post([FromBody] string observed)
         {
-            return Determinant(matrix);
+            return GetPINs(observed);
         }
-        public static int Determinant(int[][] matrix)
+        public static List<string> GetPINs(string observed)
         {
-            foreach(var line in matrix)
+            var alts = new Dictionary<char, List<string>>
             {
-                var index = 0;
-                do
+                {'1', new List<string>{"2","4"} },
+                {'2', new List<string>{"1","3","5"} },
+                {'3', new List<string>{"2","6"} },
+                {'4', new List<string>{"1","5","7"} },
+                {'5', new List<string>{"2","4","6","8"} },
+                {'6', new List<string>{"3","5","9"} },
+                {'7', new List<string>{"4","8"} },
+                {'8', new List<string>{"5","7","9","0"} },
+                {'9', new List<string>{"6","8"} },
+                {'0', new List<string>{"8"} }
+            };
+            var codeArray = new List<List<string>>();
+            var output = new List<string>();
+            foreach(var digit in observed)
+            {
+                output.Add(digit.ToString());
+                foreach(var item in alts[digit])
                 {
-                    var newIndex = GetIndex(index, line.Length);
-                } while (true);
+                    var theItem = item;
+                    var itemsToAdd = new List<string>();
+                    foreach(var el in output)
+                    {
+                        itemsToAdd.Add(theItem += el);
+                    }
+                }
+                codeArray.Add(alts[digit]);
             }
-            return 0;
+
+            var returnList = observed.Split().ToList();
+            return returnList;
         }
-        public static int GetIndex(int oldIndex, int length)
-        {
-            return (oldIndex + 1) % length;
-        }
-    }
-    public class Matrix
-    {
-        public int[][] matrix { get; set; }
     }
 }

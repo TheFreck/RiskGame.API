@@ -19,11 +19,12 @@ export const ChartContainer = props => {
     );
     // IS RUNNING **********************************
     const isRunningRef = useRef();
+    const [isRunning, SETisRunning] = useState();
     useEffect(
         () => {
-            isRunningRef.current = props.isRunning;
+            isRunningRef.current = isRunning;
         },
-        [props.isRunning]
+        [isRunning]
     )
     // VIEW ****************************************
     const [view, SETview] = useState(<div />);
@@ -33,22 +34,25 @@ export const ChartContainer = props => {
     // GO GETTERS
     // **********
     const getData = cb => {
-        return console.log("got data");
-        API.gamePlay.getData(props.gameId).then(data => {
+        API.gamePlay.getData(gameIdRef.current).then(data => {
             console.log("got data: ", data);
             if (data.status === 200) cb(data.data);
         });
     }
-
-    const ChartComponent = () => <ChartLoop
-        isRunning={isRunningRef.current}
-        gameId={gameIdRef.current}
-        getData={getData}
-    />
+    // **************
+    // EVENT HANDLING
+    // **************
+    const startButtonClick = () => {
+        SETisRunning(!isRunningRef.current);
+    }
 
     return <>
         <h1>Chart</h1>
-        <ChartComponent />
+        <button id="start-stop" onClick={startButtonClick}>Start/Stop</button>
+        <ChartLoop
+            isRunning={isRunningRef.current}
+            getData={getData}
+        />
     </>;
 }
 

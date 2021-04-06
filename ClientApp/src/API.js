@@ -116,10 +116,14 @@ export default {
         newGame: () => axios.get("api/game/new-game"),
         onOff: gameId => axios.post(`api/game/on-off/${gameId}`),
         isGameOn: gameId => axios.get(`api/game/get-game-status/${gameId}`),
-        getData: gameId => axios.get(`api/game/get-records/${gameId}`),
+        getData: gameId => {
+            console.log(`api/game/get-records/${gameId}`);
+            console.log("axios.get(`api/game/get-records/${gameId}`): ", axios.get(`api/game/get-records/${gameId}`));
+            return axios.get(`api/game/get-records/${gameId}`);
+        },
         next: query => {
             console.log(`api/game/next/${query.frames}/${query.trendiness}`);
-            axios.get(`api/game/next/${query.frames}/${query.trendiness}`)
+            return axios.get(`api/game/next/${query.frames}/${query.trendiness}`);
         },
         addAssets: () => axios.get("api/game/add-assets"),
     },

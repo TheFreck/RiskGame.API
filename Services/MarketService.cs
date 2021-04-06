@@ -40,11 +40,11 @@ namespace RiskGame.API.Services
             _assetService = assetService;
             _playerService = playerService;
         }
-        public async Task<List<MarketMetrics>> GetRecords(Guid gameId)
+        public List<MarketMetrics> GetRecords(Guid gameId)
         {
-            var incomingMarkets = await _market.FindAsync(e => e.SequenceNumber >= 0);
+            var incomingMarkets = _market.FindAsync(e => e.SequenceNumber >= 0 && e.GameId == gameId).Result;
             var markets = new List<MarketMetrics>();
-            await incomingMarkets.ForEachAsync(e => markets.Add(_mapper.Map<MarketResource, MarketMetrics>(e)));
+            incomingMarkets.ForEachAsync(e => markets.Add(_mapper.Map<MarketResource, MarketMetrics>(e)));
             return markets.OrderBy(e => e.SequenceNumber).ToList();
         }
         public void SetPixelCount(Guid gameId, int count) {
@@ -89,6 +89,7 @@ namespace RiskGame.API.Services
         public async void Motion(Economy economy)
         {
             var keepGoing = false;
+            var sequenceNumber = 0;
             do
             {
                 if (!economy.isRunning) goto LoopEnd;
@@ -97,6 +98,8 @@ namespace RiskGame.API.Services
                 var lastMarketMetrics = lastMarket.GetMetrics(GrowAssets(lastMarket.Assets, lastMarket));
                 var nextMarket = new Market(economy.GameId, economy.Assets, economy.Markets.LastOrDefault(), randy);
                 var nextMarketMetrics = nextMarket.GetMetrics(GrowAssets(lastMarket.Assets, lastMarket));
+                nextMarketMetrics.SequenceNumber = sequenceNumber;
+                sequenceNumber++;
                 _market.InsertOne(_mapper.Map<Market,MarketResource>(nextMarket));
                 var filter = Builders<EconomyResource>.Filter.Eq("GameId", economy.GameId);
                 var incomingEcon = _economy.FindAsync(filter).Result;
@@ -109,7 +112,7 @@ namespace RiskGame.API.Services
                 _economy.ReplaceOne(filter, newEconomyResource);
                 // process players' turns
                 keepGoing = await IsRunning(economy.GameId);
-                Thread.Sleep(500);
+                Thread.Sleep(100);
             } while (keepGoing);
         LoopEnd:
             Console.WriteLine("Finito");
@@ -153,7 +156,7 @@ namespace RiskGame.API.Services
     }
     public interface IMarketService
     {
-        Task<List<MarketMetrics>> GetRecords(Guid gameId);
+        List<MarketMetrics> GetRecords(Guid gameId);
         void SetPixelCount(Guid gameId, int count);
         void SetTrendiness(Guid gameId, int trend);
         void StartStop(Guid gameId);
