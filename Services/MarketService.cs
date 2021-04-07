@@ -40,12 +40,22 @@ namespace RiskGame.API.Services
             _assetService = assetService;
             _playerService = playerService;
         }
-        public List<MarketMetrics> GetRecords(Guid gameId)
+        public ChartPixel GetRecords(Guid gameId, int lastSequence)
         {
-            var incomingMarkets = _market.FindAsync(e => e.SequenceNumber >= 0 && e.GameId == gameId).Result;
-            var markets = new List<MarketMetrics>();
-            incomingMarkets.ForEachAsync(e => markets.Add(_mapper.Map<MarketResource, MarketMetrics>(e)));
-            return markets.OrderBy(e => e.SequenceNumber).ToList();
+            var query = _market.AsQueryable().Where(m => m.SequenceNumber > lastSequence).OrderByDescending(m => m.SequenceNumber).ToList();
+            var ascendingValue = query.OrderBy(m => m.Assets[0].Value);
+            return new ChartPixel
+            {
+                Open = query[query.Count - 1].Assets[0].Value,
+                Close = query[0].Assets[0].Value,
+                High = ascendingValue.FirstOrDefault().Assets[0].Value,
+                Low = ascendingValue.LastOrDefault().Assets[0].Value,
+                Volume = query.Count,
+                LastFrame = query[0].SequenceNumber
+            };
+
+
+            
         }
         public void SetPixelCount(Guid gameId, int count) {
             var filter = Builders<EconomyResource>.Filter.Eq("GameId", gameId);
@@ -92,26 +102,27 @@ namespace RiskGame.API.Services
             var sequenceNumber = 0;
             do
             {
+                Console.WriteLine("sequence number: " + sequenceNumber);
                 if (!economy.isRunning) goto LoopEnd;
-                Console.WriteLine("let's go: " + DateTime.Now);
                 var lastMarket = new Market(economy.GameId, economy.Assets, economy.Markets.LastOrDefault(), randy);
                 var lastMarketMetrics = lastMarket.GetMetrics(GrowAssets(lastMarket.Assets, lastMarket));
                 var nextMarket = new Market(economy.GameId, economy.Assets, economy.Markets.LastOrDefault(), randy);
-                var nextMarketMetrics = nextMarket.GetMetrics(GrowAssets(lastMarket.Assets, lastMarket));
-                nextMarketMetrics.SequenceNumber = sequenceNumber;
+                nextMarket.SequenceNumber = sequenceNumber;
                 sequenceNumber++;
+                var nextMarketMetrics = nextMarket.GetMetrics(GrowAssets(lastMarket.Assets, lastMarket));
                 _market.InsertOne(_mapper.Map<Market,MarketResource>(nextMarket));
                 var filter = Builders<EconomyResource>.Filter.Eq("GameId", economy.GameId);
                 var incomingEcon = _economy.FindAsync(filter).Result;
-                var newEconomy = new Economy();
                 var newEconomyResource = new EconomyResource();
-                newEconomy = _mapper.Map<EconomyResource, Economy>(newEconomyResource);
                 await incomingEcon.ForEachAsync(e => newEconomyResource = e);
                 newEconomyResource.Assets = nextMarketMetrics.Assets;
                 newEconomyResource.Markets.Add(nextMarketMetrics);
                 _economy.ReplaceOne(filter, newEconomyResource);
                 // process players' turns
+
+                // finalizing
                 keepGoing = await IsRunning(economy.GameId);
+                Console.WriteLine("next market sequence number: " + nextMarketMetrics.SequenceNumber);
                 Thread.Sleep(100);
             } while (keepGoing);
         LoopEnd:
@@ -128,7 +139,13 @@ namespace RiskGame.API.Services
             // SAVE ASSETS AFTER UPDATE
             return assets;
         }
-        private double GrowthRate(double value, double primaryIndustryGrowth, double secondaryIndustryGrowth) => (1 + primaryIndustryGrowth * Math.Abs(secondaryIndustryGrowth) / 10000);
+        private double GrowthRate(double value, double primaryIndustryGrowth, double secondaryIndustryGrowth)
+        {
+            var growthRate = 1 + (7 * primaryIndustryGrowth - 3 * secondaryIndustryGrowth) / 10000;
+            return growthRate;
+        }
+        
+
         public List<CompanyAsset> GetCompanyAssets(Guid gameId)
         {
             return _assetService.GetCompanyAssets(gameId).Result;
@@ -156,7 +173,7 @@ namespace RiskGame.API.Services
     }
     public interface IMarketService
     {
-        List<MarketMetrics> GetRecords(Guid gameId);
+        ChartPixel GetRecords(Guid gameId, int lastSequence);
         void SetPixelCount(Guid gameId, int count);
         void SetTrendiness(Guid gameId, int trend);
         void StartStop(Guid gameId);

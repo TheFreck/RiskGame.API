@@ -70,7 +70,6 @@ export const Transaction = props => {
             qty: tradeCost.tradeCost
         }).then(cash => {
             console.log("transaction got cash: ", cash);
-            debugger;
             SETplayerCash({ playerCash: cash.data });
             cb(cash.data);
         });
@@ -82,7 +81,6 @@ export const Transaction = props => {
     const addCashFromWallet = cb => {
         getCash(cash => {
             console.log("add cash from wallet: ", cash);
-            debugger;
             if (tradeCost.tradeCost * tradeShares.tradeShares > cash.length) return "Error: Not enough cash";
             for (let i = 0; i < shareCost.shareCost * tradeShares.tradeShares; i++) {
                 cash.push(cash.pop());
@@ -93,7 +91,6 @@ export const Transaction = props => {
     const addSharesFromPortfolio = (cb) => {
         getShares(shares => {
             console.log("add shares from portfolio: ", shares);
-            debugger;
             if (tradeShares > shares.length) return "Error: Not enough shares";
             for (let i = 0; i < tradeShares; i++) {
                 shares.push(shares.pop());
@@ -125,7 +122,6 @@ export const Transaction = props => {
     // EVENT HANDLING
     // **************
     const handleSubmit = e => {
-        debugger;
         e.preventDefault();
         console.log("handling submit: player: ", player);
         let playerRef = <ModelReference

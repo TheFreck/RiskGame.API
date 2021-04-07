@@ -10,6 +10,7 @@ namespace RiskGame.API.Models.MarketFolder
     public class MarketMetrics
     {
         public int SequenceNumber { get; set; }
+        public Guid GameId { get; set; }
         public double Red { get; set; }
         public Direction RedDirection;
         public double Orange { get; set; }

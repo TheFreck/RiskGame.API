@@ -7,24 +7,16 @@ export const Chart = props => {
     var theProps = {
         series: props.series,
     }
-    const sizeChart = series => {
-        let xMax = Math.max(...series);
-        let xMin = Math.min(...series);
-        let newSeries = [];
-        for (let x of series) {
-            newSeries.push(Math.floor((x - xMin) / (xMax - xMin) * 100));
-        }
-        return newSeries;
-    }
+
     // *****
     // STATE
     // *****
     // SERIES **********************************
     const seriesRef = useRef();
-    const [series, SETseries] = useState(sizeChart(props.series));
+    const [series, SETseries] = useState(props.series);
     useEffect(
         () => {
-            seriesRef.current = sizeChart(props.series);
+            seriesRef.current = props.series;
             console.log("seriesRef.current: ", seriesRef.current);
         },
         [props]

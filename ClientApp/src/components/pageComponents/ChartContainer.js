@@ -19,12 +19,21 @@ export const ChartContainer = props => {
     );
     // IS RUNNING **********************************
     const isRunningRef = useRef();
-    const [isRunning, SETisRunning] = useState();
+    const [isRunning, SETisRunning] = useState(true);
     useEffect(
         () => {
             isRunningRef.current = isRunning;
         },
-        [isRunning]
+        [props,isRunning]
+    )
+    // LAST FRAME
+    const lastFrameRef = useRef();
+    const [lastFrame, SETlastFrame] = useState();
+    useEffect(
+        () => {
+            lastFrameRef.current = lastFrame;
+        },
+        [lastFrame]
     )
     // VIEW ****************************************
     const [view, SETview] = useState(<div />);
@@ -34,7 +43,7 @@ export const ChartContainer = props => {
     // GO GETTERS
     // **********
     const getData = cb => {
-        API.gamePlay.getData(gameIdRef.current).then(data => {
+        API.gamePlay.getData(gameIdRef.current, lastFrameRef.current).then(data => {
             console.log("got data: ", data);
             if (data.status === 200) cb(data.data);
         });
@@ -44,6 +53,9 @@ export const ChartContainer = props => {
     // **************
     const startButtonClick = () => {
         SETisRunning(!isRunningRef.current);
+        API.gamePlay.onOff(props.gameId).then(outcome => {
+            console.log(outcome);
+        });
     }
 
     return <>

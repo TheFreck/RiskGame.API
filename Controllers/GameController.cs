@@ -41,11 +41,12 @@ namespace RiskGame.API.Controllers
             return Ok(await _marketService.IsRunning(incomingId));
         }
         [HttpGet("get-records/{gameId:length(36)}")]
-        public ActionResult<List<MarketMetrics>> GetRecords(string gameId)
+        public ActionResult<ChartPixel> GetRecords(string gameId, int lastSequence)
         {
             var isGuid = Guid.TryParse(gameId, out var incomingId);
             if (!isGuid) return NotFound("Me thinks that Id was not a Guid");
-            var output = _marketService.GetRecords(incomingId);
+            var output = _marketService.GetRecords(incomingId, lastSequence);
+            //Console.WriteLine("records count: " + output.Count);
             return Ok(output);
         }
         [HttpGet("get-company-assets")]

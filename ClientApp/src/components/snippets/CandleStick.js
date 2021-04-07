@@ -1,9 +1,7 @@
 ﻿import React, { useState, useEffect } from 'react';
 
-export const ChartPixel = props => {
-    const findWidth = () => props.chartWidth / props.seriesQty;
-    const setWidth = () => SETwidth(findWidth());
-    
+export const CandleStick = props => {
+
     const [id, SETid] = useState(props.id);
     const [height, SETheight] = useState(props.value);
     const [width, SETwidth] = useState(findWidth());
@@ -15,10 +13,12 @@ export const ChartPixel = props => {
         setWidth();
     }, []);
 
+    const findWidth = () => props.chartWidth / props.seriesQty;
+    const setWidth = () => SETwidth(findWidth());
     let color = open > close ? "red" : "green";
 
     let style = {
-
+        
         candlestick: {
             top: 0,
             background: "blue",
@@ -28,8 +28,8 @@ export const ChartPixel = props => {
             color: color
         },
         candlestickTop: {
-            width: `${width}%`,
-            height: `${props.cleanOpen > props.cleanClose ? props.cleanHigh - props.cleanOpen : props.cleanHigh - props.cleanClose}%`
+            width: `${width}px`,
+            height: `${open > close ? high - open : high - close}%`
         },
         candlestickTopLeft: {
             borderRight: "solid",
@@ -46,8 +46,7 @@ export const ChartPixel = props => {
         },
         candlestickBottom: {
             width: "100%",
-            color: "inherit",
-            height: `${props.cleanOpen > props.cleanClose ? props.cleanClose - props.cleanLow: props.cleanHigh - props.cleanLow}%`
+            color: "inherit"
         },
         candlestickBottomLeft: {
             borderRight: "solid",
@@ -89,4 +88,4 @@ export const ChartPixel = props => {
     </>
 }
 
-export default ChartPixel;
+export default CandleStick;

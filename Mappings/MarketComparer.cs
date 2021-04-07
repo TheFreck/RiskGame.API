@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace RiskGame.API.Mappings
 {
-    public class EconComparer : IComparer
+    public class MarketComparer : IComparer
     {
         public int Compare(object x, object y)
         {
