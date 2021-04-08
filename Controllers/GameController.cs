@@ -40,7 +40,7 @@ namespace RiskGame.API.Controllers
 
             return Ok(await _marketService.IsRunning(incomingId));
         }
-        [HttpGet("get-records/{gameId:length(36)}")]
+        [HttpGet("get-records/{gameId:length(36)}/{lastSequence}")]
         public ActionResult<ChartPixel> GetRecords(string gameId, int lastSequence)
         {
             var isGuid = Guid.TryParse(gameId, out var incomingId);

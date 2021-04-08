@@ -42,7 +42,7 @@ namespace RiskGame.API.Services
         }
         public ChartPixel GetRecords(Guid gameId, int lastSequence)
         {
-            var query = _market.AsQueryable().Where(m => m.SequenceNumber > lastSequence).OrderByDescending(m => m.SequenceNumber).ToList();
+            var query = _market.AsQueryable().Where(m => m.SequenceNumber >= lastSequence).OrderByDescending(m => m.SequenceNumber).ToList();
             var ascendingValue = query.OrderBy(m => m.Assets[0].Value);
             return new ChartPixel
             {

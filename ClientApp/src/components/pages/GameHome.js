@@ -46,7 +46,7 @@ export const GameHome = props => {
     )
     // IS RUNNING ***********************************************
     const isRunningRef = useRef();
-    const [isRunning, SETisRunning] = useState(false);
+    const [isRunning, SETisRunning] = useState();
     useEffect(
         () => {
             isRunningRef.current = isRunning;
@@ -146,6 +146,16 @@ export const GameHome = props => {
         API.gamePlay.newGame().then(game => {
             console.log("new game: ", game);
             SETgameId(game.data);
+            SETisRunning(false);
+            createAssets(1, game.data);
+        })
+    }
+    const createAssets = (num, gameid) => {
+        num--;
+        if (num >= 0) API.asset.createAsset({
+            Name: "Asset_" + num,
+            SharesOutstanding: 100,
+            GameId: gameid
         })
     }
 
@@ -195,7 +205,6 @@ export const GameHome = props => {
 
     return <>
         <NewGameButton />
-        <AssetButton />
         {viewPane}
     </>
 }

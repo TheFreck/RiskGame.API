@@ -17,7 +17,7 @@ export const Chart = props => {
     useEffect(
         () => {
             seriesRef.current = props.series;
-            console.log("seriesRef.current: ", seriesRef.current);
+            //console.log("seriesRef.current: ", seriesRef.current);
         },
         [props]
     );

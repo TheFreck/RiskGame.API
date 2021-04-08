@@ -22,16 +22,18 @@ export const ChartContainer = props => {
     const [isRunning, SETisRunning] = useState(true);
     useEffect(
         () => {
+            console.log("setting isRunningRef: ", isRunningRef.current);
             isRunningRef.current = isRunning;
+            console.log("set isRunningRef: ", isRunningRef.current);
         },
-        [props,isRunning]
+        [isRunning]
     )
     // LAST FRAME
     const lastFrameRef = useRef();
-    const [lastFrame, SETlastFrame] = useState();
+    const [lastFrame, SETlastFrame] = useState(0);
     useEffect(
         () => {
-            lastFrameRef.current = lastFrame;
+            lastFrameRef.current = lastFrame+1;
         },
         [lastFrame]
     )
@@ -43,8 +45,9 @@ export const ChartContainer = props => {
     // GO GETTERS
     // **********
     const getData = cb => {
-        API.gamePlay.getData(gameIdRef.current, lastFrameRef.current).then(data => {
-            console.log("got data: ", data);
+        API.gamePlay.getData({ gameId: gameIdRef.current, lastFrame: lastFrameRef.current }).then(data => {
+            //console.log("got data: ", data.data);
+            SETlastFrame(data.data.lastFrame)
             if (data.status === 200) cb(data.data);
         });
     }
@@ -52,9 +55,11 @@ export const ChartContainer = props => {
     // EVENT HANDLING
     // **************
     const startButtonClick = () => {
+        console.log("flipping start switch: ", isRunningRef.current);
         SETisRunning(!isRunningRef.current);
+        console.log("flipped start switch: ", isRunningRef.current);
         API.gamePlay.onOff(props.gameId).then(outcome => {
-            console.log(outcome);
+            console.log("on or off: ", outcome);
         });
     }
 

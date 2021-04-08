@@ -56,3 +56,6 @@ I've been** workin on the game loop. All the live long day. I've gotten it to wh
 
 **4/6/21
 This has** gotten big enough that I created an Azure task board to keep track of everything. The current Epic involves Charting. Next will come Trading and finally AI Players. I synchronized the game loop between front and back. Started refactoring so that it sends a packet of Open, Close, High, Low and Volume from all the server processes since the last request. So far so simple on the server side. Started making a candlestick chart pixel and began refactoring the chart rendering itself. So far so much work but nothing yet to show for it. I should be able to fix it tomorrow.
+
+**4/7/21
+Today I made great progress on the chart. On the front end I made a candlestick chart pattern to represent the OHLC data and replace the plain blue pixel that only showed one value. I was able to render the candlestick with dummy data but then after connecting it back up to the server to get game data I spent the rest of my time chasing bugs. It's close but I ran out of time today.
