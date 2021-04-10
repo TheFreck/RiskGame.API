@@ -44,7 +44,6 @@ export const Transaction = props => {
         if (props.retrieveState.player.id) {
             API.player.getPlayer(props.retrieveState.player.id)
                 .then(player => {
-                    console.log("get player: player: ", player);
                     SETplayer({ player: player.data[0] })
                 });
         }
@@ -63,13 +62,11 @@ export const Transaction = props => {
         });
     }
     const getCash = cb => {
-        console.log("transaction get cash");
         API.asset.getPlayerShares({
             id: props.retrieveState.player.id,
             type: modelTypes.Cash,
             qty: tradeCost.tradeCost
         }).then(cash => {
-            console.log("transaction got cash: ", cash);
             SETplayerCash({ playerCash: cash.data });
             cb(cash.data);
         });
@@ -80,7 +77,6 @@ export const Transaction = props => {
     // ********
     const addCashFromWallet = cb => {
         getCash(cash => {
-            console.log("add cash from wallet: ", cash);
             if (tradeCost.tradeCost * tradeShares.tradeShares > cash.length) return "Error: Not enough cash";
             for (let i = 0; i < shareCost.shareCost * tradeShares.tradeShares; i++) {
                 cash.push(cash.pop());
@@ -90,7 +86,6 @@ export const Transaction = props => {
     }
     const addSharesFromPortfolio = (cb) => {
         getShares(shares => {
-            console.log("add shares from portfolio: ", shares);
             if (tradeShares > shares.length) return "Error: Not enough shares";
             for (let i = 0; i < tradeShares; i++) {
                 shares.push(shares.pop());
@@ -123,7 +118,6 @@ export const Transaction = props => {
     // **************
     const handleSubmit = e => {
         e.preventDefault();
-        console.log("handling submit: player: ", player);
         let playerRef = <ModelReference
             name={player.player.name}
             id={player.player.id}
@@ -139,7 +133,6 @@ export const Transaction = props => {
                 cashCount={tradeCost.tradeCost * tradeShares.tradeShares}
                 sharesCount={parseInt(tradeShares.tradeShares)}
             />
-            console.log("tradeTicket.props: ", tradeTicket.props);
             API.transactions.submitTrade(tradeTicket.props).then(outcome => {
                 getPlayer();
                 SETplayerShares({ playerShares: getShares() });
@@ -154,17 +147,12 @@ export const Transaction = props => {
     }
     const handleCashChange = event => {
         event.preventDefault();
-        console.log("event target value: ", parseInt(event.target.value));
-        console.log("shareCost: ", shareCost.shareCost);
-        console.log("cash::SETtradeCost", parseInt(event.target.value) * shareCost.shareCost);
         SETshareCost({ shareCost: parseInt(event.target.value) });
         if (tradeCost.tradeCost > 0) SETtradeCostDisplay(true)
         else SETtradeCostDisplay(false);
     }
     const handleShareChange = event => {
         event.preventDefault();
-        console.log(parseInt(event.target.value));
-        console.log("shares::SETtradeCost", parseInt(event.target.value) * shareCost.shareCost);
         SETtradeShares({ tradeShares: parseInt(event.target.value) });
         if (shareCost.shareCost > 0) SETtradeSharesDisplay(true)
         else SETtradeSharesDisplay(false);
@@ -191,7 +179,6 @@ export const Transaction = props => {
         const target = event.target;
         const eventName = target.name;
         const value = target.value;
-        console.log("unblur: ", shareCost.shareCost * tradeShares.tradeShares);
         updateTradeCost();
     };
 

@@ -14,6 +14,7 @@ namespace RiskGame.API.Persistence
         public string MarketCollectionName { get; set; }
         public string ConnectionString { get; set; }
         public string DatabaseName { get; set; }
+        public string Destructo { get; set; }
     }
 
     public interface IDatabaseSettings
@@ -25,5 +26,6 @@ namespace RiskGame.API.Persistence
         string MarketCollectionName { get; set; }
         string ConnectionString { get; set; }
         string DatabaseName { get; set; }
+        string Destructo { get; set; }
     }
 }

@@ -17,7 +17,6 @@ namespace RiskGame.API.Services
         private readonly IShareService _shareService;
         private readonly IMapper _mapper;
         private readonly IMongoCollection<PlayerResource> _players;
-        //private readonly PlayerResource HAUS;
         private readonly IDatabaseSettings dbSettings; // remove this when you remove Initialize
         public PlayerService(IDatabaseSettings settings, IShareService shareService, IMapper mapper)
         {
@@ -28,6 +27,11 @@ namespace RiskGame.API.Services
             _players = database.GetCollection<PlayerResource>(settings.PlayerCollectionName);
             _shareService = shareService;
             _mapper = mapper;
+        }
+        public string MassDestruction()
+        {
+            _players.Database.Client.DropDatabase(dbSettings.DatabaseName);
+            return "it is done";
         }
         public async Task<Player> GetHAUS(Guid gameId)
         {
@@ -48,10 +52,17 @@ namespace RiskGame.API.Services
             await _players.FindAsync(player => true);
         //
         // Gets the player attached to the given id
-        public async Task<IAsyncCursor<PlayerResource>> GetPlayerAsync(Guid gameId)
+        public async Task<IAsyncCursor<PlayerResource>> GetPlayerAsync(Guid playerId)
         {
-            var anything = await _players.FindAsync(player => player.GameId == gameId);
-            return anything;
+            return await _players.FindAsync(player => player.PlayerId == playerId.ToString());
+        }
+        //
+        // Remove all players from a game
+        public string RemovePlayersFromGame(Guid gameId)
+        {
+            var filter = Builders<PlayerResource>.Filter.Eq("GameId", gameId);
+            _players.DeleteMany(filter);
+            return "they were 'removed' peacefully in their sleep";
         }
         //
         // Creates a new player from the JSON
@@ -84,10 +95,12 @@ namespace RiskGame.API.Services
     }
     public interface IPlayerService
     {
+        string MassDestruction();
         Task<Player> GetHAUS(Guid gameId);
         ModelReference GetHAUSRef(Guid gameId);
         Task<IAsyncCursor<PlayerResource>> GetAsync();
         Task<IAsyncCursor<PlayerResource>> GetPlayerAsync(Guid id);
+        string RemovePlayersFromGame(Guid gameId);
         PlayerResource Create(Player player);
         void Update(Guid id, PlayerResource playerIn);
         void Remove(Player playerIn);

@@ -2,8 +2,7 @@
 import Chart from './Chart';
 
 export const ChartLoop = props => {
-    console.log("chart loop props.isRunning: ", props.isRunning);
-
+    console.log(`I am an ${props.isRunning ? "" : "in"}active chart loop`);
     // *****
     // STATE
     // *****
@@ -22,32 +21,31 @@ export const ChartLoop = props => {
     // APPEND SERIES *******************************
     const seriesAppendRef = useRef();
     const [seriesAppend, SETseriesAppend] = useState();
-    // OPEN ****************************************
-    const openRef = useRef([]);
-    const [open, SETopen] = useState();
-    // CLOSE ***************************************
-    const closeRef = useRef([]);
-    const [close, SETclose] = useState();
     // HIGH ****************************************
-    const highRef = useRef([]);
-    const [high, SEThigh] = useState();
+    const highRef = useRef();
+    const [high, SEThigh] = useState(Number.MIN_SAFE_INTEGER);
     // LOW *****************************************
-    const lowRef = useRef([]);
-    const [low, SETlow] = useState();
-    // ON SERIES APPEND UPDATE *********************
+    const lowRef = useRef();
+    const [low, SETlow] = useState(Number.MAX_SAFE_INTEGER);
     useEffect(
         () => {
-            console.log("series append: ", seriesAppend);
+            lowRef.current > low ? lowRef.current = low : lowRef.current = lowRef.current;
+            highRef.current < high ? highRef.current = high : highRef.current = highRef.current;
+        },
+        [high,low]
+    )
+    // ON UPDATING SERIES APPEND *******************
+    useEffect(
+        () => {
             seriesAppendRef.current = seriesAppend;
             let altSeries = series ? series : [];
             if (seriesAppend) {
                 altSeries.push(seriesAppend);
+                setHighLow(altSeries);
                 SETseries(altSeries);
                 seriesRef.current = altSeries;
-                openRef.current.push(seriesAppend.cleanOpen);
-                closeRef.current.push(seriesAppend.cleanClose);
-                highRef.current.push(seriesAppend.cleanHigh);
-                lowRef.current.push(seriesAppend.cleanLow);
+                highRef.current = seriesAppend.high;
+                lowRef.current = seriesAppend.low;
             }
         },
         [seriesAppend]
@@ -60,14 +58,12 @@ export const ChartLoop = props => {
     // GAME LOOP
     // *********
     const bounce = running => {
-        console.log("bounce");
         getData();
         if (isRunningRef.current) setTimeout(() => {
             return bounceBack();
         }, 1000);
     }
     const bounceBack = () => {
-        console.log("bounce back");
         getData();
         if (isRunningRef.current) setTimeout(() => {
             return bounce();
@@ -78,49 +74,33 @@ export const ChartLoop = props => {
     // GO GETTERS
     // **********
     const getData = () => props.getData(data => {
-        console.log("gotten data: ", data);
-        let sizeChartData = sizeChart(data);
-        console.log("sizeChartData: ", sizeChartData);
-        SETseriesAppend(sizeChartData);
-        // is setting the random really necessary to cause a re-render?
-        SETrender(Math.random());
+        SETseriesAppend(data);
+        //// is setting the random really necessary to cause a re-render?
+        //SETrender(Math.random());
     });
 
     // ********
     // SERVICES
     // ********
-    const sizeChart = incoming => {
-        let newHigh = high > incoming.high ? high : incoming.high;
-        let newLow = low < incoming.low ? low : incoming.low;
-        console.log("size chart new high: ", newHigh);
-        console.log("size chart new low: ", newLow);
-        let newSeries = [];
-        for (let x of series) {
-            let cleanOpen = Math.floor((x.open - newLow) / (newHigh - newLow) * 100);
-            let cleanClose = Math.floor((x.close - newLow) / (newHigh - newLow) * 100);
-            let cleanHigh = Math.floor((x.high - newLow) / (newHigh - newLow) * 100);
-            let cleanLow = Math.floor((x.low - newLow) / (newHigh - newLow) * 100);
-            newSeries.push({
-                cleanOpen,
-                cleanClose,
-                cleanHigh,
-                cleanLow,
-                open: x.open,
-                close: x.close,
-                high: x.high,
-                low: x.low
-            });
+    const setHighLow = incoming => {
+        let newHigh, newLow;
+        for (let item of incoming) {
+            newHigh = highRef.current > item.high ? highRef.current : item.high;
+            newLow = lowRef.current < item.low ? lowRef.current : item.low;
         }
-        return newSeries;
+        highRef.current && newHigh > highRef.current ? SEThigh(newHigh) : ChartRender();
+        lowRef.current && newLow < lowRef.current ? SETlow(newLow) : ChartRender();
+        SEThigh(newHigh);
+        SETlow(newLow);
     }
 
     const ChartRender = () => {
         if (seriesRef.current !== undefined)
-            return <Chart series={seriesRef.current} />;
+            return <Chart series={seriesRef.current} seriesHigh={highRef.current} seriesLow={lowRef.current} />;
         else
             return <Chart series={[]} />
     }
-
+    //return <></>
     return <>
         <p>{render}</p>
         <ChartRender />

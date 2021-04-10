@@ -32,30 +32,5 @@ namespace RiskGame.API.Models.EconomyFolder
         public List<MarketMetrics> Markets;
         public Player HAUS { get; set; }
         public Asset CASH { get; set; }
-        public Economy()
-        {
-            isRunning = false;
-            Markets = new List<MarketMetrics> {
-                new MarketMetrics
-                {
-                    Red = 1,
-                    Orange = 1,
-                    Yellow = 1,
-                    Green = 1,
-                    Blue = 1,
-                    Violet = 1,
-                    RedDirection = Direction.Up,
-                    OrangeDirection = Direction.Up,
-                    YellowDirection = Direction.Up,
-                    GreenDirection = Direction.Up,
-                    BlueDirection = Direction.Up,
-                    VioletDirection = Direction.Up
-                }
-            };
-        }
-
-        // generate economic metrics
-        // grow Company Assets
-        // process players' turns
     }
 }

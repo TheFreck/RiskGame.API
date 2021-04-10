@@ -43,8 +43,6 @@ export default class App extends Component {
         const cursor = document.querySelector(".cursor");
         cursor.style.left = `${event.pageX}px`;
         cursor.style.top = `${event.pageY}px`;
-        console.log("left: ", cursor.style.left);
-        console.log("top: ", cursor.style.top);
     }
 
     render() {

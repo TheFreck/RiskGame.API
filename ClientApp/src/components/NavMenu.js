@@ -44,7 +44,6 @@ export class NavMenu extends Component {
         var scrollTop = $(window).scrollTop();
         var trackLength = docheight - winheight;
         var pctScrolled = Math.floor(scrollTop / trackLength * 100); // gets percentage scrolled (ie: 80 NaN if tracklength == 0)
-        //console.log(pctScrolled + '% scrolled');
         this.setState({
             now: pctScrolled
         })

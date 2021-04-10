@@ -5,7 +5,6 @@ import API from './../../API';
 import ListResults from './ListResults';
 
 export const PlayerCreate = props => {
-    //console.log("player props: ", props);
     const [gameId, SETgameId] = useState(props.gameId);
     const [playerName, SETplayerName] = useState("Charlie");
     const [playerCash, SETplayerCash] = useState(1000);

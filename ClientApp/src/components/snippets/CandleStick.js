@@ -1,91 +1,45 @@
-﻿import React, { useState, useEffect } from 'react';
+﻿import React from 'react';
 
 export const CandleStick = props => {
 
-    const [id, SETid] = useState(props.id);
-    const [height, SETheight] = useState(props.value);
-    const [width, SETwidth] = useState(findWidth());
-    const [open, SETopen] = useState();
-    const [close, SETclose] = useState();
-    const [high, SEThigh] = useState();
-    const [low, SETlow] = useState();
-    useEffect(() => {
-        setWidth();
-    }, []);
+    const height = props.chartHeight;
+    const width = props.chartWidth / props.seriesQty;
+    const color = props.value.close > props.value.open ? "green" : "firebrick";
+    const border = props.value.close > props.value.open ? "darkgreen" : "maroon";
+    const seriesBreadth = props.seriesHigh - props.value.seriesLow;
+    const cleanHigh = (props.value.high - props.seriesLow) / seriesBreadth;
+    const cleanLow = (props.value.low - props.seriesLow) / seriesBreadth;
+    const cleanOpen = (props.value.open - props.seriesLow) / seriesBreadth;
+    const cleanClose = (props.value.close - props.seriesLow) / seriesBreadth;
+    const boxTop = Math.max(cleanOpen, cleanClose);
+    const boxBottom = Math.min(cleanOpen, cleanClose);
 
-    const findWidth = () => props.chartWidth / props.seriesQty;
-    const setWidth = () => SETwidth(findWidth());
-    let color = open > close ? "red" : "green";
-
-    let style = {
-        
-        candlestick: {
-            top: 0,
-            background: "blue",
-            width: `${width}px`,
-            display: "grid",
-            gridTemplateColumns: "50% 50%",
-            color: color
-        },
-        candlestickTop: {
-            width: `${width}px`,
-            height: `${open > close ? high - open : high - close}%`
-        },
-        candlestickTopLeft: {
-            borderRight: "solid",
-            borderColor: `dark${color}`
-        },
-        candlestickTopRight: {
-            borderLeft: "solid",
-            borderColor: `dark${color}`
-        },
-        candlestickMiddle: {
-            width: "100%",
-            color: "inherit",
-            borderColor: `dark${color}`
-        },
-        candlestickBottom: {
-            width: "100%",
-            color: "inherit"
-        },
-        candlestickBottomLeft: {
-            borderRight: "solid",
-            borderColor: `dark${color}`
-        },
-        candlestickBottomRight: {
-            borderLeft: "solid",
-            borderColor: `dark${color}`
-        },
-        pixelBottom: {
-            height: `100%`,
-            width: `${width}px`,
-            bottom: 0,
-            opacity: .9,
-        }
+    const pixelStyle = {
+        height: `${height}px`,
+        width: `${width}px`,
+        position: "absolute",
+        left: `${props.id * width}px`
     }
 
-    return <>
-        <div className="candlestick pixel-top" style={style.pixelTop}>
-            <div className="candlestick-top" style={style.candlestickTop}>
-                <div className="candlestick-top-left" style={style.candlestickTopLeft}>
-                </div>
-                <div className="candlestick-top-right" style={style.candlestickTopRight}>
-                </div>
-            </div>
-            <div className="candlestick-middle">
-                <div className="candlestick-middle-body" style={style.candlestickMiddle}>
-                </div>
-            </div>
-            <div className="candlestick-bottom" style={style.candlestickBottom}>
-                <div className="candlestick-bottom-left" style={style.candlestickBottomLeft}>
-                </div>
-                <div className="candlestick-bottom-right" style={style.candlestickBottomRight}>
-                </div>
-            </div>
-        </div>
-        <div className="pixel-bottom" style={style.pixelBottom}>
-        </div>
-    </>
+    const Pixel = () => <div className="pixel" style={pixelStyle} >
+        <PixelSpace height={height * (1-cleanHigh)} />
+        <CandleStickPixel height={ height * (cleanHigh-cleanLow)} />
+        <PixelSpace height={height * cleanLow} />
+    </div>;
+    const PixelSpace = props => <div className="pixelSpace" style={{ height: `${props.height}px` }}></div>;
+    const CandleStickPixel = () => <div className="candlestick">
+        <Wick height={height * (cleanHigh - boxTop} />
+        <Candle />
+        <Wick height={height * (boxBottom - cleanLow} />
+    </div>;
+    const Wick = props => <div className="top-wick" style={{height: `${props.height}`, width: '100%'}}>
+        <LeftWick />
+        <RightWick />
+    </div>;
+    const Candle = () => <div style={{ height: `${height * (boxTop - boxBottom)}px`, background: `${color}`, borderColor: `${border}` }} className="candle" ></div>;
+    const LeftWick = () => <div style={{ borderColor: `${border}`, border: 'none', borderRight: 'solid', height: '100%' }} className="left-wick" ></div>;
+    const RightWick = () => <div style={{ borderColor: `${border}`, border: 'none', borderLeft: 'solid', height: '100%' }} className="right-wick" ></div>;
+    return <Pixel />;
 }
 
 export default CandleStick;

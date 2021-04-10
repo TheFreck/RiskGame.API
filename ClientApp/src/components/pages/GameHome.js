@@ -25,7 +25,6 @@ export const GameHome = props => {
     // **********
     const updateState = changeSet => {
         if ((player || changeSet.player) && (cash || changeSet.cash) && (assets.length || changeSet.assets)) SETgotEm(true);
-        console.log("state set: ", changeSet);
         SETplayer(changeSet.player ? changeSet.player : player.player);
         SETcash(changeSet.csh ? changeSet.csh : cash.cash);
         SETassets(changeSet.asst ? assets.concat(changeSet.asst) : assets.assets);
@@ -37,7 +36,6 @@ export const GameHome = props => {
         () => {
             if (gameId !== gameIdRef.current) {
                 gameIdRef.current = gameId;
-                console.log("gameIdRef.current: ", gameIdRef.current);
                 SETviewPane(<ChartContainer gameId={gameIdRef.current} isRunning={isRunningRef.current} />);
             }
             else return;
@@ -61,7 +59,6 @@ export const GameHome = props => {
             if(cashRef.current != cash) cashRef.current = cash;
             else if (gameIdRef.current) {
                 getCash(gameIdRef.current, cash => {
-                    if (cash.status == 200) console.log("yay it's cash: ", cash);
                 });
             }
         }, [gameId]
@@ -120,13 +117,18 @@ export const GameHome = props => {
         );
     };
     const selfDestruct = () => {
-        console.log(API.gamePlay.initialize("Playa101"));
+        API.gamePlay.initialize("badBoyNeedSpank").then(init => {
+        })
         SETplayer({ player: {} });
         SETcash({ cash: {} });
         SETassets({ assets: {} });
         SETgotEm(false);
         SETtradeButtonMessageDisplay(false);
         SETtradeButtonMessage("");
+    }
+    const gameOver = () => {
+        API.gamePlay.gameOver(gameIdRef.current).then(answer => {
+        })
     }
     const assetButtonClick = gameid => {
         SETviewPane(<AssetCreate updateState={updateState} playerButtonClick={playerButtonClick} gameId={gameIdRef.current} state={state} />);
@@ -144,7 +146,6 @@ export const GameHome = props => {
     }
     const newGameClick = () => {
         API.gamePlay.newGame().then(game => {
-            console.log("new game: ", game);
             SETgameId(game.data);
             SETisRunning(false);
             createAssets(1, game.data);
@@ -160,12 +161,10 @@ export const GameHome = props => {
     }
 
     const tradeButtonMouseEnter = () => {
-        console.log("enter");
         SETtradeButtonMessage("Create an asset and a player to start");
         setTimeout(() => SETtradeButtonMessage(""), 3333);
     }
     const tradeButtonMouseLeave = () => {
-        console.log("exit");
         SETtradeButtonMessage("");
     }
 
@@ -182,6 +181,10 @@ export const GameHome = props => {
         style={initStyle}
         variant="danger"
     >Don't<br /> Press!<br />Or Else!!!</Button>;
+    const GameOverButton = () => <Button
+        onClick={gameOver}
+        variant="light"
+    >Game Over</Button>;
     const TradeButton = gotEm => {
         if (gotEm.gotEm) {
             return <Button onClick={tradeButtonClick} variant="dark">Place a Trade</Button>;
@@ -204,6 +207,8 @@ export const GameHome = props => {
     >New Game</Button>
 
     return <>
+        <SelfDestructButton />
+        <GameOverButton />
         <NewGameButton />
         {viewPane}
     </>

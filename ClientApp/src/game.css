@@ -15,3 +15,20 @@
     color: green;
 }
 
+.left-wick {
+    height: 100%;
+    width: 100%;
+    border: none;
+    border-right: solid;
+}
+.right-wick{
+    height: 100%;
+    width: 100%;
+    border: none;
+    border-left: solid;
+}
+
+.wick{
+    display: grid;
+    grid-template-columns: 50% 50%;
+}

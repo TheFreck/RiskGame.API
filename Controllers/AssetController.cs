@@ -233,7 +233,8 @@ namespace RiskGame.API.Controllers
             {
                 return NotFound();
             }
-            _assetService.Remove(incomingId);
+            var filter = Builders<AssetResource>.Filter.Eq("GameId", incomingId);
+            _assetService.RemoveFromGame(filter);
             return NoContent();
         }
 

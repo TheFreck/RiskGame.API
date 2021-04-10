@@ -3,7 +3,6 @@ import ChartPixel from './../snippets/ChartPixel';
 
 export const Chart = props => {
     console.log("chart props: ", props);
-
     var theProps = {
         series: props.series,
     }
@@ -17,33 +16,35 @@ export const Chart = props => {
     useEffect(
         () => {
             seriesRef.current = props.series;
-            //console.log("seriesRef.current: ", seriesRef.current);
         },
         [props]
     );
 
-
     const [height, SETheight] = useState(window.visualViewport.height * .8);
-    const [width, SETwidth] = useState(window.visualViewport.width * .8);
+    const [width, SETwidth] = useState(window.visualViewport.width);
 
 
     let style = {
-        background: "darkgrey",
-        width: "100vw",
-        height: `${height}px`,
-        position: "relative",
-        padding: 0,
+        chartContainer: {
+            background: "darkgrey",
+            width: "100vw",
+            height: `${height}px`,
+            position: "relative",
+            padding: 0,
+        }
     }
 
     return (
         <>
-            <div className="chart-container" style={style}>
+            <div className="chart" style={style.chartContainer}>
                 {
                     series.map((pixel, i) => 
                         <ChartPixel
                             key={i}
                             id={i}
                             value={pixel}
+                            seriesHigh={props.seriesHigh}
+                            seriesLow={props.seriesLow}
                             chartHeight={height}
                             chartWidth={width}
                             seriesQty={series.length}

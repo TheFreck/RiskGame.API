@@ -18,13 +18,19 @@ export const ChartContainer = props => {
         []
     );
     // IS RUNNING **********************************
-    const isRunningRef = useRef();
-    const [isRunning, SETisRunning] = useState(true);
+    const isRunningRef = useRef(false);
+    const [isRunning, SETisRunning] = useState(false);
     useEffect(
         () => {
-            console.log("setting isRunningRef: ", isRunningRef.current);
             isRunningRef.current = isRunning;
-            console.log("set isRunningRef: ", isRunningRef.current);
+            console.log("isRunning: ", isRunning);
+            API.gamePlay.onOff({ gameId: props.gameId, isRunning }).then(outcome => {
+                console.log("servier running: ", outcome.data);
+            });
+            SETview(<ChartLoop
+                isRunning={isRunning}
+                getData={getData}
+            />);
         },
         [isRunning]
     )
@@ -46,7 +52,6 @@ export const ChartContainer = props => {
     // **********
     const getData = cb => {
         API.gamePlay.getData({ gameId: gameIdRef.current, lastFrame: lastFrameRef.current }).then(data => {
-            //console.log("got data: ", data.data);
             SETlastFrame(data.data.lastFrame)
             if (data.status === 200) cb(data.data);
         });
@@ -55,21 +60,15 @@ export const ChartContainer = props => {
     // EVENT HANDLING
     // **************
     const startButtonClick = () => {
-        console.log("flipping start switch: ", isRunningRef.current);
+        console.log("start button: ", isRunningRef.current);
         SETisRunning(!isRunningRef.current);
-        console.log("flipped start switch: ", isRunningRef.current);
-        API.gamePlay.onOff(props.gameId).then(outcome => {
-            console.log("on or off: ", outcome);
-        });
+        
     }
 
     return <>
         <h1>Chart</h1>
         <button id="start-stop" onClick={startButtonClick}>Start/Stop</button>
-        <ChartLoop
-            isRunning={isRunningRef.current}
-            getData={getData}
-        />
+        {view}
     </>;
 }
 

@@ -94,7 +94,6 @@ export const AssetCreate = props => {
                 }
                 else {
                     SETassetCreated(false );
-                    console.log("didn't get it");
                 }
             })
         }
@@ -151,7 +150,6 @@ export const AssetCreate = props => {
         }
     };
     const handleFinished = event => {
-        console.log("props: ", props);
         props.playerButtonClick(gameId);
     }
 

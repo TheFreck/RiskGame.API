@@ -61,14 +61,14 @@ namespace RiskGame.API.Controllers
         // ****
         // POST
         // ****
-        [HttpPost("on-off/{gameId:length(36)}")]
-        public async Task<ActionResult<bool>> OnOff(string gameId)
+        [HttpPost("on-off/{gameId:length(36)}/{isRunning}")]
+        public async Task<ActionResult<bool>> OnOff(string gameId, bool isRunning)
         {
             var isGuid = Guid.TryParse(gameId, out var incomingId);
             if (!isGuid) return NotFound("Me thinks that Id was not a Guid");
-            _marketService.StartStop(incomingId);
+            _marketService.StartStop(incomingId, isRunning);
 
-            return await GameStatus(gameId);
+            return Ok(await _marketService.IsRunning(incomingId));
         }
 
         // ***
@@ -85,6 +85,18 @@ namespace RiskGame.API.Controllers
         // ******
         // DELETE
         // ******
-
+        [HttpDelete("blowup-the-inside-world/{secretCode}")]
+        public ActionResult<string> BlowUpTheInsideWorld(string secretCode)
+        {
+            _marketService.BigBang(secretCode);
+            return Ok("sweet oblivion!");
+        }
+        [HttpDelete("end-game/{gameId:length(36)}")]
+        public ActionResult<string> EndGame(string gameId)
+        {
+            var isGuid = Guid.TryParse(gameId, out var incomingId);
+            if (!isGuid) return NotFound("Me thinks that Id was not a Guid");
+            return Ok(_marketService.EndGame(incomingId));
+        }
     }
 }

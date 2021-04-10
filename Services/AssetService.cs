@@ -101,8 +101,8 @@ namespace RiskGame.API.Services
             var assetRes = _mapper.Map<Asset, AssetResource>(assetIn);         
             _assets.DeleteOne(asset => asset.AssetId.ToString() == assetRes.AssetId);
         }
-        public void Remove(Guid id) =>
-            _assets.DeleteOne(asset => asset.AssetId == id.ToString());
+        public void RemoveFromGame(FilterDefinition<AssetResource> filter) => _assets.DeleteOne(filter);
+
         public ModelReference ToRef(Asset asset) =>
             _mapper.Map<Asset,ModelReference>(asset);
     }
@@ -119,7 +119,7 @@ namespace RiskGame.API.Services
         AssetResource Create(Asset asset);
         void Replace(Guid id, Asset assetIn);
         void Remove(Asset assetIn);
-        void Remove(Guid id);
+        void RemoveFromGame(FilterDefinition<AssetResource> filter);
         ModelReference ToRef(Asset asset);
     }
 }

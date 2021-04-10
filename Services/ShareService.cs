@@ -112,6 +112,12 @@ namespace RiskGame.API.Services
                 return new ModelReference { Message = $"Something went wrong while updating the shares: {e.Message}" };
             }
         }
+        public string ShredShares(Guid assetId)
+        {
+            var filter = Builders<ShareResource>.Filter.Eq(s => s._assetId, assetId);
+            _shares.DeleteMany(filter);
+            return "the shares no longer exist on this plane of existence";
+        }
         public ModelReference ToRef(Share share) =>
             _mapper.Map<Share, ModelReference>(share);
         public List<ModelReference> ToRef(List<Share> shares) =>
@@ -132,6 +138,7 @@ namespace RiskGame.API.Services
         Task<List<ShareResource>> GetPlayerCash(ModelReference playerRef);
         Task<List<ModelReference>> CreateShares(ModelReference asset, int qty, ModelReference owner, ModelTypes type);
         Task<ModelReference> UpdateShares(List<ShareResource> shares);
+        string ShredShares(Guid assetId);
         ModelReference ToRef(Share share);
         List<ModelReference> ToRef(List<Share> shares);
         ModelReference ResToRef(ShareResource share);

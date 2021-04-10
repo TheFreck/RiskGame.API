@@ -1,120 +1,46 @@
 ﻿import React, { useState, useEffect } from 'react';
 
 export const ChartPixel = props => {
-    const findWidth = () => props.chartWidth / props.seriesQty;
-    const setWidth = () => SETwidth(findWidth());
-    
-    const [id, SETid] = useState(props.id);
-    const [height, SETheight] = useState(props.chartHeight);
-    const [width, SETwidth] = useState(findWidth());
-    const [open, SETopen] = useState();
-    const [close, SETclose] = useState();
-    const [high, SEThigh] = useState();
-    const [low, SETlow] = useState();
-    const [color, SETcolor] = useState();
-    const [border, SETborder] = useState();
-    useEffect(() => {
-        setWidth();
-        console.log("props: ", props);
-        console.log("props.value: ", props.value);
-        debugger;
-        if (props.value.cleanOpen > props.value.cleanClose) {
-            SETcolor("firebrick");
-            SETborder("maroon");
-        }
-        else {
-            SETcolor("green");
-            SETborder("darkgreen");
-        }
-    }, []);
+    debugger;
+    const chartHeight = props.chartHeight;
+    const width = props.chartWidth / props.seriesQty;
+    const color = props.value.close > props.value.open ? "green" : "firebrick";
+    const border = props.value.close > props.value.open ? "darkgreen" : "maroon";
+    const seriesBreadth = props.seriesHigh - props.seriesLow;
+    const cleanHigh = (props.value.high - props.seriesLow) / seriesBreadth;
+    const cleanLow = (props.value.low - props.seriesLow) / seriesBreadth;
+    const cleanOpen = (props.value.open - props.seriesLow) / seriesBreadth;
+    const cleanClose = (props.value.close - props.seriesLow) / seriesBreadth;
+    const boxTop = Math.max(cleanOpen, cleanClose);
+    const boxBottom = Math.min(cleanOpen, cleanClose);
+    const candleHeight = chartHeight * (boxTop - boxBottom);
 
-    let style = {
-        pixel: {
-            height: `${props.value.cleanHigh}%`,
-            display: "inline-block",
-            position: "relative"
-        },
-        candlestick: {
-            top: 0,
-            width: `${width}px`,
-            height: `${props.value.cleanHigh - props.value.cleanLow}%`,
-            position: "relative",
-        },
-        candlestickTop: {
-            height: `${props.value.cleanOpen > props.value.cleanClose ? props.value.cleanHigh - props.value.cleanOpen : props.value.cleanHigh - props.value.cleanClose}%`,
-            width: "100%",
-            display: "grid",
-            gridTemplateColumns: "50% 50%"
-        },
-        candlestickTopLeft: {
-            borderRight: "solid",
-            borderColor: border,
-            width: "100%",
-        },
-        candlestickTopRight: {
-            borderLeft: "solid",
-            borderColor: border,
-            width: "100%",
-        },
-        candlestickMiddle: {
-            width: "100%",
-            background: color,
-            borderColor: border,
-            border: "solid",
-            height: `${props.value.cleanOpen > props.value.cleanClose ? props.value.cleanOpen - props.value.cleanClose : props.value.cleanClose - props.value.cleanOpen}%`
-        },
-        candlestickBottom: {
-            width: "100%",
-            height: `${props.value.cleanOpen > props.value.cleanClose ? props.value.cleanClose - props.value.cleanLow : props.value.cleanOpen - props.value.cleanLow}%`,
-            display: "grid",
-            gridTemplateColumns: "50% 50%"
-        },
-        candlestickBottomLeft: {
-            width: "100%",
-            borderRight: "solid",
-            borderColor: border
-        },
-        candlestickBottomRight: {
-            width: "100%",
-            borderLeft: "solid",
-            borderColor: border
-        },
-        pixelBottom: {
-            height: `${props.value.cleanLow}%`,
-            width: `${width}px`,
-            bottom: 0,
-            opacity: .9,
-            position: "relative",
-        }
+    const pixelStyle = {
+        height: `${chartHeight}px`,
+        width: `${width}px`,
+        position: "absolute",
+        left: `${props.id * width}px`
     }
 
-    return <>
-        <div className="pixel" style={style.pixel}>
-            <div className="candlestick" style={style.candlestick}>
-                <div className="candlestick-top" style={style.candlestickTop}>
-                    <div className="candlestick-top-left" style={style.candlestickTopLeft}>
-                    </div>
-                    <div className="candlestick-top-right" style={style.candlestickTopRight}>
-                    </div>
-                </div>
-                <div className="candlestick-middle" style={style.candlestickMiddle}>
-                    <div className="candlestick-middle-body">
-                    </div>
-                </div>
-                <div className="candlestick-bottom" style={style.candlestickBottom}>
-                    <div className="candlestick-bottom-left" style={style.candlestickBottomLeft}>
-                    </div>
-                    <div className="candlestick-bottom-right" style={style.candlestickBottomRight}>
-                    </div>
-                </div>
-            </div>
-            <div className="pixel-bottom" style={style.pixelBottom}>
-                1--
-                -2-
-                --3
-            </div>
-        </div>
-    </>
+    const Pixel = () => <div className="pixel" style={pixelStyle} >
+        <PixelSpace height={chartHeight * (1 - cleanHigh)} />
+        <CandleStickPixel height={chartHeight * (cleanHigh - cleanLow)} />
+        <PixelSpace height={chartHeight * cleanLow} />
+    </div>;
+    const PixelSpace = pixSpProps => <div className="pixelSpace" style={{ height: pixSpProps.height }}></div>;
+    const CandleStickPixel = candlePixProps => <div className="candlestick" style={{ height: candlePixProps.height }} >
+        <Wick height={chartHeight * (cleanHigh - boxTop)} />
+        <Candle />
+        <Wick height={chartHeight * (boxBottom - cleanLow)} />
+    </div>;
+    const Wick = wickProps => <div className="wick" style={{ height: wickProps.height, width: '100%' }}>
+        <LeftWick />
+        <RightWick />
+    </div>;
+    const Candle = () => <div style={{ height: candleHeight, background: `${color}`, borderColor: `${border}` }} className="candle" ></div>;
+    const LeftWick = () => <div style={{ borderColor: `${border}`, border: 'none solid none none', height: '100%' }} className="left-wick" ></div>;
+    const RightWick = () => <div style={{ borderColor: `${border}`, border: 'none none none solid', height: '100%' }} className="right-wick" ></div>;
+    return <Pixel />;
 }
 
 export default ChartPixel;
