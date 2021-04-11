@@ -32,11 +32,12 @@ export default {
             if (!query) return this.messages.badInput;
             return axios.put(`api/asset/${query.id}`, query.changeSet);
         },
-        // Delete
         deleteAsset: query => {
             if (!query) return this.messages.badInput;
-            return axios.delete(`api/asset/${query}`);
-        }
+            return axios.post(`api/asset/delete-asset`,query);
+        },
+        // Delete
+        deleteGameAssets: query => axios.delete(`api/asset/game-assets/${query}`),
     },
     player: {
         // Get
@@ -82,18 +83,18 @@ export default {
         }
     },
     gamePlay: {
-        initialize: secretCode => axios.delete(`api/game/blowup-the-inside-world/${secretCode}`),
-        gameOver: gameId => axios.delete(`api/game/end-game/${gameId}`),
+        // Get
         newGame: () => axios.get("api/game/new-game"),
-        onOff: query => axios.post(`api/game/on-off/${query.gameId}/${query.isRunning}`),
         isGameOn: gameId => axios.get(`api/game/get-game-status/${gameId}`),
-        getData: query => {
-            return axios.get(`api/game/get-records/${query.gameId}/${query.lastFrame}`);
-        },
-        next: query => {
-            return axios.get(`api/game/next/${query.frames}/${query.trendiness}`);
-        },
+        getData: query => axios.get(`api/game/get-records/${query.gameId}/${query.lastFrame}`),
+        next: query => axios.get(`api/game/next/${query.frames}/${query.trendiness}`),
         addAssets: () => axios.get("api/game/add-assets"),
+        // Post
+        onOff: query => axios.post(`api/game/on-off/${query.gameId}/${query.isRunning}`),
+        // Put
+        initialize: secretCode => axios.put(`api/game/blowup-the-inside-world`, `"${secretCode}"`, { headers: { "content-type": "application/json" } }),
+        // Delete
+        gameOver: gameId => axios.delete(`api/game/end-game`, gameId),
     },
     messages: {
         badInput: "Huh? Didn't hear that"

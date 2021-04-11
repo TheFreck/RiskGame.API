@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace RiskGame.API.Controllers
 {
@@ -81,16 +82,17 @@ namespace RiskGame.API.Controllers
             _marketService.SetTrendiness(gameId, trend);
             return "dun did it";
         }
+        [HttpPut("blowup-the-inside-world")]
+        public ActionResult<string> BlowUpTheInsideWorld([FromBody] string secretCode)
+        {
+            Console.WriteLine("secret code: " + secretCode);
+            //_marketService.BigBang(secretCode);
+            return Ok("sweet oblivion!");
+        }
 
         // ******
         // DELETE
         // ******
-        [HttpDelete("blowup-the-inside-world/{secretCode}")]
-        public ActionResult<string> BlowUpTheInsideWorld(string secretCode)
-        {
-            _marketService.BigBang(secretCode);
-            return Ok("sweet oblivion!");
-        }
         [HttpDelete("end-game/{gameId:length(36)}")]
         public ActionResult<string> EndGame(string gameId)
         {

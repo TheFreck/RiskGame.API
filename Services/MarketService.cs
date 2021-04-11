@@ -46,19 +46,11 @@ namespace RiskGame.API.Services
         }
         public ChartPixel GetRecords(Guid gameId, int lastSequence)
         {
-            var query = _market.AsQueryable().Where(m => m.SequenceNumber > lastSequence).OrderByDescending(m => m.SequenceNumber).ToList();
+            var query = _market.AsQueryable().Where(m => (m.SequenceNumber > lastSequence) && (m.GameId == gameId)).OrderByDescending(m => m.SequenceNumber).ToList();
 
             foreach (var item in query) Console.WriteLine(item.SequenceNumber);
             Console.WriteLine("that's it: " + query.Count);
-            var pixel = new ChartPixel
-            {
-                Open = 0,
-                Close = 0,
-                High = 0,
-                Low = 0,
-                LastFrame = 0,
-                Volume = 0
-            };
+            var pixel = new ChartPixel();
             if(query.Count > 0)
             {
                 pixel.Open = query.LastOrDefault().Assets[0].Value;
@@ -68,14 +60,8 @@ namespace RiskGame.API.Services
                 pixel.High = ascendingValue.LastOrDefault().Assets[0].Value;
                 pixel.Low = ascendingValue.FirstOrDefault().Assets[0].Value;
                 pixel.Volume = query.Count;
-                return pixel;
             }
-            else
-            {
-                query = _market.AsQueryable().OrderByDescending(m => m.SequenceNumber).ToList();
-                Thread.Sleep(100);
-                return GetRecords(gameId, lastSequence);
-            }
+            return pixel;
         }
         public void SetPixelCount(Guid gameId, int count) {
             var filter = Builders<EconomyResource>.Filter.Eq("GameId", gameId);
@@ -165,7 +151,7 @@ namespace RiskGame.API.Services
                 // finalizing
                 keepGoing = await IsRunning(economy.GameId);
                 Console.WriteLine("next market sequence number: " + nextMarketMetrics.SequenceNumber);
-                Thread.Sleep(100);
+                Thread.Sleep(50);
             } while (keepGoing);
         LoopEnd:
             Console.WriteLine("Finito");

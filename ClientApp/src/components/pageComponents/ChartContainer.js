@@ -53,7 +53,8 @@ export const ChartContainer = props => {
     const getData = cb => {
         API.gamePlay.getData({ gameId: gameIdRef.current, lastFrame: lastFrameRef.current }).then(data => {
             SETlastFrame(data.data.lastFrame)
-            if (data.status === 200) cb(data.data);
+            if (data.status === 200 && data.data.volume > 0) cb(data.data);
+            else console.log("nothing came back");
         });
     }
     // **************

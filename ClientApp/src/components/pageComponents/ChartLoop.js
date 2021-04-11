@@ -41,11 +41,13 @@ export const ChartLoop = props => {
             let altSeries = series ? series : [];
             if (seriesAppend) {
                 altSeries.push(seriesAppend);
-                setHighLow(altSeries);
                 SETseries(altSeries);
-                seriesRef.current = altSeries;
-                highRef.current = seriesAppend.high;
-                lowRef.current = seriesAppend.low;
+                setHighLow(altSeries, result => {
+                    seriesRef.current = altSeries;
+                    highRef.current = result.high;
+                    lowRef.current = result.low;
+
+                });
             }
         },
         [seriesAppend]
@@ -82,7 +84,7 @@ export const ChartLoop = props => {
     // ********
     // SERVICES
     // ********
-    const setHighLow = incoming => {
+    const setHighLow = (incoming,cb) => {
         let newHigh, newLow;
         for (let item of incoming) {
             newHigh = highRef.current > item.high ? highRef.current : item.high;
@@ -92,6 +94,7 @@ export const ChartLoop = props => {
         lowRef.current && newLow < lowRef.current ? SETlow(newLow) : ChartRender();
         SEThigh(newHigh);
         SETlow(newLow);
+        cb({ high: newHigh, low: newLow });
     }
 
     const ChartRender = () => {

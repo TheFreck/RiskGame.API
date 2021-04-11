@@ -118,6 +118,7 @@ export const GameHome = props => {
     };
     const selfDestruct = () => {
         API.gamePlay.initialize("badBoyNeedSpank").then(init => {
+            console.log("init: ", init);
         })
         SETplayer({ player: {} });
         SETcash({ cash: {} });

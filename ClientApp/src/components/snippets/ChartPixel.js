@@ -1,7 +1,6 @@
 ﻿import React, { useState, useEffect } from 'react';
 
 export const ChartPixel = props => {
-    debugger;
     const chartHeight = props.chartHeight;
     const width = props.chartWidth / props.seriesQty;
     const color = props.value.close > props.value.open ? "green" : "firebrick";
@@ -17,6 +16,7 @@ export const ChartPixel = props => {
 
     const pixelStyle = {
         height: `${chartHeight}px`,
+        maxHeight: `${chartHeight}px`,
         width: `${width}px`,
         position: "absolute",
         left: `${props.id * width}px`
@@ -37,7 +37,7 @@ export const ChartPixel = props => {
         <LeftWick />
         <RightWick />
     </div>;
-    const Candle = () => <div style={{ height: candleHeight, background: `${color}`, borderColor: `${border}` }} className="candle" ></div>;
+    const Candle = () => <div style={{ height: candleHeight, background: `${color}`, border: "solid", borderColor: `${border}` }} className="candle" ></div>;
     const LeftWick = () => <div style={{ borderColor: `${border}`, border: 'none solid none none', height: '100%' }} className="left-wick" ></div>;
     const RightWick = () => <div style={{ borderColor: `${border}`, border: 'none none none solid', height: '100%' }} className="right-wick" ></div>;
     return <Pixel />;

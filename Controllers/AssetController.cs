@@ -57,7 +57,7 @@ namespace RiskGame.API.Controllers
             if (!isGuid) return NotFound("Me thinks that Id was not a Guid");
             try
             {
-                if(true) Ok("anything in here");
+                if (true) Ok("anything in here");
                 var incomingCash = _assetService.GetCashAsync(incomingId).Result;
                 var cash = new AssetResource();
                 await incomingCash.ForEachAsync(c => cash = c);
@@ -110,7 +110,7 @@ namespace RiskGame.API.Controllers
             var playerRes = new PlayerResource();
             await incomingPlayer.ForEachAsync(p => playerRes = p);
             var playerRef = _playerService.ResToRef(playerRes);
-            var shareType = await _shareService.GetPlayerShares(playerRef,modelType);
+            var shareType = await _shareService.GetPlayerShares(playerRef, modelType);
 
             var allShares = _mapper.Map<List<ShareResource>, List<ModelReference>>(shareType);
             var allOrNone = 0;
@@ -150,7 +150,7 @@ namespace RiskGame.API.Controllers
             var isGuid = Guid.TryParse(assetIn.GameId, out var gameId);
             if (!isGuid) return NotFound("Me thinks that Id was not a Guid");
             var game = _marketService.GetGame(gameId).Result;
-            
+
             // Create a new Asset
             var assetId = _assetService.Create(asset);
             var hausRef = _playerService.GetHAUSRef(gameId);
@@ -158,7 +158,7 @@ namespace RiskGame.API.Controllers
             // Add all game assets including the new one to the Game
             var incoming = _assetService.GetGameAssetsAsync(gameId).Result;
             var assetResources = _assetService.TakeCompanyAsset(incoming);
-            foreach(var resource in assetResources)
+            foreach (var resource in assetResources)
             {
                 if (resource == null)
                 {
@@ -220,13 +220,10 @@ namespace RiskGame.API.Controllers
                 return NotFound(e);
             }
         }
-        // **************************************************************
-        // DELETE DELETE DELETE DELETE DELETE DELETE DELETE DELETE DELETE 
-        // **************************************************************
-        [HttpDelete("{id:length(36)}")]
-        public async Task<IActionResult> Delete(string id) // assetId
+        [HttpPut("delete-asset")]
+        public async Task<IActionResult> DeleteAsset([FromBody] string assId) // assetId
         {
-            var isGuid = Guid.TryParse(id, out var incomingId);
+            var isGuid = Guid.TryParse(assId, out var incomingId);
             if (!isGuid) return NotFound("Me thinks that Id was not a Guid");
             var asset = await _assetService.GetAsync(incomingId);
             if (asset == null)
@@ -237,12 +234,16 @@ namespace RiskGame.API.Controllers
             _assetService.RemoveFromGame(filter);
             return NoContent();
         }
-
-        //[HttpDelete("game/start/initialize/{secretPassword}")]
-        //public ActionResult<string> Initialize(string secretPassword)
-        //{
-        //    if (secretPassword == "Playa101") return Ok(_assetService.Initialize());
-        //    else return Unauthorized("no way doood!");
-        //}
+        // **************************************************************
+        // DELETE DELETE DELETE DELETE DELETE DELETE DELETE DELETE DELETE 
+        // **************************************************************
+        [HttpDelete("game-assets/{gameId:length(36)}")]
+        public ActionResult<DeleteResult> DeleteGameAssets(string gameId)
+        {
+            var isGuid = Guid.TryParse(gameId, out var incomingId);
+            if (!isGuid) return NotFound("Me thinks that Id was not a Guid");
+            var filter = Builders<AssetResource>.Filter.Eq("GameId", incomingId);
+            return Ok(_assetService.RemoveAssetsFromGame(filter));
+        }
     }
 }
