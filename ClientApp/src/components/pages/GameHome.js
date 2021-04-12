@@ -129,6 +129,7 @@ export const GameHome = props => {
     }
     const gameOver = () => {
         API.gamePlay.gameOver(gameIdRef.current).then(answer => {
+            console.log(answer);
         })
     }
     const assetButtonClick = gameid => {

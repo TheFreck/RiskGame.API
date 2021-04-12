@@ -26,6 +26,7 @@ export const ChartPixel = props => {
         <PixelSpace height={chartHeight * (1 - cleanHigh)} />
         <CandleStickPixel height={chartHeight * (cleanHigh - cleanLow)} />
         <PixelSpace height={chartHeight * cleanLow} />
+        <AxisLabel value={props.id} />
     </div>;
     const PixelSpace = pixSpProps => <div className="pixelSpace" style={{ height: pixSpProps.height }}></div>;
     const CandleStickPixel = candlePixProps => <div className="candlestick" style={{ height: candlePixProps.height }} >
@@ -37,9 +38,10 @@ export const ChartPixel = props => {
         <LeftWick />
         <RightWick />
     </div>;
-    const Candle = () => <div style={{ height: candleHeight, background: `${color}`, border: "solid", borderColor: `${border}` }} className="candle" ></div>;
+    const Candle = () => <div style={{ height: candleHeight, background: `${color}`, border: "solid", borderColor: `${border}` }} className="candle" >{props.value.volume}</div>;
     const LeftWick = () => <div style={{ borderColor: `${border}`, border: 'none solid none none', height: '100%' }} className="left-wick" ></div>;
     const RightWick = () => <div style={{ borderColor: `${border}`, border: 'none none none solid', height: '100%' }} className="right-wick" ></div>;
+    const AxisLabel = () => <div className="x-label">{props.id}</div>
     return <Pixel />;
 }
 

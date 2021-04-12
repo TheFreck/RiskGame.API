@@ -67,7 +67,6 @@ export const ChartContainer = props => {
     }
 
     return <>
-        <h1>Chart</h1>
         <button id="start-stop" onClick={startButtonClick}>Start/Stop</button>
         {view}
     </>;

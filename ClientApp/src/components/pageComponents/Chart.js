@@ -1,5 +1,6 @@
 ﻿import React, { useState, useEffect, useRef } from 'react';
 import ChartPixel from './../snippets/ChartPixel';
+import VerticalChartAxis from './../snippets/VerticalChartAxis';
 
 export const Chart = props => {
     console.log("chart props: ", props);
@@ -20,8 +21,8 @@ export const Chart = props => {
         [props]
     );
 
-    const [height, SETheight] = useState(window.visualViewport.height * .8);
-    const [width, SETwidth] = useState(window.visualViewport.width);
+    const [height, SETheight] = useState(window.visualViewport.height * .7);
+    const [width, SETwidth] = useState(window.visualViewport.width * .8);
 
 
     let style = {
@@ -36,21 +37,27 @@ export const Chart = props => {
 
     return (
         <>
-            <div className="chart" style={style.chartContainer}>
-                {
-                    series.map((pixel, i) => 
-                        <ChartPixel
-                            key={i}
-                            id={i}
-                            value={pixel}
-                            seriesHigh={props.seriesHigh}
-                            seriesLow={props.seriesLow}
-                            chartHeight={height}
-                            chartWidth={width}
-                            seriesQty={series.length}
-                        />
-                    )
-                }
+            <div className="chart-row">
+                <VerticalChartAxis
+                    chartTop={props.seriesHigh}
+                    chartBottom={props.seriesLow}
+                />
+                <div className="chart" style={style.chartContainer}>
+                    {
+                        series.map((pixel, i) => 
+                            <ChartPixel
+                                key={i}
+                                id={i}
+                                value={pixel}
+                                seriesHigh={props.seriesHigh}
+                                seriesLow={props.seriesLow}
+                                chartHeight={height}
+                                chartWidth={width}
+                                seriesQty={series.length}
+                            />
+                        )
+                    }
+                </div>
             </div>
         </>
     );

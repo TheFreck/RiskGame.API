@@ -80,11 +80,8 @@ namespace RiskGame.API.Services
             var asset = await _assets.FindAsync(asset => asset.AssetId == id.ToString());
             return asset;
         }
-        public async Task<IAsyncCursor<AssetResource>> GetGameAssetsAsync(Guid id)
-        {
-            var asset = await _assets.FindAsync(asset => asset.GameId == id);
-            return asset;
-        }
+        public IAsyncCursor<AssetResource> GetGameAssetsAsync(Guid id) => _assets.FindAsync(asset => asset.GameId == id).Result;
+        public AssetResource[] GetQueryableGameAssets(Guid gameId) => _assets.AsQueryable().Where(a => a.GameId == gameId).ToArray();
         public AssetResource Create(Asset asset)
         {
             var newAsset = _mapper.Map<Asset, AssetResource>(asset);
@@ -111,12 +108,13 @@ namespace RiskGame.API.Services
     {
         //string Initialize();
         Task<List<AssetResource>> GetAsync();
-        Task<IAsyncCursor<AssetResource>> GetGameAssetsAsync(Guid id);
         Task<List<CompanyAsset>> GetCompanyAssets(Guid gameId);
         List<CompanyAsset> TakeCompanyAsset(IAsyncCursor<AssetResource> foundAssets);
         Task<IAsyncCursor<AssetResource>> GetCashAsync(Guid gameId);
         Task<IAsyncCursor<AssetResource>> GetSharesAsync(Guid id, ModelTypes type);
         Task<IAsyncCursor<AssetResource>> GetAsync(Guid id);
+        IAsyncCursor<AssetResource> GetGameAssetsAsync(Guid id);
+        AssetResource[] GetQueryableGameAssets(Guid gameId);
         AssetResource Create(Asset asset);
         void Replace(Guid id, Asset assetIn);
         void Remove(Asset assetIn);

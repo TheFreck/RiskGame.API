@@ -32,3 +32,29 @@
     display: grid;
     grid-template-columns: 50% 50%;
 }
+.chart-row{
+    display: grid;
+    grid-template-columns: 10% 90%;
+}
+.seriesHigh{
+    display:block;
+    width: 100%;
+}
+.seriesLow{
+    display: block;
+    width: 100%;
+}
+.vertical-chart-axis {
+    position: relative;
+    height: 100%;
+}
+.tick-mark{
+    height: 10%;
+}
+.x-label{
+    font-size: 2em;
+    text-align:center;
+}
+.candle{
+    text-align:center;
+}

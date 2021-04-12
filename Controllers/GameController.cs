@@ -17,10 +17,12 @@ namespace RiskGame.API.Controllers
     public class GameController : ControllerBase
     {
         private readonly IMarketService _marketService;
+        private readonly IEconService _econService;
         public bool hasAssets;
-        public GameController(IMarketService marketService)
+        public GameController(IMarketService marketService, IEconService econService)
         {
             _marketService = marketService;
+            _econService = econService;
 
         }
         // ***
@@ -39,7 +41,7 @@ namespace RiskGame.API.Controllers
             var isGuid = Guid.TryParse(gameId, out var incomingId);
             if (!isGuid) return NotFound("Me thinks that Id was not a Guid");
 
-            return Ok(await _marketService.IsRunning(incomingId));
+            return Ok(await _econService.IsRunning(incomingId));
         }
         [HttpGet("get-records/{gameId:length(36)}/{lastSequence}")]
         public ActionResult<ChartPixel> GetRecords(string gameId, int lastSequence)
@@ -69,7 +71,7 @@ namespace RiskGame.API.Controllers
             if (!isGuid) return NotFound("Me thinks that Id was not a Guid");
             _marketService.StartStop(incomingId, isRunning);
 
-            return Ok(await _marketService.IsRunning(incomingId));
+            return Ok(await _econService.IsRunning(incomingId));
         }
 
         // ***
@@ -86,7 +88,7 @@ namespace RiskGame.API.Controllers
         public ActionResult<string> BlowUpTheInsideWorld([FromBody] string secretCode)
         {
             Console.WriteLine("secret code: " + secretCode);
-            //_marketService.BigBang(secretCode);
+            _marketService.BigBang(secretCode);
             return Ok("sweet oblivion!");
         }
 
