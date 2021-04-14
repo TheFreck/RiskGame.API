@@ -38,10 +38,12 @@ namespace RiskGame.API.Services
             await incomingShares.ForEachAsync(s => shares.Add(s));
             return shares;
         }
+        public IQueryable<ShareResource> GetQueryableShares(Guid assetId) => _shares.AsQueryable().Where(s => s._assetId == assetId);
         public async Task<IAsyncCursor<ShareResource>> GetAsync(Guid id)
         {
             var filter = Builders<ShareResource>.Filter.Eq("Id", id.ToString());
-            return await _shares.FindAsync(filter);
+            var output = await _shares.FindAsync(filter);
+            return output;
         }
         public async Task<List<ShareResource>> GetAsync(List<Guid> shares)
         {
@@ -73,7 +75,7 @@ namespace RiskGame.API.Services
             await incomingCash.ForEachAsync(m => yourCashSirOrMadam.Add(m));
             return yourCashSirOrMadam;
         }
-        public async Task<List<ModelReference>> CreateShares(ModelReference asset, int qty, ModelReference owner, ModelTypes type)
+        public async Task<List<Share>> CreateShares(ModelReference asset, int qty, ModelReference owner, ModelTypes type)
         {
             var sharesList = new List<ShareResource>();
             for (var i = 0; i < qty; i++)
@@ -90,7 +92,7 @@ namespace RiskGame.API.Services
             }
             // submit sharesList to the db
             await _shares.InsertManyAsync(sharesList).ConfigureAwait(true);
-            return _mapper.Map<List<ShareResource>, List<ModelReference>>(sharesList);
+            return _mapper.Map<List<ShareResource>, List<Share>>(sharesList);
         }
         public async Task<ModelReference> UpdateShares(List<ShareResource> shares)
         {
@@ -130,13 +132,14 @@ namespace RiskGame.API.Services
     public interface IShareService
     {
         Task<IAsyncCursor<ShareResource>> GetAsync();
+        IQueryable<ShareResource> GetQueryableShares(Guid assetId);
         Task<List<ShareResource>> GetAssetSharesAsync(AssetResource asset);
         Task<IAsyncCursor<ShareResource>> GetAsync(Guid id);
         Task<List<ShareResource>> GetAsync(List<Guid> shares);
         Task<IAsyncCursor<ShareResource>> GetNonCashAsync();
         Task<List<ShareResource>> GetPlayerShares(ModelReference playerRef, ModelTypes type);
         Task<List<ShareResource>> GetPlayerCash(ModelReference playerRef);
-        Task<List<ModelReference>> CreateShares(ModelReference asset, int qty, ModelReference owner, ModelTypes type);
+        Task<List<Share>> CreateShares(ModelReference asset, int qty, ModelReference owner, ModelTypes type);
         Task<ModelReference> UpdateShares(List<ShareResource> shares);
         string ShredShares(Guid assetId);
         ModelReference ToRef(Share share);

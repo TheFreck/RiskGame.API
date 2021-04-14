@@ -59,3 +59,13 @@ This has** gotten big enough that I created an Azure task board to keep track of
 
 **4/7/21
 Today I** made great progress on the chart. On the front end I made a candlestick chart pattern to represent the OHLC data and replace the plain blue pixel that only showed one value. I was able to render the candlestick with dummy data but then after connecting it back up to the server to get game data I spent the rest of my time chasing bugs. It's close but I ran out of time today.
+
+**4/13/21
+The past** few days I've been working on the charting. I've hit something strange where the server loop has been set to run once every 100 milliseconds and the client runs once every 1000 milliseconds. I expected each round of the client to pick up roughly 10 packets of data each time. What's actually happening is that it gets 2-3. When I run the server without the client it run very close to once every 100 milliseconds. It seems strange that the process of asking for data would slow it down that much. I've been working on other things too but this has been a constant simmer. Anyhow, today I wrote the logic to pay dividends.  
+I'm working through in my mind the decision making of the Players. Firstly each AI player has a risk tolerance and if their portfolio is too risky they will sell stock and if it's too safe they will buy. Additionally they will evaluate information about the stocks themselves. In terms of what information is available to them I have a few thoughts:  
+> - rolling average of each industry's growth rate  
+> - rolling average of the company's earnings (the value of the **CompanyAsset** held by the asset multiplied by the equity multiplier (Assets/Equity))  
+> - perhaps down the road I can make certain information available only to some and other available only to others so none of the players have the complete picture  
+> - perhaps some players can be more sophisticated than others and can incorporate more data points into their decisions  
+> - each player should be limited to a certain number of data points of the data available. Perhaps selecting which points is handled by a random process  
+I'll probably update this list

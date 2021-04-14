@@ -15,7 +15,7 @@ export const VerticalChartAxis = props => {
     return <>
         <div className="vertical-chart-axis">
             {
-                ticks.map(mark => <TickMark value={mark} />)
+                ticks.map((mark, id) => <TickMark key={id} value={mark} />)
             }
         </div>
     </>;

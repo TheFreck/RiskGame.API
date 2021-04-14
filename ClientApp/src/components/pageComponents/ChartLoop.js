@@ -63,13 +63,13 @@ export const ChartLoop = props => {
         getData();
         if (isRunningRef.current) setTimeout(() => {
             return bounceBack();
-        }, 500);
+        }, 1000);
     }
     const bounceBack = () => {
         getData();
         if (isRunningRef.current) setTimeout(() => {
             return bounce();
-        }, 500);
+        }, 1000);
     }
 
     // **********

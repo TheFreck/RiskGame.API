@@ -60,18 +60,19 @@ namespace RiskGame.API.Controllers
 
             return _marketService.GetCompanyAssets(incomingId);
         }
+        [HttpGet("get-games")]
+        public ActionResult<List<EconomyOut>> GetGames() => _econService.GetGames();
+        [HttpGet("get-markets")]
+        public ActionResult<List<MarketMetrics>> GetMarkets() => _marketService.GetMarkets();
 
         // ****
         // POST
         // ****
         [HttpPost("on-off/{gameId:length(36)}/{isRunning}")]
-        public async Task<ActionResult<bool>> OnOff(string gameId, bool isRunning)
+        public void OnOff(string gameId, bool isRunning)
         {
             var isGuid = Guid.TryParse(gameId, out var incomingId);
-            if (!isGuid) return NotFound("Me thinks that Id was not a Guid");
             _marketService.StartStop(incomingId, isRunning);
-
-            return Ok(await _econService.IsRunning(incomingId));
         }
 
         // ***

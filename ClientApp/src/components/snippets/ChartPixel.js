@@ -41,7 +41,7 @@ export const ChartPixel = props => {
     const Candle = () => <div style={{ height: candleHeight, background: `${color}`, border: "solid", borderColor: `${border}` }} className="candle" >{props.value.volume}</div>;
     const LeftWick = () => <div style={{ borderColor: `${border}`, border: 'none solid none none', height: '100%' }} className="left-wick" ></div>;
     const RightWick = () => <div style={{ borderColor: `${border}`, border: 'none none none solid', height: '100%' }} className="right-wick" ></div>;
-    const AxisLabel = () => <div className="x-label">{props.id}</div>
+    const AxisLabel = axisProps => <div className="x-label">{axisProps.value}</div>
     return <Pixel />;
 }
 

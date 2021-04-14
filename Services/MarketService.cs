@@ -52,7 +52,7 @@ namespace RiskGame.API.Services
             Console.WriteLine("Get records: " + DateTime.Now.Second + ":" + DateTime.Now.Millisecond);
             var pixel = new ChartPixel();
             pixel.LastFrame = lastSequence;
-            if(query.Count > 5)
+            if(query.Count > 0)
             {
                 pixel.Open = query.LastOrDefault().Assets[0] != null ? query.LastOrDefault().Assets[0].Value : query.LastOrDefault().Assets[1].Value;
                 pixel.Close = query.FirstOrDefault().Assets[0] != null ? query.FirstOrDefault().Assets[0].Value : query.FirstOrDefault().Assets[1].Value;
@@ -145,6 +145,7 @@ namespace RiskGame.API.Services
                 return e.Message;
             }
         }
+        public List<MarketMetrics> GetMarkets() => _mapper.Map<List<MarketResource>,List<MarketMetrics>>(_market.FindAsync(m => true).Result.ToList());
     }
     public interface IMarketService
     {
@@ -155,7 +156,9 @@ namespace RiskGame.API.Services
         void SetTrendiness(Guid gameId, int trend);
         void StartStop(Guid gameId, bool running);
         Guid NewGame();
-        public List<CompanyAsset> GetCompanyAssets(Guid gameId); Task<Economy> GetGame(Guid gameId);
+        List<CompanyAsset> GetCompanyAssets(Guid gameId);
+        Task<Economy> GetGame(Guid gameId);
         string UpdateGame(Economy game);
+        List<MarketMetrics> GetMarkets();
     }
 }

@@ -22,4 +22,11 @@ namespace RiskGame.API.Mappings
             CreateMap<AssetResource, Asset>().ForMember(member => member.Id, config => config.MapFrom(og => Guid.Parse(og.AssetId)));
         }
     }
+    public class AssetResourceToAssetIn : Profile
+    {
+        public AssetResourceToAssetIn()
+        {
+            CreateMap<AssetResource, AssetIn>().ForMember(member => member.Id, config => config.MapFrom(og => og.AssetId));
+        }
+    }
 }

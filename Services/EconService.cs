@@ -44,11 +44,11 @@ namespace RiskGame.API.Services
             var keepGoing = false;
             do
             {
+                keepGoing = false;
                 var companyAssetList = new List<CompanyAsset>();
                 var assetsList = new List<AssetResource>();
                 var assets = _assetService.GetGameAssetsAsync(econId);
                 await assets.ForEachAsync(a => { assetsList.Add(a); companyAssetList.Add(a.CompanyAsset); });
-                keepGoing = false;
                 var markets = _market.AsQueryable().Where(m => m.GameId == econId).ToList();
                 var incomingEconomy = _economy.FindAsync(econFilter).Result;
                 await incomingEconomy.ForEachAsync(e => economy = e);
@@ -57,32 +57,30 @@ namespace RiskGame.API.Services
                 var grownAssets = GrowAssets(assetsList.ToArray(), lastMarket);
                 var lastMarketMetrics = lastMarket.GetMetrics(_mapper.Map<AssetResource[], CompanyAsset[]>(grownAssets));
                 var nextMarket = new Market(econId, lastMarket.Assets, lastMarketMetrics, randy);
-                nextMarket.SequenceNumber = lastMarket.SequenceNumber + 1;
                 _market.InsertOne(_mapper.Map<Market, MarketResource>(nextMarket));
                 // process players' turns
-                Console.WriteLine("tick: " + DateTime.Now.Second + ":" + DateTime.Now.Millisecond);
+                Console.WriteLine("tick: " /*+ DateTime.Now.Second + ":" + DateTime.Now.Millisecond*/);
                 // finalizing
                 keepGoing = await IsRunning(economy.GameId);
-                Thread.Sleep(1);
+                //Thread.Sleep(1);
             } while (keepGoing);
         LoopEnd:
             Console.WriteLine("Finito");
             return "that was fun wasn't it?";
         }
-
         private AssetResource[] GrowAssets(AssetResource[] assets, Market market)
         {
             foreach (var asset in assets)
             {
                 if (asset.CompanyAsset == null) continue;
-                var value = asset.CompanyAsset.Value * GrowthRate(asset.CompanyAsset.Value, market.GetMetric(asset.CompanyAsset.PrimaryIndustry), market.GetMetric(asset.CompanyAsset.SecondaryIndustry));
+                var value = asset.CompanyAsset.Value * GrowthRate(market.GetMetric(asset.CompanyAsset.PrimaryIndustry), market.GetMetric(asset.CompanyAsset.SecondaryIndustry));
                 //Console.WriteLine("asset value: " + value);
                 asset.CompanyAsset.Value = value;
                 _assetService.Replace(Guid.Parse(asset.AssetId), _mapper.Map<AssetResource, Asset>(asset));
             }
             return assets;
         }
-        private double GrowthRate(double value, double primaryIndustryGrowth, double secondaryIndustryGrowth)
+        private double GrowthRate(double primaryIndustryGrowth, double secondaryIndustryGrowth)
         {
             var backhalf = (7 * primaryIndustryGrowth - 3 * secondaryIndustryGrowth) / 100;
             var growthRate = 1.001 + backhalf;
@@ -97,10 +95,12 @@ namespace RiskGame.API.Services
             await incoming.ForEachAsync(g => isRunning = g.isRunning);
             return isRunning;
         }
+        public List<EconomyOut> GetGames() => _mapper.Map<List<EconomyResource>,List<EconomyOut>>(_economy.FindAsync<EconomyResource>(g => true).Result.ToList());
     }
     public interface IEconService
     {
         Task<string> Motion(Guid econId);
         Task<bool> IsRunning(Guid gameId);
+        List<EconomyOut> GetGames();
     }
 }

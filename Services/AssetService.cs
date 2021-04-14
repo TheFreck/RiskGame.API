@@ -100,9 +100,8 @@ namespace RiskGame.API.Services
         }
         public void RemoveFromGame(FilterDefinition<AssetResource> filter) => _assets.DeleteOne(filter);
         public DeleteResult RemoveAssetsFromGame(FilterDefinition<AssetResource> filter) => _assets.DeleteMany(filter);
-
-        public ModelReference ToRef(Asset asset) =>
-            _mapper.Map<Asset,ModelReference>(asset);
+        public ModelReference ToRef(Asset asset) => _mapper.Map<Asset,ModelReference>(asset);
+        public ModelReference ResToRef(AssetResource asset) => _mapper.Map<AssetResource, ModelReference>(asset);
     }
     public interface IAssetService
     {
@@ -121,5 +120,6 @@ namespace RiskGame.API.Services
         void RemoveFromGame(FilterDefinition<AssetResource> filter);
         DeleteResult RemoveAssetsFromGame(FilterDefinition<AssetResource> filter);
         ModelReference ToRef(Asset asset);
+        ModelReference ResToRef(AssetResource asset);
     }
 }

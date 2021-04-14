@@ -53,6 +53,7 @@ namespace RiskGame.API.Logic
             // look at underlying CompanyAsset
             // look at equity multiplier: A/E
             // if desire and reality differ by enough then make a trade
+
             return TurnTypes.Hold;
         }
     }

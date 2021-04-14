@@ -170,9 +170,9 @@ export const GameHome = props => {
         SETtradeButtonMessage("");
     }
 
-    // *********************
-    // FUNCTIONAL COMPONENTS
-    // *********************
+    // ***************
+    //  SUB COMPONENTS
+    // ***************
     let initStyle = {
         "borderRadius": "50%",
         "borderColor": "darkred",
