@@ -68,4 +68,4 @@ I'm working through in my mind the decision making of the Players. Firstly each 
 > - perhaps down the road I can make certain information available only to some and other available only to others so none of the players have the complete picture  
 > - perhaps some players can be more sophisticated than others and can incorporate more data points into their decisions  
 > - each player should be limited to a certain number of data points of the data available. Perhaps selecting which points is handled by a random process  
-I'll probably update this list
+I'll probably update this list but the key is that there is no market real or imagined with an even distribution of information. One of the unexpected virtues of market dynamics is that out of this imperfect knowledge rises a "market knowledge" which incorporates all the bits of knowledge 
