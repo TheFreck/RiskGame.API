@@ -49,7 +49,7 @@ namespace RiskGame.API.Services
         {
             var query = _market.AsQueryable().Where(m => (m.SequenceNumber > lastSequence) && (m.GameId == gameId)).OrderByDescending(m => m.SequenceNumber).ToList();
 
-            Console.WriteLine("Get records: " + DateTime.Now.Second + ":" + DateTime.Now.Millisecond);
+            //Console.WriteLine("Get records: " + DateTime.Now.Second + ":" + DateTime.Now.Millisecond);
             var pixel = new ChartPixel();
             pixel.LastFrame = lastSequence;
             if(query.Count > 0)
@@ -75,12 +75,12 @@ namespace RiskGame.API.Services
             var update = Builders<EconomyResource>.Update.Set("Trendiness", trend);
             _economy.UpdateOne(filter, update);
         }
-        public async void StartStop(Guid gameId, bool running)
+        public void StartStop(Guid gameId, bool running)
         {
             var filter = Builders<EconomyResource>.Filter.Eq("GameId", gameId);
             var update = Builders<EconomyResource>.Update.Set("isRunning", running);
             var game = _economy.FindOneAndUpdate(filter, update);
-            await _econService.Motion(game.GameId);
+            _econService.Motion(game.GameId);
         }
         public string BigBang(string secretCode)
         {

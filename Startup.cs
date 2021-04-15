@@ -44,6 +44,7 @@ namespace RiskGame.API
             services.AddSingleton<ITransactionLogic,TransactionLogic>();
             services.AddSingleton<IMarketService, MarketService>();
             services.AddSingleton<IEconService, EconService>();
+            services.AddSingleton<IEconLogic, EconLogic>();
 
             services.AddControllersWithViews();
 

@@ -32,7 +32,7 @@ namespace RiskGame.API.Models.MarketFolder
         public Player[] Players { get; set; }
         public Player HAUS { get; set; }
         public Asset CASH { get; set; }
-        public Market(Guid gameId, CompanyAsset[] assets, MarketMetrics yester, Random randy)
+        public Market(Guid gameId, CompanyAsset[] assets, Random randy, MarketMetrics yester)
         {
             Time = DateTime.Now;
             SequenceNumber = yester != null ? yester.SequenceNumber + 1 : 0;

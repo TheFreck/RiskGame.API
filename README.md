@@ -67,5 +67,9 @@ I'm working through in my mind the decision making of the Players. Firstly each 
 > - rolling average of the company's earnings (the value of the **CompanyAsset** held by the asset multiplied by the equity multiplier (Assets/Equity))  
 > - perhaps down the road I can make certain information available only to some and other available only to others so none of the players have the complete picture  
 > - perhaps some players can be more sophisticated than others and can incorporate more data points into their decisions  
-> - each player should be limited to a certain number of data points of the data available. Perhaps selecting which points is handled by a random process  
+> - each player should be limited to a certain number of data points of the data available. Perhaps selecting which points is handled by a random process   
+> - each player calculates the expected growth of the stock according to the data they have. If it is greater than the StockPrice-CompanyAsset*EquityMultiplier then they want to buy. The opposite is true to sell. A built in margin around the values will handle hold situations. In other words, the difference must be greater than a certain threshhold for a trade to be triggered.
 I'll probably update this list but the key is that there is no market real or imagined with an even distribution of information. One of the unexpected virtues of market dynamics is that out of this imperfect knowledge rises a "market knowledge" which incorporates all the bits of knowledge 
+
+**4/14/21
+Part of** the issue with the chart loop is that it takes more time to run each time it runs. So I'm doing some refactoring of the process and separating out a lot of functionality. This is a win independent of progress on the bug.

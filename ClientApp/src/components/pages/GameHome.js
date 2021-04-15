@@ -159,7 +159,8 @@ export const GameHome = props => {
             Name: "Asset_" + num,
             SharesOutstanding: 100,
             GameId: gameid
-        })
+        }).then(answer => console.log("asset create: ", answer));
+        console.log(num);
     }
 
     const tradeButtonMouseEnter = () => {

@@ -156,15 +156,7 @@ namespace RiskGame.API.Controllers
             var hausRef = _playerService.GetHAUSRef(gameId);
 
             // Add all game assets including the new one to the Game
-            var incomingAssetResources = _assetService.GetGameAssetsAsync(gameId);
-            var assetResources = new List<CompanyAsset>();
-            await incomingAssetResources.ForEachAsync(resource =>
-            {
-                if (resource != null)
-                {
-                    assetResources.Add(_mapper.Map<AssetResource,CompanyAsset>(resource));
-                }
-            });
+            var assetResources = _assetService.GetGameAssets(gameId).Select(a => a.CompanyAsset);
             var gameAssets = assetResources.ToArray();
             game.Assets = gameAssets;
             var result = _marketService.UpdateGame(game);

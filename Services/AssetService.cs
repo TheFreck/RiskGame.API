@@ -53,11 +53,7 @@ namespace RiskGame.API.Services
             var foundAsssets = await _assets.FindAsync(a => a.AssetId != "");
             return foundAsssets.ToList();
         }
-        public async Task<List<CompanyAsset>> GetCompanyAssets(Guid gameId)
-        {
-            var anything = await _assets.FindAsync(a => a.GameId == gameId);
-            return TakeCompanyAsset(anything);
-        }
+        public CompanyAsset[] GetCompanyAssets(Guid gameId) => _assets.AsQueryable().Where(a => a.GameId == gameId).Select(a => a.CompanyAsset).ToArray();
         public List<CompanyAsset> TakeCompanyAsset(IAsyncCursor<AssetResource> foundAssets)
         {
             var companyAssets = new List<CompanyAsset>();
@@ -80,7 +76,7 @@ namespace RiskGame.API.Services
             var asset = await _assets.FindAsync(asset => asset.AssetId == id.ToString());
             return asset;
         }
-        public IAsyncCursor<AssetResource> GetGameAssetsAsync(Guid id) => _assets.FindAsync(asset => asset.GameId == id).Result;
+        public AssetResource[] GetGameAssets(Guid id) => _assets.AsQueryable().Where(a => a.GameId == id).Where(a => a.CompanyAsset != null).ToArray();
         public AssetResource[] GetQueryableGameAssets(Guid gameId) => _assets.AsQueryable().Where(a => a.GameId == gameId).ToArray();
         public AssetResource Create(Asset asset)
         {
@@ -107,12 +103,12 @@ namespace RiskGame.API.Services
     {
         //string Initialize();
         Task<List<AssetResource>> GetAsync();
-        Task<List<CompanyAsset>> GetCompanyAssets(Guid gameId);
+        Task<CompanyAsset[]> GetCompanyAssets(Guid gameId);
         List<CompanyAsset> TakeCompanyAsset(IAsyncCursor<AssetResource> foundAssets);
         Task<IAsyncCursor<AssetResource>> GetCashAsync(Guid gameId);
         Task<IAsyncCursor<AssetResource>> GetSharesAsync(Guid id, ModelTypes type);
         Task<IAsyncCursor<AssetResource>> GetAsync(Guid id);
-        IAsyncCursor<AssetResource> GetGameAssetsAsync(Guid id);
+        AssetResource[] GetGameAssets(Guid id);
         AssetResource[] GetQueryableGameAssets(Guid gameId);
         AssetResource Create(Asset asset);
         void Replace(Guid id, Asset assetIn);
