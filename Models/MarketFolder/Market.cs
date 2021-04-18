@@ -126,5 +126,9 @@ namespace RiskGame.API.Models.MarketFolder
                 VioletDirection
             };
         }
+        public Market()
+        {
+
+        }
     }
 }

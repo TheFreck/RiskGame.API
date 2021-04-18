@@ -24,6 +24,7 @@ namespace RiskGame.API.Models.PlayerFolder
         public string Name { get; set; }
         public int Cash { get; set; }
         public int RiskTolerance { get; set; }
+        public Sophistication Experience { get; set; }
         //
         // model type is used to convert this class to a ModelReference
         // it is automatically set and cannot be overridden

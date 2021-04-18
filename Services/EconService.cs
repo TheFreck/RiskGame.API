@@ -43,17 +43,15 @@ namespace RiskGame.API.Services
         }
         public Task<string> Motion(Guid econId)
         {
+            var marketHistory = new MarketMetricsHistory();
             var econFilter = Builders<EconomyResource>.Filter.Eq("GameId", econId);
             var economy = _economy.AsQueryable().Where(e => e.GameId == econId).FirstOrDefault();
             var markets = _market.AsQueryable().Where(m => m.GameId == econId).ToArray();
-            var assets = _assetService.GetCompanyAssets(econId).Result;
-            _market.InsertOne(_mapper.Map<Market, MarketResource>(new Market(econId, assets, randy, null)));
+            var assets = _assetService.GetCompanyAssets(econId);
             if (markets.Length == 0) _market.InsertOne(_mapper.Map<Market, MarketResource>(new Market(econId, assets, randy, null)));
             var keepGoing = false;
             do
             {
-                var now = DateTime.Now;
-                Console.WriteLine($"{now.Minute}:{now.Second}:{now.Millisecond}");
                 var loop = new MarketLoopData
                 {
                     Filter = econFilter,
@@ -62,13 +60,18 @@ namespace RiskGame.API.Services
                     EconId = econId
                 };
                 var next = _econLogic.LoopRound(loop).Result;
+                marketHistory.Red.Add(next.Market.Red * (int)next.Market.RedDirection);
+                marketHistory.Orange.Add(next.Market.Orange * (int)next.Market.OrangeDirection);
+                marketHistory.Yellow.Add(next.Market.Yellow * (int)next.Market.YellowDirection);
+                marketHistory.Green.Add(next.Market.Green * (int)next.Market.GreenDirection);
+                marketHistory.Blue.Add(next.Market.Blue * (int)next.Market.BlueDirection);
+                marketHistory.Violet.Add(next.Market.Violet * (int)next.Market.VioletDirection);
                 economy = next.Economy;
                 keepGoing = next.KeepGoing;
             } while (keepGoing);
             Console.WriteLine("Finito");
             return Task.FromResult("that was fun wasn't it?");
         }
-
         public async Task<bool> IsRunning(Guid gameId) => await _econLogic.IsRunning(gameId);
         public List<EconomyOut> GetGames() => _mapper.Map<List<EconomyResource>,List<EconomyOut>>(_economy.FindAsync<EconomyResource>(g => true).Result.ToList());
     }

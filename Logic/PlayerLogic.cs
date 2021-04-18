@@ -8,6 +8,7 @@ using MongoDB.Driver;
 using RiskGame.API.Entities;
 using RiskGame.API.Entities.Enums;
 using RiskGame.API.Models.AssetFolder;
+using RiskGame.API.Models.MarketFolder;
 using RiskGame.API.Models.PlayerFolder;
 using RiskGame.API.Models.SharesFolder;
 using RiskGame.API.Services;
@@ -48,8 +49,9 @@ namespace RiskGame.API.Logic
             else if (currentSellAllocation > player.RiskTolerance) return TurnTypes.Sell;
             return TurnTypes.Hold;
         }
-        public TurnTypes EvaluateAsset(Player player, Asset asset)
+        public TurnTypes EvaluateAsset(Player player, Asset asset, MarketMetricsHistory history)
         {
+            var news = new Newspaper(history).ReadNewspaper(player.Experience, asset);
             // look at underlying CompanyAsset
             // look at equity multiplier: A/E
             // if desire and reality differ by enough then make a trade

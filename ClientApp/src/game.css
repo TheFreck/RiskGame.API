@@ -19,12 +19,14 @@
     height: 100%;
     width: 100%;
     border: none;
+    border-width: 2px;
     border-right: solid;
 }
-.right-wick{
+.right-wick {
     height: 100%;
     width: 100%;
     border: none;
+    border-width: 2px;
     border-left: solid;
 }
 
@@ -50,10 +52,12 @@
 }
 .tick-mark{
     height: 10%;
+    font-size: 1em;
 }
 .x-label{
-    font-size: 2em;
+    font-size: 1em;
     text-align:center;
+
 }
 .candle{
     text-align:center;

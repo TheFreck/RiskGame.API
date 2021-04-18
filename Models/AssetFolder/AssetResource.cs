@@ -23,11 +23,13 @@ namespace RiskGame.API.Models.AssetFolder
         public int SharesOutstanding { get; set; }
         public int LastBuyPrice { get; set; }
         public int LastSellPrice { get; set; }
-        public int LastDividendPayout { get; set; }
         public double MostRecentValue { get; set; }
+        public int LastDividendPayout { get; set; }
+        public DateTime LastDividendDate { get; set; }
         public string Message { get; set; }
         public readonly ModelTypes ModelType = ModelTypes.Asset;
         public CompanyAsset CompanyAsset { get; set; }
         public int Debt { get; set; }
+        public List<double> History { get; set; }
     }
 }

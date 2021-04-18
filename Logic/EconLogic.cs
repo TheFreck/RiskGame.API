@@ -24,24 +24,30 @@ namespace RiskGame.API.Logic
         private readonly IDatabaseSettings _dbSettings;
         private readonly IMongoCollection<EconomyResource> _economy;
         private readonly IMongoCollection<MarketResource> _market;
-        public EconLogic(IAssetService assetService, IPlayerService playerService, IShareService shareService, IMapper mapper)
+        public EconLogic(IDatabaseSettings dbSettings, IAssetService assetService, IPlayerService playerService, IShareService shareService, IMapper mapper)
         {
+            _dbSettings = dbSettings;
             _assetService = assetService;
             _playerService = playerService;
             _shareService = shareService;
             _mapper = mapper;
             randy = new Random();
+            var client = new MongoClient(_dbSettings.ConnectionString);
+            var database = client.GetDatabase(_dbSettings.DatabaseName);
+            database.DropCollection(_dbSettings.EconomyCollectionName);
+            _market = database.GetCollection<MarketResource>(_dbSettings.MarketCollectionName);
+            _economy = database.GetCollection<EconomyResource>(_dbSettings.EconomyCollectionName);
         }
         public async Task<MarketLoopData> LoopRound(MarketLoopData precursors)
         {
             precursors.KeepGoing = false;
             var assets = _assetService.GetGameAssets(precursors.EconId).Where(a => a.CompanyAsset != null).ToArray();
             var companyAssets = assets.Select(a => a.CompanyAsset).ToArray();
-            var lastMarketResource = _market.AsQueryable().Where(m => m.GameId == precursors.EconId).LastOrDefault();
-            precursors.Economy = _economy.AsQueryable().Where(e => e.GameId == precursors.EconId).FirstOrDefault();
+            var lastMarketResource = _market.AsQueryable().Where(m => m.GameId == precursors.EconId).ToList().LastOrDefault();
+            precursors.Economy = _economy.AsQueryable().Where(e => e.GameId == precursors.EconId).ToList().FirstOrDefault();
             var lastMarket = _mapper.Map<MarketResource,Market>(lastMarketResource);
-            var lastMarketMetrics = lastMarket.GetMetrics(_mapper.Map<AssetResource[], CompanyAsset[]>(GrowAssets(assets, lastMarket)));
-            var nextMarket = new Market(precursors.EconId, companyAssets, lastMarketMetrics, randy);
+            var lastMarketMetrics = lastMarket.GetMetrics(GrowAssets(assets, lastMarket).Select(a => a.CompanyAsset).ToArray());
+            var nextMarket = new Market(precursors.EconId, companyAssets, randy, lastMarketMetrics);
             _market.InsertOne(_mapper.Map<Market, MarketResource>(nextMarket));
             // process players' turns
             // finalizing
@@ -55,8 +61,8 @@ namespace RiskGame.API.Logic
             {
                 if (asset.CompanyAsset == null) continue;
                 var value = asset.CompanyAsset.Value * GrowthRate(market.GetMetric(asset.CompanyAsset.PrimaryIndustry), market.GetMetric(asset.CompanyAsset.SecondaryIndustry));
-                //Console.WriteLine("asset value: " + value);
                 asset.CompanyAsset.Value = value;
+                asset.History.Add(value);
                 _assetService.Replace(Guid.Parse(asset.AssetId), _mapper.Map<AssetResource, Asset>(asset));
             }
             return assets;

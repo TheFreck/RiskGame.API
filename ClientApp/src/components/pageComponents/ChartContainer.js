@@ -25,7 +25,7 @@ export const ChartContainer = props => {
             isRunningRef.current = isRunning;
             console.log("isRunning: ", isRunning);
             API.gamePlay.onOff({ gameId: props.gameId, isRunning }).then(outcome => {
-                console.log("servier running: ", outcome.data);
+                console.log("server running: ", outcome.data);
             });
             SETview(<ChartLoop
                 isRunning={isRunning}

@@ -36,7 +36,7 @@ namespace RiskGame.API.Logic
             var haus = _playerService.GetHAUS(gameId);
             if (cashRefs?.Count > 0)
             {
-                Console.WriteLine("cashRefs");
+                //Console.WriteLine("cashRefs");
                 foreach (var id in cashRefs)
                 {
                     cashGuids.Add(id.Id);

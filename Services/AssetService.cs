@@ -103,7 +103,7 @@ namespace RiskGame.API.Services
     {
         //string Initialize();
         Task<List<AssetResource>> GetAsync();
-        Task<CompanyAsset[]> GetCompanyAssets(Guid gameId);
+        CompanyAsset[] GetCompanyAssets(Guid gameId);
         List<CompanyAsset> TakeCompanyAsset(IAsyncCursor<AssetResource> foundAssets);
         Task<IAsyncCursor<AssetResource>> GetCashAsync(Guid gameId);
         Task<IAsyncCursor<AssetResource>> GetSharesAsync(Guid id, ModelTypes type);

@@ -28,8 +28,9 @@ namespace RiskGame.API.Models.EconomyFolder
         public bool isRunning { get; set; }
         public int PixelCount { get; set; }
         public int Trendiness { get; set; }
-        public CompanyAsset[] Assets;
-        public List<MarketMetrics> Markets;
+        public CompanyAsset[] Assets { get; set; }
+        public List<MarketMetrics> Markets { get; set; }
+        public MarketMetricsHistory History { get; set; }
         public Player HAUS { get; set; }
         public Asset CASH { get; set; }
     }

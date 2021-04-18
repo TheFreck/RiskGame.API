@@ -102,7 +102,7 @@ namespace RiskGame.API.Controllers
         [HttpGet("player-shares/{id:length(36)}/{type}/{qty}")]
         public async Task<ActionResult<List<ModelReference>>> GetPlayerShares(string id, int type, int qty) // playerId
         {
-            Console.WriteLine("Get shares: " + type);
+            //Console.WriteLine("Get shares: " + type);
             var modelType = (ModelTypes)type;
             var isGuid = Guid.TryParse(id, out var incomingId);
             if (!isGuid) return NotFound("Me thinks that Id was not a Guid");
@@ -120,11 +120,11 @@ namespace RiskGame.API.Controllers
             return Ok(output);
         }
         [HttpGet("company-assets/{gameId:length(36)}")]
-        public ActionResult<List<CompanyAsset>> GetCompanyAssets(string gameId)
+        public ActionResult<CompanyAsset[]> GetCompanyAssets(string gameId)
         {
             var isGuid = Guid.TryParse(gameId, out var incomingId);
             if (!isGuid) return NotFound("Me thinks that Id was not a Guid");
-            return _assetService.GetCompanyAssets(incomingId).Result;
+            return _assetService.GetCompanyAssets(incomingId);
         }
         // ****************************************************************
         // POST POST POST POST POST POST POST POST POST POST POST POST POST

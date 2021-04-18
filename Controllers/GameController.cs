@@ -53,7 +53,7 @@ namespace RiskGame.API.Controllers
             return Ok(output);
         }
         [HttpGet("get-company-assets")]
-        public ActionResult<List<CompanyAsset>> GetCompanyAssets(string gameId)
+        public ActionResult<CompanyAsset[]> GetCompanyAssets(string gameId)
         {
             var isGuid = Guid.TryParse(gameId, out var incomingId);
             if (!isGuid) return NotFound("Me thinks that Id was not a Guid");

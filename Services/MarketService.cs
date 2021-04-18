@@ -52,7 +52,7 @@ namespace RiskGame.API.Services
             //Console.WriteLine("Get records: " + DateTime.Now.Second + ":" + DateTime.Now.Millisecond);
             var pixel = new ChartPixel();
             pixel.LastFrame = lastSequence;
-            if(query.Count > 0)
+            if(query.Count > 4)
             {
                 pixel.Open = query.LastOrDefault().Assets[0] != null ? query.LastOrDefault().Assets[0].Value : query.LastOrDefault().Assets[1].Value;
                 pixel.Close = query.FirstOrDefault().Assets[0] != null ? query.FirstOrDefault().Assets[0].Value : query.FirstOrDefault().Assets[1].Value;
@@ -121,10 +121,7 @@ namespace RiskGame.API.Services
             _economy.InsertOneAsync(_mapper.Map<Economy,EconomyResource>(newGame));
             return newGame.GameId;
         }
-        public List<CompanyAsset> GetCompanyAssets(Guid gameId)
-        {
-            return _assetService.GetCompanyAssets(gameId).Result;
-        }
+        public CompanyAsset[] GetCompanyAssets(Guid gameId) => _assetService.GetCompanyAssets(gameId);
         public async Task<Economy> GetGame(Guid gameId)
         {
             var filter = Builders<EconomyResource>.Filter.Eq("GameId", gameId);
@@ -156,7 +153,7 @@ namespace RiskGame.API.Services
         void SetTrendiness(Guid gameId, int trend);
         void StartStop(Guid gameId, bool running);
         Guid NewGame();
-        List<CompanyAsset> GetCompanyAssets(Guid gameId);
+        CompanyAsset[] GetCompanyAssets(Guid gameId);
         Task<Economy> GetGame(Guid gameId);
         string UpdateGame(Economy game);
         List<MarketMetrics> GetMarkets();

@@ -73,3 +73,6 @@ I'll probably update this list but the key is that there is no market real or im
 
 **4/14/21
 Part of** the issue with the chart loop is that it takes more time to run each time it runs. So I'm doing some refactoring of the process and separating out a lot of functionality. This is a win independent of progress on the bug.
+
+**4/15/21
+With additional** testing using the StopWatch class the loop is running at roughly the same speed each time which is around 430 milliseconds. That actually explains a lot of the server/chart sync issues I was hitting. In the end, though, this loop doesn't need to run as frequently as it is right now so no worries. I've just been using this data stream to create the chart, but the actual data displayed on the chart will be the result of trades made by the human and AI players.
