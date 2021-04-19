@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using RiskGame.API.Models.AssetFolder;
 
 namespace RiskGame.API.Controllers
 {

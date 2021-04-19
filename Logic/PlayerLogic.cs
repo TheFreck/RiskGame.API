@@ -52,6 +52,7 @@ namespace RiskGame.API.Logic
         public TurnTypes EvaluateAsset(Player player, Asset asset, MarketMetricsHistory history)
         {
             var news = new Newspaper(history).ReadNewspaper(player.Experience, asset);
+
             // look at underlying CompanyAsset
             // look at equity multiplier: A/E
             // if desire and reality differ by enough then make a trade

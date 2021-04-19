@@ -1,4 +1,5 @@
-﻿using RiskGame.API.Entities.Enums;
+﻿using RiskGame.API.Entities;
+using RiskGame.API.Entities.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,5 +12,10 @@ namespace RiskGame.API.Models.AssetFolder
         public IndustryTypes PrimaryIndustry { get; set; }
         public IndustryTypes SecondaryIndustry { get; set; }
         public double Value { get; set; }
+        public List<Wave> Waves { get; set; }
+        public CompanyAsset()
+        {
+            Waves = new List<Wave>();
+        }
     }
 }

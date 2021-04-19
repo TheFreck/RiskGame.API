@@ -49,6 +49,7 @@
 .vertical-chart-axis {
     position: relative;
     height: 100%;
+    text-align: center;
 }
 .tick-mark{
     height: 10%;

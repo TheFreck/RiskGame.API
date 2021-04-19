@@ -9,7 +9,7 @@ export const VerticalChartAxis = props => {
     const increments = (props.chartTop - props.chartBottom) / 10;
     let ticks = [];
     for (let i = 0; i < 10; i++) {
-        ticks.push(top - increments * i);
+        ticks.push((top - increments * i).toFixed(2));
     }
 
     return <>

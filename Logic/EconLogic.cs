@@ -48,6 +48,7 @@ namespace RiskGame.API.Logic
             var lastMarket = _mapper.Map<MarketResource,Market>(lastMarketResource);
             var lastMarketMetrics = lastMarket.GetMetrics(GrowAssets(assets, lastMarket).Select(a => a.CompanyAsset).ToArray());
             var nextMarket = new Market(precursors.EconId, companyAssets, randy, lastMarketMetrics);
+            precursors.Market = lastMarketMetrics;
             _market.InsertOne(_mapper.Map<Market, MarketResource>(nextMarket));
             // process players' turns
             // finalizing
@@ -60,20 +61,29 @@ namespace RiskGame.API.Logic
             foreach (var asset in assets)
             {
                 if (asset.CompanyAsset == null) continue;
-                var value = asset.CompanyAsset.Value * GrowthRate(market.GetMetric(asset.CompanyAsset.PrimaryIndustry), market.GetMetric(asset.CompanyAsset.SecondaryIndustry));
+                var period = randy.Next(10, 100);
+                var magnitude = GrowthRate(
+                        market.GetMetric(asset.CompanyAsset.PrimaryIndustry),
+                        market.GetMetric(asset.CompanyAsset.SecondaryIndustry)
+                    ) / period;
+                asset.CompanyAsset.Waves.Add(new Wave {
+                    Magnitude = magnitude, 
+                    Period = period });
+                double growthRate = 0;
+                foreach(var wave in asset.CompanyAsset.Waves)
+                {
+                    growthRate += wave.Magnitude;
+                    wave.Period--;
+                }
+                asset.CompanyAsset.Waves = asset.CompanyAsset.Waves.Where(c => c.Period > 0).ToList();
+                var value = asset.CompanyAsset.Value * (1 + growthRate);
                 asset.CompanyAsset.Value = value;
                 asset.History.Add(value);
                 _assetService.Replace(Guid.Parse(asset.AssetId), _mapper.Map<AssetResource, Asset>(asset));
             }
             return assets;
         }
-        private double GrowthRate(double primaryIndustryGrowth, double secondaryIndustryGrowth)
-        {
-            var backhalf = (7 * primaryIndustryGrowth - 3 * secondaryIndustryGrowth) / 100;
-            var growthRate = 1.001 + backhalf;
-            //Console.WriteLine("growth rate: " + growthRate);
-            return growthRate;
-        }
+        private double GrowthRate(double primaryIndustryGrowth, double secondaryIndustryGrowth) => (7 * primaryIndustryGrowth - 3 * secondaryIndustryGrowth) / 100;
         public async Task<bool> IsRunning(Guid gameId)
         {
             var econ = _economy.AsQueryable().Where(e => e.GameId == gameId).Select(g => g.isRunning);

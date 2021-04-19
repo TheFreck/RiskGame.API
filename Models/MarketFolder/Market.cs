@@ -38,7 +38,7 @@ namespace RiskGame.API.Models.MarketFolder
             SequenceNumber = yester != null ? yester.SequenceNumber + 1 : 0;
             GameId = gameId;
             Assets = assets;
-            MarketTrendiness = randy.Next(9);
+            MarketTrendiness = randy.Next(8);
             if (randy.Next(9) > MarketTrendiness) RedDirection = yester != null ? (Direction)((int)yester.RedDirection * -1) : Direction.Up;
             else RedDirection = yester != null ? yester.RedDirection : Direction.Up;
             Red = randy.NextDouble() * (int)RedDirection;
@@ -75,6 +75,7 @@ namespace RiskGame.API.Models.MarketFolder
         {
             return new MarketMetrics
             {
+                GameId = GameId,
                 SequenceNumber = SequenceNumber,
                 Red = Red,
                 RedDirection = RedDirection,

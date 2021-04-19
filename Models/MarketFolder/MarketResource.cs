@@ -3,6 +3,7 @@ using MongoDB.Bson.Serialization.Attributes;
 using Newtonsoft.Json;
 using RiskGame.API.Entities;
 using RiskGame.API.Entities.Enums;
+using RiskGame.API.Models.AssetFolder;
 using System;
 using System.Collections.Generic;
 using System.Linq;
