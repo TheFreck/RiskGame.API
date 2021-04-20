@@ -38,7 +38,7 @@ namespace RiskGame.API.Logic
             _market = database.GetCollection<MarketResource>(_dbSettings.MarketCollectionName);
             _economy = database.GetCollection<EconomyResource>(_dbSettings.EconomyCollectionName);
         }
-        public async Task<MarketLoopData> LoopRound(MarketLoopData precursors)
+        public MarketLoopData LoopRound(MarketLoopData precursors)
         {
             precursors.KeepGoing = false;
             var assets = _assetService.GetGameAssets(precursors.EconId).Where(a => a.CompanyAsset != null).ToArray();
@@ -52,7 +52,7 @@ namespace RiskGame.API.Logic
             _market.InsertOne(_mapper.Map<Market, MarketResource>(nextMarket));
             // process players' turns
             // finalizing
-            precursors.KeepGoing = await IsRunning(precursors.EconId);
+            precursors.KeepGoing = IsRunning(precursors.EconId);
             //Thread.Sleep(1);
             return precursors;
         }
@@ -84,19 +84,11 @@ namespace RiskGame.API.Logic
             return assets;
         }
         private double GrowthRate(double primaryIndustryGrowth, double secondaryIndustryGrowth) => (7 * primaryIndustryGrowth - 3 * secondaryIndustryGrowth) / 100;
-        public async Task<bool> IsRunning(Guid gameId)
-        {
-            var econ = _economy.AsQueryable().Where(e => e.GameId == gameId).Select(g => g.isRunning);
-            var filter = Builders<EconomyResource>.Filter.Eq("GameId", gameId);
-            var incoming = _economy.FindAsync(filter).Result;
-            var isRunning = false;
-            await incoming.ForEachAsync(g => isRunning = g.isRunning);
-            return isRunning;
-        }
+        public bool IsRunning(Guid gameId) => _economy.AsQueryable().Where(e => e.GameId == gameId).Select(g => g.isRunning).FirstOrDefault();
     }
     public interface IEconLogic
     {
-        Task<MarketLoopData> LoopRound(MarketLoopData precursors);
-        Task<bool> IsRunning(Guid gameId);
+        MarketLoopData LoopRound(MarketLoopData precursors);
+        bool IsRunning(Guid gameId);
     }
 }

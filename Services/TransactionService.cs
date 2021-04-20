@@ -12,6 +12,7 @@ using AutoMapper;
 using RiskGame.API.Models.SharesFolder;
 using MongoDB.Driver;
 using RiskGame.API.Logic;
+using RiskGame.API.Entities.Enums;
 
 namespace RiskGame.API.Services
 {
@@ -42,22 +43,19 @@ namespace RiskGame.API.Services
                 trade.SuccessfulTrade = false;
                 return trade;
             } // OUT no buyer or seller
-            if(trade.Buyer != null && trade.Cash == null)
+            if(trade.Buyer != null && trade.Cash == 0)
             {
                 trade.Message = "No cash was included in the ticket";
                 trade.SuccessfulTrade = false;
                 return trade;
-            } // OUT buyer has no cash
-            if(trade.Seller != null && trade.Shares == null)
+            } // OUT buyer has insufficient cash
+            if(trade.Seller != null && trade.Shares == 0)
             {
                 trade.Message = "No shares were included in the ticket";
                 trade.SuccessfulTrade = false;
                 return trade;
-            } // OUT seller has no shares
-            // get Game
-            var game = _marketService.GetGame(trade.GameId);
+            } // OUT seller has insufficient shares
             // get Haus
-            var hausRef = _playerService.GetHAUSRef(trade.GameId);
             var haus = _playerService.GetHAUS(trade.GameId).Result;
             // get Buyer
             var buyer = new PlayerResource();
@@ -71,13 +69,18 @@ namespace RiskGame.API.Services
             var sellerRef = _playerService.ResToRef(seller);
             var buyerRef = _playerService.ResToRef(buyer);
             // get cash and shares
-            var tradeCash = _transactionLogic.GetCash(trade.Cash, trade.CashCount, trade.GameId).Result;
-            var tradeShares = _transactionLogic.GetShares(trade.Shares, trade.SharesCount, trade.GameId).Result;
+            var tradeAsset = _assetService.GetAsset(trade.Asset.Id, ModelTypes.Asset);
+            var cash = _assetService.GetAsset(trade.GameId, ModelTypes.Cash);
+            var tradeCash = _shareService.GetPlayerShares(buyerRef, tradeAsset, trade.Cash);
+            var tradeShares = _shareService.GetPlayerShares(sellerRef, cash, trade.Shares);
             try
             {
                 // Transfer ownership of cash and shares
-                _transactionLogic.TransferShares(buyer, tradeShares, trade.CashCount);
-                _transactionLogic.TransferShares(seller, tradeCash, trade.CashCount);
+                var transferredShares = _transactionLogic.TransferShares(buyer, tradeShares, trade.Cash);
+                var transferredCash = _transactionLogic.TransferShares(seller, tradeCash, trade.Cash);
+                await _shareService.UpdateShares(transferredShares);
+                await _shareService.UpdateShares(transferredCash);
+
                 // complete the trade ticket
                 trade.Message = $"Shares: {_shareService.UpdateShares(tradeShares).Result.Message}; Cash: {_shareService.UpdateShares(tradeCash)}";
                 trade.TradeTime = DateTime.Now;

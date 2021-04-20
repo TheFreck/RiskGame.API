@@ -56,25 +56,9 @@ namespace RiskGame.API.Services
             return returnShares;
         }
         public async Task<IAsyncCursor<ShareResource>> GetNonCashAsync() => await _shares.FindAsync(s => s.ModelType.Equals(ModelTypes.Share));
-        public async Task<List<ShareResource>> GetPlayerShares(ModelReference playerRef, ModelTypes type)
-        {
-            // COMBINE THIS WITH GetPlayerCash()
-            var filter = Builders<ShareResource>.Filter.Eq(p => p.CurrentOwner.Id, playerRef.Id) &
-            Builders<ShareResource>.Filter.Eq(p => p.ModelType, type);
-            var incomingShares = await _shares.FindAsync(filter);
-            var yourSharesSirOrMadam = new List<ShareResource>();
-            await incomingShares.ForEachAsync(m => yourSharesSirOrMadam.Add(m));
-            return yourSharesSirOrMadam;
-        }
-        public async Task<List<ShareResource>> GetPlayerCash(ModelReference playerRef)
-        {
-            var filter = Builders<ShareResource>.Filter.Eq(p => p.CurrentOwner.Id, playerRef.Id) &
-            Builders<ShareResource>.Filter.Eq(p => p.ModelType, ModelTypes.Cash);
-            var incomingCash = await _shares.FindAsync(filter);
-            var yourCashSirOrMadam = new List<ShareResource>();
-            await incomingCash.ForEachAsync(m => yourCashSirOrMadam.Add(m));
-            return yourCashSirOrMadam;
-        }
+        public int GetPlayerShareCount(Guid playerId, Guid assetId) => _shares.AsQueryable().Where(s => s._assetId == assetId).Where(s => s.CurrentOwner.Id == playerId).Count();
+        public List<ShareResource> GetPlayerShares(ModelReference playerRef, AssetResource asset, int qty) => _shares.AsQueryable().Where(c => c.CurrentOwner == playerRef).Where(c => c._assetId.ToString() == asset.AssetId).Take(qty).ToList();
+        public List<ShareResource> GetAllPlayerShares(ModelReference playerRef, AssetResource asset) => _shares.AsQueryable().Where(s => s.CurrentOwner == playerRef).Where(s => s._assetId.ToString() == asset.AssetId).ToList();
         public async Task<List<Share>> CreateShares(ModelReference asset, int qty, ModelReference owner, ModelTypes type)
         {
             var sharesList = new List<ShareResource>();
@@ -137,8 +121,9 @@ namespace RiskGame.API.Services
         Task<IAsyncCursor<ShareResource>> GetAsync(Guid id);
         Task<List<ShareResource>> GetAsync(List<Guid> shares);
         Task<IAsyncCursor<ShareResource>> GetNonCashAsync();
-        Task<List<ShareResource>> GetPlayerShares(ModelReference playerRef, ModelTypes type);
-        Task<List<ShareResource>> GetPlayerCash(ModelReference playerRef);
+        int GetPlayerShareCount(Guid playerId, Guid assetId);
+        List<ShareResource> GetPlayerShares(ModelReference playerRef, AssetResource asset, int qty);
+        List<ShareResource> GetAllPlayerShares(ModelReference playerRef, AssetResource asset);
         Task<List<Share>> CreateShares(ModelReference asset, int qty, ModelReference owner, ModelTypes type);
         Task<ModelReference> UpdateShares(List<ShareResource> shares);
         string ShredShares(Guid assetId);

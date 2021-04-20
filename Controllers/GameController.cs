@@ -37,12 +37,12 @@ namespace RiskGame.API.Controllers
         [HttpGet("new-game")]
         public string NewGame() => _marketService.NewGame().ToString();
         [HttpGet("get-game-status/{gameId:length(36)}")]
-        public async Task<ActionResult<bool>> GameStatus(string gameId)
+        public ActionResult<bool> GameStatus(string gameId)
         {
             var isGuid = Guid.TryParse(gameId, out var incomingId);
             if (!isGuid) return NotFound("Me thinks that Id was not a Guid");
 
-            return Ok(await _econService.IsRunning(incomingId));
+            return Ok(_econService.IsRunning(incomingId));
         }
         [HttpGet("get-records/{gameId:length(36)}/{lastSequence}")]
         public ActionResult<ChartPixel> GetRecords(string gameId, int lastSequence)

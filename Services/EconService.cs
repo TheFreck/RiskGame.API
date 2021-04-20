@@ -41,7 +41,7 @@ namespace RiskGame.API.Services
             _shareService = shareService;
             _econLogic = econLogic;
         }
-        public Task<string> Motion(Guid econId)
+        public Task<string> AssetLoop(Guid econId)
         {
             var marketHistory = new MarketMetricsHistory();
             var econFilter = Builders<EconomyResource>.Filter.Eq("GameId", econId);
@@ -59,7 +59,7 @@ namespace RiskGame.API.Services
                     KeepGoing = economy.isRunning,
                     EconId = econId
                 };
-                var next = _econLogic.LoopRound(loop).Result;
+                var next = _econLogic.LoopRound(loop);
                 marketHistory.Red.Add(next.Market.Red * (int)next.Market.RedDirection);
                 marketHistory.Orange.Add(next.Market.Orange * (int)next.Market.OrangeDirection);
                 marketHistory.Yellow.Add(next.Market.Yellow * (int)next.Market.YellowDirection);
@@ -72,13 +72,15 @@ namespace RiskGame.API.Services
             Console.WriteLine("Finito");
             return Task.FromResult("that was fun wasn't it?");
         }
-        public async Task<bool> IsRunning(Guid gameId) => await _econLogic.IsRunning(gameId);
+        public bool IsRunning(Guid gameId) => _econLogic.IsRunning(gameId);
+        public EconomyResource GetGame(Guid gameId) => _economy.AsQueryable().Where(g => g.GameId == gameId).FirstOrDefault();
         public List<EconomyOut> GetGames() => _mapper.Map<List<EconomyResource>,List<EconomyOut>>(_economy.FindAsync<EconomyResource>(g => true).Result.ToList());
     }
     public interface IEconService
     {
-        Task<string> Motion(Guid econId);
-        Task<bool> IsRunning(Guid gameId);
+        Task<string> AssetLoop(Guid econId);
+        bool IsRunning(Guid gameId);
         List<EconomyOut> GetGames();
+        EconomyResource GetGame(Guid gameId);
     }
 }

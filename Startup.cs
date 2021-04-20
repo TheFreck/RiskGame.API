@@ -41,9 +41,13 @@ namespace RiskGame.API
             services.AddSingleton<IPlayerService,PlayerService>();
             services.AddSingleton<IAssetService,AssetService>();
             services.AddSingleton<IShareService,ShareService>();
-            services.AddSingleton<ITransactionLogic,TransactionLogic>();
             services.AddSingleton<IMarketService, MarketService>();
             services.AddSingleton<IEconService, EconService>();
+            services.AddSingleton<ITransactionService, TransactionService>();
+
+            services.AddSingleton<IPlayerLogic, PlayerLogic>();
+            services.AddSingleton<IAssetLogic, AssetLogic>();
+            services.AddSingleton<ITransactionLogic,TransactionLogic>();
             services.AddSingleton<IEconLogic, EconLogic>();
 
             services.AddControllersWithViews();

@@ -76,3 +76,6 @@ Part of** the issue with the chart loop is that it takes more time to run each t
 
 **4/15/21
 With additional** testing using the StopWatch class the loop is running at roughly the same speed each time which is around 430 milliseconds. That actually explains a lot of the server/chart sync issues I was hitting. In the end, though, this loop doesn't need to run as frequently as it is right now so no worries. I've just been using this data stream to create the chart, but the actual data displayed on the chart will be the result of trades made by the human and AI players.
+
+**4/19/21
+Made some** really great progress on the Player decision making and the player loop. In fact, I'm ready to start testing and refining it. So instead of doing that I ran into the reason we do a Repository Class for each model instead of just letting the model's service class handle it. CIRCULAR REFERENCES!!! when the services use each other to access their models GRRRRRRRR... So I created a Player Repo and tomorrow will follow suit with the other models and hopefully I'll be able to test the player loop tomorrow.

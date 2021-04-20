@@ -14,10 +14,9 @@ namespace RiskGame.API.Entities
         public Guid GameId { get; set; }
         public ModelReference Buyer { get; set; }
         public ModelReference Seller { get; set; }
-        public List<ModelReference> Shares { get; set; }
-        public int SharesCount { get; set; }
-        public List<ModelReference> Cash { get; set; }
-        public int CashCount { get; set; }
+        public ModelReference Asset { get; set; }
+        public int Shares { get; set; }
+        public int Cash { get; set; }
         public DateTime TradeTime { get; set; }
         public bool SuccessfulTrade { get; set; }
         public string Message { get; set; }

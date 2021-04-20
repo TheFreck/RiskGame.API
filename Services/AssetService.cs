@@ -60,24 +60,16 @@ namespace RiskGame.API.Services
             foundAssets.ForEachAsync(a => {if(a.CompanyAsset != null) companyAssets.Add(a.CompanyAsset); });
             return companyAssets;
         }
-        public async Task<IAsyncCursor<AssetResource>> GetCashAsync(Guid gameId)
-        {
-            var cash = await _assets.FindAsync(cash => cash.Name == ModelTypes.Cash.ToString() && cash.GameId == gameId);
-            return cash;
-        }
         public async Task<IAsyncCursor<AssetResource>> GetSharesAsync(Guid id, ModelTypes type) 
         {
             var filterBase = Builders<AssetResource>.Filter;
             var filter = filterBase.Eq("ModelType", type) & filterBase.Eq("_assetId", id);
             return await _assets.FindAsync(filter);
         }
-        public async Task<IAsyncCursor<AssetResource>> GetAsync(Guid id)
-        {
-            var asset = await _assets.FindAsync(asset => asset.AssetId == id.ToString());
-            return asset;
-        }
+        public AssetResource GetAsset(Guid id, ModelTypes type) => _assets.AsQueryable().Where(a => a.AssetId == id.ToString()).Where(a => a.ModelType == type).FirstOrDefault();
         public AssetResource[] GetGameAssets(Guid id) => _assets.AsQueryable().Where(a => a.GameId == id).Where(a => a.CompanyAsset != null).ToArray();
         public AssetResource[] GetQueryableGameAssets(Guid gameId) => _assets.AsQueryable().Where(a => a.GameId == gameId).ToArray();
+        public AssetResource GetGameCash(Guid gameId) => _assets.AsQueryable().Where(a => a.GameId == gameId).Where(a => a.ModelType == ModelTypes.Cash).FirstOrDefault();
         public AssetResource Create(Asset asset)
         {
             var newAsset = _mapper.Map<Asset, AssetResource>(asset);
@@ -105,11 +97,11 @@ namespace RiskGame.API.Services
         Task<List<AssetResource>> GetAsync();
         CompanyAsset[] GetCompanyAssets(Guid gameId);
         List<CompanyAsset> TakeCompanyAsset(IAsyncCursor<AssetResource> foundAssets);
-        Task<IAsyncCursor<AssetResource>> GetCashAsync(Guid gameId);
         Task<IAsyncCursor<AssetResource>> GetSharesAsync(Guid id, ModelTypes type);
-        Task<IAsyncCursor<AssetResource>> GetAsync(Guid id);
+        AssetResource GetAsset(Guid id, ModelTypes type);
         AssetResource[] GetGameAssets(Guid id);
         AssetResource[] GetQueryableGameAssets(Guid gameId);
+        AssetResource GetGameCash(Guid gameId);
         AssetResource Create(Asset asset);
         void Replace(Guid id, Asset assetIn);
         void Remove(Asset assetIn);

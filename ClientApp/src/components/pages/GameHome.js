@@ -151,6 +151,7 @@ export const GameHome = props => {
             SETgameId(game.data);
             SETisRunning(false);
             createAssets(1, game.data);
+            createPlayers(10, game.data);
         })
     }
     const createAssets = (num, gameid) => {
@@ -160,7 +161,14 @@ export const GameHome = props => {
             SharesOutstanding: 100,
             GameId: gameid
         }).then(answer => console.log("asset create: ", answer));
-        console.log(num);
+    }
+    const createPlayers(num, gameid) => {
+        num--;
+        if (num >= 0) API.player.createPlayer({
+            Name: "Player_" + num,
+            Gameid: gameId,
+            Cash: 1000
+        }).then(answer > console.log("player create: ", answer));
     }
 
     const tradeButtonMouseEnter = () => {

@@ -80,7 +80,7 @@ namespace RiskGame.API.Services
             var filter = Builders<EconomyResource>.Filter.Eq("GameId", gameId);
             var update = Builders<EconomyResource>.Update.Set("isRunning", running);
             var game = _economy.FindOneAndUpdate(filter, update);
-            _econService.Motion(game.GameId);
+            _econService.AssetLoop(game.GameId);
         }
         public string BigBang(string secretCode)
         {
@@ -98,13 +98,13 @@ namespace RiskGame.API.Services
             var econUpdate  = Builders<EconomyResource>.Update.Set("isRunning", false);
             var econ = _economy.FindOneAndUpdateAsync(econFilter,econUpdate).Result;
             // destroy assets and their shares
-            var assets = _assetService.GetAsync(gameId).Result;
-            await assets.ForEachAsync(a =>
+            var assets = _assetService.GetGameAssets(gameId);
+            foreach(var a in assets)
             {
                 _shareService.ShredShares(Guid.Parse(a.AssetId));
                 var assetFilter = Builders<AssetResource>.Filter.Eq("GameId", gameId);
                 _assetService.RemoveFromGame(assetFilter);
-            });
+            }
             // get the markets
             var marketsFilter = Builders<MarketResource>.Filter.Eq("GameId", gameId);
             var markets = _market.DeleteMany(marketsFilter);

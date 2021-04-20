@@ -23,7 +23,7 @@ namespace RiskGame.API.Models.PlayerFolder
         [JsonProperty("Name")]
         public string Name { get; set; }
         public int Cash { get; set; }
-        public int RiskTolerance { get; set; }
+        public double RiskTolerance { get; set; }
         public Sophistication Experience { get; set; }
         //
         // model type is used to convert this class to a ModelReference

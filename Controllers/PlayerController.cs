@@ -68,11 +68,10 @@ namespace RiskGame.API.Controllers
             player.Id = Guid.NewGuid();
             player.PlayerId = player.Id.ToString();
             
-            var incomingCash = _assetService.GetCashAsync(player.GameId).Result;
-            var cash = new AssetResource();
-            await incomingCash.ForEachAsync(c => cash = c);
+            var cash = _assetService.GetGameCash(player.GameId);
             var playerRef = _playerService.ToRef(player);
-            var outcome = await _shareService.CreateShares(_mapper.Map<AssetResource, ModelReference>(cash), player.Cash, playerRef, ModelTypes.Cash);
+
+            await _shareService.CreateShares(_mapper.Map<AssetResource, ModelReference>(cash), player.Cash, playerRef, ModelTypes.Cash);
             cash.SharesOutstanding += player.Cash;
             try
             {

@@ -7,8 +7,10 @@ namespace RiskGame.API.Entities.Enums
 {
     public enum TurnTypes
     {
-        Sell = 0,
-        Hold = 1,
-        Buy = 2
+        QuickSell = -2,
+        Sell = -1,
+        Hold = 0,
+        Buy = 1,
+        QuickBuy = 2
     }
 }

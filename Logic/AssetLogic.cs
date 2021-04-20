@@ -21,7 +21,7 @@ using System.Reflection.Metadata;
 
 namespace RiskGame.API.Logic
 {
-    public class AssetLogic
+    public class AssetLogic : IAssetLogic
     {
         private readonly IAssetService _assetService;
         private readonly IPlayerService _playerService;
@@ -37,19 +37,15 @@ namespace RiskGame.API.Logic
             randy = new Random();
         }
 
-        public async void PayDividend(ModelReference assetRef)
+        public void PayDividend(ModelReference assetRef)
         {
             // calculate dividend
-            var incomeSheet = CalculateDividend(assetRef).Result;
-            var incomingAsset = _assetService.GetAsync(assetRef.Id).Result;
-            var asset = new AssetResource();
-            await incomingAsset.ForEachAsync(a => asset = a);
+            var incomeSheet = CalculateDividend(assetRef);
+            var asset = _assetService.GetAsset(assetRef.Id, ModelTypes.Asset);
             var hausRef = _playerService.GetHAUSRef(asset.GameId);
             var shares = _shareService.GetQueryableShares(assetRef.Id).ToList();
-            var incomingCash = _assetService.GetCashAsync(asset.GameId).Result;
-            var cash = new AssetResource();
+            var cash = _assetService.GetGameCash(asset.GameId);
             var cashRef = _assetService.ResToRef(cash);
-            await incomingCash.ForEachAsync(c => cash = c);
             var dividends = _shareService.CreateShares(cashRef, incomeSheet.Dividends, hausRef, ModelTypes.Cash).Result;
             var dividendsPerShare = dividends.Count / shares.Count;
             // pay dividends on each share
@@ -69,16 +65,14 @@ namespace RiskGame.API.Logic
                 div.CurrentOwner = hausRef;
                 shareDividends.Add(div);
             }
-            await _shareService.UpdateShares(_mapper.Map<List<Share>, List<ShareResource>>(shareDividends));
+            _shareService.UpdateShares(_mapper.Map<List<Share>, List<ShareResource>>(shareDividends));
             // add leftover dividend cash back into the company value
             asset.MostRecentValue += incomeSheet.EquityGrowth + dividends.Count;
             _assetService.Replace(Guid.Parse(asset.AssetId), _mapper.Map<AssetResource, Asset>(asset));
         }
-        private async Task<IncomeSheet> CalculateDividend(ModelReference assetRef)
+        private IncomeSheet CalculateDividend(ModelReference assetRef)
         {
-            var incomingAsset = _assetService.GetAsync(assetRef.Id).Result;
-            var asset = new AssetResource();
-            await incomingAsset.ForEachAsync(a => asset = a);
+            var asset = _assetService.GetAsset(assetRef.Id, ModelTypes.Asset);
             var recentValue = asset.MostRecentValue;
             var currentValue = asset.CompanyAsset.Value * asset.Debt;
             var grossIncome = currentValue - recentValue;
@@ -94,5 +88,9 @@ namespace RiskGame.API.Logic
                 EquityGrowth = equityGrowth
             };
         }
+    }
+    public interface IAssetLogic
+    {
+        void PayDividend(ModelReference assetRef);
     }
 }
