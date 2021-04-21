@@ -28,12 +28,12 @@ namespace RiskGame.API.Models.SharesFolder
         //
         // the history will eventually preserve a record of each trade this share has been a part of
         public List<TradeTicket> History { get; set; }
-        public ModelReference CurrentOwner { get; set; }
+        public ModelReference  CurrentOwner { get; set; }
         //
         // model type is used to convert this class to a ModelReference
         // it is automatically set and cannot be overridden
         public readonly ModelTypes ModelType = ModelTypes.Cash;
-        public CashShare(Guid assetId, string name, ModelReference owner)
+        public CashShare(Guid assetId, string name, ModelReference  owner)
         {
             _assetId = assetId;
             Id = Guid.NewGuid();

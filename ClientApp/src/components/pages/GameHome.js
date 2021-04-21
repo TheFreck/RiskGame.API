@@ -59,16 +59,18 @@ export const GameHome = props => {
             if(cashRef.current != cash) cashRef.current = cash;
             else if (gameIdRef.current) {
                 getCash(gameIdRef.current, cash => {
+                    console.log("cash: ", cash);
                 });
             }
         }, [gameId]
     );
     const getCash = (csh, cb) => {
-        let gmid = "";
-        if (gameId) gmid = gameId;
-        else if (csh) gmid = csh;
-        else return;
-        API.asset.getCash(gmid).then(data => {
+        //let gmid = "";
+        //if (gameId) gmid = gameId;
+        //else if (csh) gmid = csh;
+        //else return;
+        API.asset.getCash(csh).then(data => {
+            console.log("cash back: ", data);
             cb(data.data)
         });
     }
@@ -148,6 +150,7 @@ export const GameHome = props => {
     }
     const newGameClick = () => {
         API.gamePlay.newGame().then(game => {
+            console.log("new: ", game.data);
             SETgameId(game.data);
             SETisRunning(false);
             createAssets(1, game.data);
@@ -162,13 +165,13 @@ export const GameHome = props => {
             GameId: gameid
         }).then(answer => console.log("asset create: ", answer));
     }
-    const createPlayers(num, gameid) => {
+    const createPlayers = (num, gameid) => {
         num--;
         if (num >= 0) API.player.createPlayer({
             Name: "Player_" + num,
-            Gameid: gameId,
+            Gameid: gameid,
             Cash: 1000
-        }).then(answer > console.log("player create: ", answer));
+        }).then(answer => console.log("player create: ", answer));
     }
 
     const tradeButtonMouseEnter = () => {

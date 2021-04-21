@@ -12,9 +12,9 @@ namespace RiskGame.API.Entities
     public class TradeTicket
     {
         public Guid GameId { get; set; }
-        public ModelReference Buyer { get; set; }
-        public ModelReference Seller { get; set; }
-        public ModelReference Asset { get; set; }
+        public ModelReference  Buyer { get; set; }
+        public ModelReference  Seller { get; set; }
+        public ModelReference  Asset { get; set; }
         public int Shares { get; set; }
         public int Cash { get; set; }
         public DateTime TradeTime { get; set; }

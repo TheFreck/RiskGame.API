@@ -1,4 +1,5 @@
 ﻿using MongoDB.Driver;
+using RiskGame.API.Models.AssetFolder;
 using RiskGame.API.Models.EconomyFolder;
 using RiskGame.API.Models.MarketFolder;
 using System;
@@ -12,13 +13,14 @@ namespace RiskGame.API.Entities
     public class MarketLoopData
     {
         [Required]
-        public FilterDefinition<EconomyResource> Filter { get; set; }
-        [Required]
         public EconomyResource Economy { get; set; }
+        [Required]
         public MarketMetrics Market { get; set; }
         [Required]
-        public bool KeepGoing { get; set; }
-        [Required]
         public Guid EconId { get; set; }
+        [Required]
+        public AssetResource[] Assets { get; set; }
+        [Required]
+        public MarketResource LastMarket { get; set; }
     }
 }

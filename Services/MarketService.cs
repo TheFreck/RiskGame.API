@@ -15,147 +15,120 @@ using MongoDB.Bson;
 using System.Threading;
 using RiskGame.API.Entities.Enums;
 using Microsoft.AspNetCore.Mvc;
+using RiskGame.API.Persistence.Repositories;
 
 namespace RiskGame.API.Services
 {
     public class MarketService : IMarketService
     {
-        private readonly IAssetService _assetService;
-        private readonly IPlayerService _playerService;
-        private readonly IShareService _shareService;
+        private readonly IAssetRepo _assetRepo;
+        private readonly IPlayerRepo _playerRepo;
+        private readonly IShareRepo _shareRepo;
+        private readonly IMarketRepo _marketRepo;
+        private readonly IEconRepo _econRepo;
         private readonly IEconService _econService;
         private readonly Random randy;
         private readonly IMapper _mapper;
-        private readonly IDatabaseSettings _dbSettings;
-        private readonly IMongoCollection<EconomyResource> _economy;
-        private readonly IMongoCollection<MarketResource> _market;
 
-        public MarketService(IDatabaseSettings settings, IAssetService assetService, IPlayerService playerService, IShareService shareService, IEconService econService, IMapper mapper, IDatabaseSettings dbSettings)
+        public MarketService(IMapper mapper, IEconService econService, IAssetRepo assetRepo, IPlayerRepo playerRepo, IShareRepo shareRepo, IMarketRepo marketRepo, IEconRepo econRepo)
         {
-            _dbSettings = dbSettings;
             _mapper = mapper;
             randy = new Random();
-            var client = new MongoClient(settings.ConnectionString);
-            var database = client.GetDatabase(settings.DatabaseName);
-            database.DropCollection(settings.EconomyCollectionName);
-            _market = database.GetCollection<MarketResource>(settings.MarketCollectionName);
-            _economy = database.GetCollection<EconomyResource>(settings.EconomyCollectionName);
-            _assetService = assetService;
-            _playerService = playerService;
-            _shareService = shareService;
+            _assetRepo = assetRepo;
+            _playerRepo = playerRepo;
+            _shareRepo = shareRepo;
+            _marketRepo = marketRepo;
+            _econRepo = econRepo;
             _econService = econService;
         }
         public ChartPixel GetRecords(Guid gameId, int lastSequence)
         {
-            var query = _market.AsQueryable().Where(m => (m.SequenceNumber > lastSequence) && (m.GameId == gameId)).OrderByDescending(m => m.SequenceNumber).ToList();
-
-            //Console.WriteLine("Get records: " + DateTime.Now.Second + ":" + DateTime.Now.Millisecond);
+            var records = _marketRepo.GetMany().Where(m => (m.SequenceNumber > lastSequence) && (m.GameId == gameId)).OrderByDescending(m => m.SequenceNumber).ToList();
             var pixel = new ChartPixel();
             pixel.LastFrame = lastSequence;
-            if(query.Count > 4)
+            if(records.Count > 4)
             {
-                pixel.Open = query.LastOrDefault().Assets[0] != null ? query.LastOrDefault().Assets[0].Value : query.LastOrDefault().Assets[1].Value;
-                pixel.Close = query.FirstOrDefault().Assets[0] != null ? query.FirstOrDefault().Assets[0].Value : query.FirstOrDefault().Assets[1].Value;
-                pixel.LastFrame = query.FirstOrDefault().SequenceNumber;
-                var ascendingValue = query.OrderBy(m => m.Assets[0] != null ? m.Assets[0].Value : m.Assets[1].Value);
+                pixel.Open = records.LastOrDefault().Assets[0] != null ? records.LastOrDefault().Assets[0].Value : records.LastOrDefault().Assets[1].Value;
+                pixel.Close = records.FirstOrDefault().Assets[0] != null ? records.FirstOrDefault().Assets[0].Value : records.FirstOrDefault().Assets[1].Value;
+                pixel.LastFrame = records.FirstOrDefault().SequenceNumber;
+                var ascendingValue = records.OrderBy(m => m.Assets[0] != null ? m.Assets[0].Value : m.Assets[1].Value);
                 pixel.High = ascendingValue.LastOrDefault().Assets[0] != null ? ascendingValue.LastOrDefault().Assets[0].Value: ascendingValue.LastOrDefault().Assets[1].Value;
                 pixel.Low = ascendingValue.FirstOrDefault().Assets[0] != null ? ascendingValue.FirstOrDefault().Assets[0].Value : ascendingValue.FirstOrDefault().Assets[1].Value;
-                pixel.Volume = query.Count;
+                pixel.Volume = records.Count;
             }
             return pixel;
         }
-        public void SetPixelCount(Guid gameId, int count) {
-            var filter = Builders<EconomyResource>.Filter.Eq("GameId", gameId);
+        public UpdateResult SetPixelCount(Guid gameId, int count) {
             var update = Builders<EconomyResource>.Update.Set("PixelCount", count);
-            _economy.UpdateOne(filter, update);
+            return _econRepo.UpdateOne(gameId,update).Result;
         }
-        public void SetTrendiness(Guid gameId, int trend)
+        public UpdateResult SetTrendiness(Guid gameId, int trend)
         {
-            var filter = Builders<EconomyResource>.Filter.Eq("GameId", gameId);
             var update = Builders<EconomyResource>.Update.Set("Trendiness", trend);
-            _economy.UpdateOne(filter, update);
+            return _econRepo.UpdateOne(gameId, update).Result;
         }
         public void StartStop(Guid gameId, bool running)
         {
             var filter = Builders<EconomyResource>.Filter.Eq("GameId", gameId);
             var update = Builders<EconomyResource>.Update.Set("isRunning", running);
-            var game = _economy.FindOneAndUpdate(filter, update);
-            _econService.AssetLoop(game.GameId);
+            var game = _econRepo.UpdateOne(gameId,update);
+            _econService.AssetLoop(gameId);
         }
-        public string BigBang(string secretCode)
-        {
-            if (secretCode == _dbSettings.Destructo)
-            {
-                _playerService.MassDestruction();
-                return "the screams of the data as they were being deleted are starting to fade...";
-            }
-            return "Not gonna do it";
-        }
+        public string BigBang(string secretCode) => _econRepo.DeleteAll(secretCode) ? "the screams of the data as they were being deleted are starting to fade..." : "Not gonna do it";
         public async Task<string> EndGame(Guid gameId)
         {
             // Stop game
             var econFilter = Builders<EconomyResource>.Filter.Eq("GameId", gameId);
             var econUpdate  = Builders<EconomyResource>.Update.Set("isRunning", false);
-            var econ = _economy.FindOneAndUpdateAsync(econFilter,econUpdate).Result;
+            await _econRepo.UpdateOne(gameId, econUpdate);
             // destroy assets and their shares
-            var assets = _assetService.GetGameAssets(gameId);
-            foreach(var a in assets)
+            foreach(var asset in _assetRepo.GetGameAssets(gameId))
             {
-                _shareService.ShredShares(Guid.Parse(a.AssetId));
-                var assetFilter = Builders<AssetResource>.Filter.Eq("GameId", gameId);
-                _assetService.RemoveFromGame(assetFilter);
+                await _shareRepo.DeleteAssetShares(Guid.Parse(asset.AssetId));
             }
-            // get the markets
-            var marketsFilter = Builders<MarketResource>.Filter.Eq("GameId", gameId);
-            var markets = _market.DeleteMany(marketsFilter);
+            await _assetRepo.DeleteGameAssets(gameId);
+            // delete the markets
+            var markets = _marketRepo.DeleteGameMarkets(gameId);
             // players' turns
-            var players = _playerService.RemovePlayersFromGame(gameId);
-            var game = _economy.FindOneAndDeleteAsync(econFilter).Result;
+            await _playerRepo.DeleteGamePlayers(gameId);
+            await _econRepo.DeleteOne(gameId);
             return "there is nothing left; just the rubble of bits and bytes to be reallocated";
         }
         public Guid NewGame()
         {
             var newGame = new Economy();
-            newGame.HAUS = _mapper.Map<PlayerResource,Player>(_playerService.Create(new Player("HAUS", Guid.NewGuid(), newGame.GameId)));
-            newGame.CASH = _mapper.Map<AssetResource,Asset>(_assetService.Create(new Asset(ModelTypes.Cash.ToString(), Guid.NewGuid(), newGame.GameId)));
-            _economy.InsertOneAsync(_mapper.Map<Economy,EconomyResource>(newGame));
+            newGame.Markets = new List<MarketMetrics>();
+            var newMarket = new Market();
+            var assets = _assetRepo.GetMany().Where(a => a.GameId == newGame.GameId).Select(a => a.CompanyAsset).ToArray();
+            newGame.Markets.Add(newMarket.GetMetrics(assets));
+            _playerRepo.CreateOne(_mapper.Map<Player, PlayerResource>(new Player("HAUS", Guid.NewGuid(), newGame.GameId)));
+            newGame.HAUS = _mapper.Map<PlayerResource,Player>(_playerRepo.GetHAUS(newGame.GameId));
+            newGame.CASH = _mapper.Map<AssetResource,Asset>(_assetRepo.GetGameAssets(newGame.GameId).Where(c => c.ModelType == ModelTypes.Cash).FirstOrDefault());
+            _econRepo.CreateOne(_mapper.Map<Economy,EconomyResource>(newGame));
             return newGame.GameId;
         }
-        public CompanyAsset[] GetCompanyAssets(Guid gameId) => _assetService.GetCompanyAssets(gameId);
-        public async Task<Economy> GetGame(Guid gameId)
-        {
-            var filter = Builders<EconomyResource>.Filter.Eq("GameId", gameId);
-            var incoming = _economy.FindAsync(filter).Result;
-            var game = new EconomyResource();
-            await incoming.ForEachAsync(g => game = g);
-            return _mapper.Map<EconomyResource,Economy>(game);
-        }
+        public CompanyAsset[] GetCompanyAssets(Guid gameId) => _assetRepo.GetGameAssets(gameId).Select(a => a.CompanyAsset).ToArray();
+        public Economy GetGame(Guid gameId) => _mapper.Map<EconomyResource,Economy>(_econRepo.GetOne(gameId));
         public string UpdateGame(Economy game)
         {
-            var filter = Builders<EconomyResource>.Filter.Eq("GameId", game.GameId);
-            try
-            {
-                return _economy.ReplaceOne(filter,_mapper.Map<Economy,EconomyResource>(game)).ToString();
-            }
-            catch (Exception e)
-            {
-                return e.Message;
-            }
+            return _econRepo.ReplaceOne(Builders<EconomyResource>.Filter.Eq("GameId", game.GameId),
+                _mapper.Map<Economy, EconomyResource>(game)
+                ).ToString();
         }
-        public List<MarketMetrics> GetMarkets() => _mapper.Map<List<MarketResource>,List<MarketMetrics>>(_market.FindAsync(m => true).Result.ToList());
+        public List<MarketMetrics> GetMarkets(Guid gameId) => _mapper.Map<List<MarketResource>,List<MarketMetrics>>(_marketRepo.GetMany().Where(m => m.GameId == gameId).ToList());
     }
     public interface IMarketService
     {
         string BigBang(string secretCode);
         Task<string> EndGame(Guid gameId);
         ChartPixel GetRecords(Guid gameId, int lastSequence);
-        void SetPixelCount(Guid gameId, int count);
-        void SetTrendiness(Guid gameId, int trend);
+        UpdateResult SetPixelCount(Guid gameId, int count);
+        UpdateResult SetTrendiness(Guid gameId, int trend);
         void StartStop(Guid gameId, bool running);
         Guid NewGame();
         CompanyAsset[] GetCompanyAssets(Guid gameId);
-        Task<Economy> GetGame(Guid gameId);
+        Economy GetGame(Guid gameId);
         string UpdateGame(Economy game);
-        List<MarketMetrics> GetMarkets();
+        List<MarketMetrics> GetMarkets(Guid gameId);
     }
 }

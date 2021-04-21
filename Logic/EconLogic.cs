@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using MongoDB.Driver;
 using RiskGame.API.Entities;
+using RiskGame.API.Entities.Enums;
 using RiskGame.API.Models.AssetFolder;
 using RiskGame.API.Models.EconomyFolder;
 using RiskGame.API.Models.MarketFolder;
@@ -16,44 +17,34 @@ namespace RiskGame.API.Logic
 {
     public class EconLogic : IEconLogic
     {
-        private readonly IAssetService _assetService;
-        private readonly IPlayerService _playerService;
-        private readonly IShareService _shareService;
         private readonly IMapper _mapper;
         private readonly Random randy;
-        private readonly IDatabaseSettings _dbSettings;
-        private readonly IMongoCollection<EconomyResource> _economy;
-        private readonly IMongoCollection<MarketResource> _market;
-        public EconLogic(IDatabaseSettings dbSettings, IAssetService assetService, IPlayerService playerService, IShareService shareService, IMapper mapper)
+        public EconLogic(IDatabaseSettings dbSettings, IMapper mapper)
         {
-            _dbSettings = dbSettings;
-            _assetService = assetService;
-            _playerService = playerService;
-            _shareService = shareService;
             _mapper = mapper;
             randy = new Random();
-            var client = new MongoClient(_dbSettings.ConnectionString);
-            var database = client.GetDatabase(_dbSettings.DatabaseName);
-            database.DropCollection(_dbSettings.EconomyCollectionName);
-            _market = database.GetCollection<MarketResource>(_dbSettings.MarketCollectionName);
-            _economy = database.GetCollection<EconomyResource>(_dbSettings.EconomyCollectionName);
         }
         public MarketLoopData LoopRound(MarketLoopData precursors)
         {
-            precursors.KeepGoing = false;
-            var assets = _assetService.GetGameAssets(precursors.EconId).Where(a => a.CompanyAsset != null).ToArray();
-            var companyAssets = assets.Select(a => a.CompanyAsset).ToArray();
-            var lastMarketResource = _market.AsQueryable().Where(m => m.GameId == precursors.EconId).ToList().LastOrDefault();
-            precursors.Economy = _economy.AsQueryable().Where(e => e.GameId == precursors.EconId).ToList().FirstOrDefault();
+            // grow assets
+            var lastMarketResource = precursors.LastMarket;
             var lastMarket = _mapper.Map<MarketResource,Market>(lastMarketResource);
-            var lastMarketMetrics = lastMarket.GetMetrics(GrowAssets(assets, lastMarket).Select(a => a.CompanyAsset).ToArray());
-            var nextMarket = new Market(precursors.EconId, companyAssets, randy, lastMarketMetrics);
-            precursors.Market = lastMarketMetrics;
-            _market.InsertOne(_mapper.Map<Market, MarketResource>(nextMarket));
-            // process players' turns
-            // finalizing
-            precursors.KeepGoing = IsRunning(precursors.EconId);
-            //Thread.Sleep(1);
+            var grownAssets = GrowAssets(precursors.Assets, lastMarket).Select(a => a.CompanyAsset).ToArray();
+            var lastMarketMetrics = lastMarket.GetMetrics(grownAssets);
+            var nextMarket = new Market(precursors.EconId, precursors.Assets.Select(a => a.CompanyAsset).ToArray(), randy, lastMarketMetrics);
+            // update economy
+            precursors.Economy.Assets = grownAssets;
+            // update precursors
+            precursors.LastMarket = _mapper.Map<Market,MarketResource>(nextMarket);
+            precursors.Economy.History.Red.Add(nextMarket.GetMetric(IndustryTypes.Red));
+            precursors.Economy.History.Orange.Add(nextMarket.GetMetric(IndustryTypes.Orange));
+            precursors.Economy.History.Yellow.Add(nextMarket.GetMetric(IndustryTypes.Yellow));
+            precursors.Economy.History.Green.Add(nextMarket.GetMetric(IndustryTypes.Green));
+            precursors.Economy.History.Blue.Add(nextMarket.GetMetric(IndustryTypes.Blue));
+            precursors.Economy.History.Violet.Add(nextMarket.GetMetric(IndustryTypes.Violet));
+
+
+
             return precursors;
         }
         private AssetResource[] GrowAssets(AssetResource[] assets, Market market)
@@ -79,16 +70,14 @@ namespace RiskGame.API.Logic
                 var value = asset.CompanyAsset.Value * (1 + growthRate);
                 asset.CompanyAsset.Value = value;
                 asset.History.Add(value);
-                _assetService.Replace(Guid.Parse(asset.AssetId), _mapper.Map<AssetResource, Asset>(asset));
+                //_assetService.Replace(Guid.Parse(asset.AssetId), _mapper.Map<AssetResource, Asset>(asset));
             }
             return assets;
         }
         private double GrowthRate(double primaryIndustryGrowth, double secondaryIndustryGrowth) => (7 * primaryIndustryGrowth - 3 * secondaryIndustryGrowth) / 100;
-        public bool IsRunning(Guid gameId) => _economy.AsQueryable().Where(e => e.GameId == gameId).Select(g => g.isRunning).FirstOrDefault();
     }
     public interface IEconLogic
     {
         MarketLoopData LoopRound(MarketLoopData precursors);
-        bool IsRunning(Guid gameId);
     }
 }

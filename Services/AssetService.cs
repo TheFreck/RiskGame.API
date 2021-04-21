@@ -11,103 +11,61 @@ using RiskGame.API.Models.SharesFolder;
 using RiskGame.API.Models.PlayerFolder;
 using RiskGame.API.Entities;
 using RiskGame.API.Entities.Enums;
+using RiskGame.API.Persistence.Repositories;
 
 namespace RiskGame.API.Services
 {
     public class AssetService : IAssetService
     {
-        private readonly IMongoCollection<AssetResource> _assets;
-        private readonly IPlayerService _playerService;
+        private readonly IAssetRepo _assetRepo;
+        private readonly IPlayerRepo _playerRepo;
+        private readonly IShareRepo _shareRepo;
+        private readonly IMarketRepo _marketRepo;
+        private readonly IEconRepo _econRepo;
         private readonly IMapper _mapper;
-        private readonly IDatabaseSettings dbSettings; // remove this when you remove Initialize
-        public AssetService(IDatabaseSettings settings, IMapper mapper, IPlayerService playerService)
+        public AssetService(IAssetRepo assetRepo, IPlayerRepo playerRepo, IShareRepo shareRepo, IMarketRepo marketRepo, IEconRepo econRepo, IMapper mapper)
         {
-            _playerService = playerService;
-            dbSettings = settings;
+            _assetRepo = assetRepo;
+            _playerRepo = playerRepo;
+            _shareRepo = shareRepo;
+            _marketRepo = marketRepo;
+            _econRepo = econRepo;
             _mapper = mapper;
-            var client = new MongoClient(settings.ConnectionString);
-            var database = client.GetDatabase(settings.DatabaseName);
-            database.DropCollection(settings.AssetCollectionName);
-            database.DropCollection(settings.ShareCollectionName);
-            _assets = database.GetCollection<AssetResource>(settings.AssetCollectionName);
-        }
-        //
-        // Drops the Asset Collection and recreates CASH
-        //public string Initialize()
-        //{
-        //    try
-        //    {
-        //        _assets.Database.DropCollection(dbSettings.AssetCollectionName);
-        //        _assets.Database.DropCollection(dbSettings.ShareCollectionName);
-        //        var cash = Create(_mapper.Map<AssetResource,Asset>(CASH));
-        //        return "Asset Tabula Rasa";
-        //    }
-        //    catch (Exception e)
-        //    {
-        //        return "Error: " + e.Message;
-        //    }
 
-        //}
-        public async Task<List<AssetResource>> GetAsync()
-        {
-            var foundAsssets = await _assets.FindAsync(a => a.AssetId != "");
-            return foundAsssets.ToList();
         }
-        public CompanyAsset[] GetCompanyAssets(Guid gameId) => _assets.AsQueryable().Where(a => a.GameId == gameId).Select(a => a.CompanyAsset).ToArray();
-        public List<CompanyAsset> TakeCompanyAsset(IAsyncCursor<AssetResource> foundAssets)
-        {
-            var companyAssets = new List<CompanyAsset>();
-            foundAssets.ForEachAsync(a => {if(a.CompanyAsset != null) companyAssets.Add(a.CompanyAsset); });
-            return companyAssets;
-        }
-        public async Task<IAsyncCursor<AssetResource>> GetSharesAsync(Guid id, ModelTypes type) 
-        {
-            var filterBase = Builders<AssetResource>.Filter;
-            var filter = filterBase.Eq("ModelType", type) & filterBase.Eq("_assetId", id);
-            return await _assets.FindAsync(filter);
-        }
-        public AssetResource GetAsset(Guid id, ModelTypes type) => _assets.AsQueryable().Where(a => a.AssetId == id.ToString()).Where(a => a.ModelType == type).FirstOrDefault();
-        public AssetResource[] GetGameAssets(Guid id) => _assets.AsQueryable().Where(a => a.GameId == id).Where(a => a.CompanyAsset != null).ToArray();
-        public AssetResource[] GetQueryableGameAssets(Guid gameId) => _assets.AsQueryable().Where(a => a.GameId == gameId).ToArray();
-        public AssetResource GetGameCash(Guid gameId) => _assets.AsQueryable().Where(a => a.GameId == gameId).Where(a => a.ModelType == ModelTypes.Cash).FirstOrDefault();
-        public AssetResource Create(Asset asset)
-        {
-            var newAsset = _mapper.Map<Asset, AssetResource>(asset);
-            _assets.InsertOne(newAsset);
-            return newAsset;
-        }
+        public List<AssetResource> GetAsync() => _assetRepo.GetMany().ToList();
+        public CompanyAsset[] GetCompanyAssets(Guid gameId) => _assetRepo.GetMany().Where(a => a.GameId == gameId).Select(a => a.CompanyAsset).ToArray();
+        public List<ShareResource> GetShares(Guid assetId, ModelTypes type) => _shareRepo.GetMany().Where(s => s._assetId == assetId).Where(s => s.ModelType == type).ToList();
+        public AssetResource GetAsset(Guid id, ModelTypes type) => _assetRepo.GetMany().Where(a => a.AssetId == id.ToString()).Where(a => a.ModelType == type).FirstOrDefault();
+        public AssetResource[] GetGameAssets(Guid id) => _assetRepo.GetMany().Where(a => a.GameId == id).Where(a => a.CompanyAsset != null).ToArray();
+        public AssetResource GetGameCash(Guid gameId) => _assetRepo.GetMany().Where(a => a.GameId == gameId).Where(a => a.ModelType == ModelTypes.Cash).FirstOrDefault();
+        public void Create(AssetResource asset) => _assetRepo.CreateOne(asset);
         public void Replace(Guid id, Asset assetIn)
         {
             var assetRes = _mapper.Map<Asset, AssetResource>(assetIn);
-            _assets.ReplaceOne(asset => asset.AssetId == id.ToString(), assetRes);
+            _assetRepo.ReplaceOne(id, assetRes);
         }
-        public void Remove(Asset assetIn)
-        {
-            var assetRes = _mapper.Map<Asset, AssetResource>(assetIn);         
-            _assets.DeleteOne(asset => asset.AssetId.ToString() == assetRes.AssetId);
-        }
-        public void RemoveFromGame(FilterDefinition<AssetResource> filter) => _assets.DeleteOne(filter);
-        public DeleteResult RemoveAssetsFromGame(FilterDefinition<AssetResource> filter) => _assets.DeleteMany(filter);
-        public ModelReference ToRef(Asset asset) => _mapper.Map<Asset,ModelReference>(asset);
-        public ModelReference ResToRef(AssetResource asset) => _mapper.Map<AssetResource, ModelReference>(asset);
+        public void Remove(AssetResource assetIn) => _assetRepo.DeleteOne(Guid.Parse(assetIn.AssetId));
+        public void RemoveFromGame(Guid assetId) => _assetRepo.DeleteOne(assetId);
+        public void RemoveAssetsFromGame(List<Guid> assetIds) => _assetRepo.DeleteMany(assetIds);
+        public ModelReference  ToRef(Asset asset) => _mapper.Map<Asset,ModelReference >(asset);
+        public ModelReference  ResToRef(AssetResource asset) => _mapper.Map<AssetResource, ModelReference >(asset);
     }
     public interface IAssetService
     {
         //string Initialize();
-        Task<List<AssetResource>> GetAsync();
+        List<AssetResource> GetAsync();
         CompanyAsset[] GetCompanyAssets(Guid gameId);
-        List<CompanyAsset> TakeCompanyAsset(IAsyncCursor<AssetResource> foundAssets);
-        Task<IAsyncCursor<AssetResource>> GetSharesAsync(Guid id, ModelTypes type);
+        List<ShareResource> GetShares(Guid id, ModelTypes type);
         AssetResource GetAsset(Guid id, ModelTypes type);
         AssetResource[] GetGameAssets(Guid id);
-        AssetResource[] GetQueryableGameAssets(Guid gameId);
         AssetResource GetGameCash(Guid gameId);
-        AssetResource Create(Asset asset);
+        void Create(AssetResource asset);
         void Replace(Guid id, Asset assetIn);
-        void Remove(Asset assetIn);
-        void RemoveFromGame(FilterDefinition<AssetResource> filter);
-        DeleteResult RemoveAssetsFromGame(FilterDefinition<AssetResource> filter);
-        ModelReference ToRef(Asset asset);
-        ModelReference ResToRef(AssetResource asset);
+        void Remove(AssetResource assetIn);
+        void RemoveFromGame(Guid assetId);
+        void RemoveAssetsFromGame(List<Guid> assetIds);
+        ModelReference  ToRef(Asset asset);
+        ModelReference  ResToRef(AssetResource asset);
     }
 }

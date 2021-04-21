@@ -12,14 +12,14 @@ namespace RiskGame.API.Mappings
     {
         public ShareToModelReference()
         {
-            CreateMap<Share, ModelReference>();
+            CreateMap<Share, ModelReference >();
         }
     }
     public class ModelReferenceToShare : Profile
     {
         public ModelReferenceToShare()
         {
-            CreateMap<ModelReference, Share>();
+            CreateMap<ModelReference , Share>();
         }
     }
 }

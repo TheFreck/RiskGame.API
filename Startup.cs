@@ -19,6 +19,7 @@ using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
 using RiskGame.API.Logic;
+using RiskGame.API.Persistence.Repositories;
 
 namespace RiskGame.API
 {
@@ -38,6 +39,7 @@ namespace RiskGame.API
             services.AddSingleton<IDatabaseSettings>(sp =>
                 sp.GetRequiredService<IOptions<DatabaseSettings>>().Value);
 
+            // SERVICES
             services.AddSingleton<IPlayerService,PlayerService>();
             services.AddSingleton<IAssetService,AssetService>();
             services.AddSingleton<IShareService,ShareService>();
@@ -45,10 +47,18 @@ namespace RiskGame.API
             services.AddSingleton<IEconService, EconService>();
             services.AddSingleton<ITransactionService, TransactionService>();
 
+            // LOGIC
             services.AddSingleton<IPlayerLogic, PlayerLogic>();
             services.AddSingleton<IAssetLogic, AssetLogic>();
             services.AddSingleton<ITransactionLogic,TransactionLogic>();
             services.AddSingleton<IEconLogic, EconLogic>();
+
+            // REPOSITORIES
+            services.AddSingleton<IAssetRepo, AssetRepo>();
+            services.AddSingleton<IPlayerRepo, PlayerRepo>();
+            services.AddSingleton<IShareRepo, ShareRepo>();
+            services.AddSingleton<IMarketRepo, MarketRepo>();
+            services.AddSingleton<IEconRepo, EconRepo>();
 
             services.AddControllersWithViews();
 

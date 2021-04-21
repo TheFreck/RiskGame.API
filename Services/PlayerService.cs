@@ -12,47 +12,45 @@ using Microsoft.AspNetCore.Mvc;
 using RiskGame.API.Logic;
 using RiskGame.API.Entities.Enums;
 using RiskGame.API.Entities;
+using RiskGame.API.Persistence.Repositories;
+using RiskGame.API.Models.AssetFolder;
 
 namespace RiskGame.API.Services
 {
     public class PlayerService : IPlayerService
     {
-        private readonly IShareService _shareService;
         private readonly IMapper _mapper;
-        private readonly IMongoCollection<PlayerResource> _players;
-        private readonly IEconService _econService;
-        private readonly IAssetService _assetService;
+        private readonly IPlayerRepo _playerRepo;
+        private readonly IAssetRepo _assetRepo;
+        private readonly IShareRepo _shareRepo;
+        private readonly IEconRepo _econRepo;
         private readonly ITransactionService _transactionService;
+
         private readonly IPlayerLogic _playerLogic;
-        private readonly IDatabaseSettings dbSettings; // remove this when you remove Initialize
-        public PlayerService(IDatabaseSettings settings, IShareService shareService, IEconService econService, IAssetService assetService, ITransactionService transactionService, IPlayerLogic playerLogic, IMapper mapper)
+        public PlayerService(IShareRepo shareRepo, IAssetRepo assetRepo, IPlayerRepo playerRepo, IEconRepo econRepo, IPlayerLogic playerLogic, IMapper mapper, ITransactionService transactionService)
         {
-            var client = new MongoClient(settings.ConnectionString);
-            var database = client.GetDatabase(settings.DatabaseName);
-            database.DropCollection(settings.PlayerCollectionName);
-            dbSettings = settings;
-            _players = database.GetCollection<PlayerResource>(settings.PlayerCollectionName);
-            _shareService = shareService;
-            _econService = econService;
+            _shareRepo = shareRepo;
+            _assetRepo = assetRepo;
+            _playerRepo = playerRepo;
+            _econRepo = econRepo;
             _playerLogic = playerLogic;
-            _assetService = assetService;
-            _transactionService = transactionService;
             _mapper = mapper;
+            _transactionService = transactionService;
         }
         public Task<string> PlayerLoop(Guid gameId)
         {
-            var players = _players.AsQueryable().Where(p => p.GameId == gameId).ToList();
-            var assets = _assetService.GetGameAssets(gameId);
-            var game = _econService.GetGame(gameId);
-            var keepGoing = _econService.IsRunning(gameId);
+            var players = _playerRepo.GetGamePlayers(gameId);
+            var assets = _assetRepo.GetGameAssets(gameId);
+            var game = _econRepo.GetOne(gameId);
             do
             {
                 foreach(var player in players)
                 {
+                    var shares = _shareRepo.GetMany().Where(s => s.CurrentOwner.Id.ToString() == player.PlayerId).ToArray();
                     var tradeTicket = new TradeTicket();
                     tradeTicket.GameId = gameId;
-                    tradeTicket.Asset = _assetService.ResToRef(assets[0]);
-                    var outcome = _playerLogic.PlayerTurn(player, assets, game.History);
+                    tradeTicket.Asset = _mapper.Map<AssetResource,ModelReference>(assets[0]);
+                    var outcome = _playerLogic.PlayerTurn(player, _mapper.Map<ShareResource[],Share[]>(shares), assets, game.History);
                     var total = (TurnTypes)((int)Math.Floor(new int[] {(int)outcome.Allocation, (int)outcome.Asset}.Average()));
                     tradeTicket.Shares = outcome.Qty;
 
@@ -84,76 +82,54 @@ namespace RiskGame.API.Services
                     var traded = _transactionService.Transact(tradeTicket);
                     // add transaction to board
                 }
-            } while (keepGoing);
+            } while (_econRepo.GetOne(gameId).isRunning);
             return Task.FromResult("player loop ended");
         }
-        public string MassDestruction()
+
+        private int AssetResource(AssetResource assetResource)
         {
-            _players.Database.Client.DropDatabase(dbSettings.DatabaseName);
-            return "it is done";
+            throw new NotImplementedException();
         }
-        public async Task<Player> GetHAUS(Guid gameId)
-        {
-            var filterBase = Builders<PlayerResource>.Filter;
-            var filter = filterBase.Eq("GameId", gameId) & filterBase.Eq("Name","HAUS");
-            var incoming = _players.FindAsync(filter).Result;
-            var haus = new PlayerResource();
-            await incoming.ForEachAsync(p => haus = p);
-            return _mapper.Map<PlayerResource,Player>(haus);
-        }
-        public ModelReference GetHAUSRef(Guid gameId)
-        {
-            return ToRef(GetHAUS(gameId).Result);
-        }
-        //
-        // Gets a list of all players in the DB
-        public async Task<IAsyncCursor<PlayerResource>> GetAsync() => await _players.FindAsync(player => true);
+
+        public PlayerResource GetHAUS(Guid gameId) => _playerRepo.GetHAUS(gameId);
+        public ModelReference GetHAUSRef(Guid gameId) => ResToRef(GetHAUS(gameId));
         //
         // Gets the player attached to the given id
-        public PlayerResource GetPlayerResource(Guid playerId) => _players.AsQueryable().Where(p => p.PlayerId == playerId.ToString()).FirstOrDefault();
-        public async Task<IAsyncCursor<PlayerResource>> GetPlayerAsync(Guid playerId) => await _players.FindAsync(player => player.PlayerId == playerId.ToString());
+        public PlayerResource GetPlayer(Guid playerId) => _playerRepo.GetOne(playerId);
         //
         // Remove all players from a game
-        public string RemovePlayersFromGame(Guid gameId)
-        {
-            var filter = Builders<PlayerResource>.Filter.Eq("GameId", gameId);
-            _players.DeleteMany(filter);
-            return "they were 'removed' peacefully in their sleep";
-        }
+        public DeleteResult RemovePlayersFromGame(Guid gameId) => _playerRepo.DeleteMany(_playerRepo.GetGamePlayers(gameId).Select(p => p.GameId).ToList()).Result;
         //
         // Creates a new player from the JSON
         public PlayerResource Create(Player player)
         {
             var newPlayer = _mapper.Map<Player, PlayerResource>(player);
-            _players.InsertOne(newPlayer);
+            _playerRepo.CreateOne(newPlayer);
             return newPlayer;
         }
         //
         // Updates attributes of the Player
         // including updates to Cash and Portfolio
-        public void Update(Guid id, PlayerResource playerIn) => _players.ReplaceOne(player => player.PlayerId == id.ToString(), playerIn);
+        public UpdateResult Update(Guid id, UpdateDefinition<PlayerResource> update) => _playerRepo.UpdateOne(id, update).Result;
+        //
+        // replaces a player with the input
+        public ReplaceOneResult Replace(FilterDefinition<PlayerResource> filter, PlayerResource player) => _playerRepo.Replace(filter, player);
         //
         // Deletes the player in the db
-        public void Remove(Player playerIn) => _players.DeleteOne(player => player.PlayerId == playerIn.Id.ToString());
-        //
-        // Deletes the player in the db
-        public void Remove(Guid id) => _players.DeleteOne(player => player.PlayerId == id.ToString());
-        public ModelReference ToRef(Player player) => _mapper.Map<Player,ModelReference>(player);
+        public DeleteResult Remove(Guid playerId) => _playerRepo.DeleteOne(playerId).Result;
+        public ModelReference ToRef(Player player) => _mapper.Map<Player, ModelReference>(player);
         public ModelReference ResToRef(PlayerResource player) => _mapper.Map<PlayerResource, ModelReference>(player);
     }
     public interface IPlayerService
     {
-        string MassDestruction();
-        Task<Player> GetHAUS(Guid gameId);
+        PlayerResource GetHAUS(Guid gameId);
         ModelReference GetHAUSRef(Guid gameId);
-        Task<IAsyncCursor<PlayerResource>> GetAsync();
-        PlayerResource GetPlayerResource(Guid playerId);
-        Task<IAsyncCursor<PlayerResource>> GetPlayerAsync(Guid id);
-        string RemovePlayersFromGame(Guid gameId);
+        PlayerResource GetPlayer(Guid playerId);
+        DeleteResult RemovePlayersFromGame(Guid gameId);
         PlayerResource Create(Player player);
-        void Update(Guid id, PlayerResource playerIn);
-        void Remove(Player playerIn);
-        void Remove(Guid id);
+        UpdateResult Update(Guid id, UpdateDefinition<PlayerResource> update);
+        ReplaceOneResult Replace(FilterDefinition<PlayerResource> filter, PlayerResource player);
+        DeleteResult Remove(Guid id);
         ModelReference ToRef(Player player);
         ModelReference ResToRef(PlayerResource player);
     }

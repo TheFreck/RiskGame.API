@@ -12,14 +12,14 @@ namespace RiskGame.API.Mappings
     {
         public PlayerResourseToModelReference()
         {
-            CreateMap<PlayerResource, ModelReference>().ForMember(member => member.Id, config => config.MapFrom(og => Guid.Parse(og.PlayerId)));
+            CreateMap<PlayerResource, ModelReference >().ForMember(member => member.Id, config => config.MapFrom(og => Guid.Parse(og.PlayerId)));
         }
     }
     public class ModelReferenceToPlayerResource : Profile
     {
         public ModelReferenceToPlayerResource()
         {
-            CreateMap<ModelReference, PlayerResource>().ForMember(member => member.PlayerId, config => config.MapFrom(og => og.Id.ToString()));
+            CreateMap<ModelReference , PlayerResource>().ForMember(member => member.PlayerId, config => config.MapFrom(og => og.Id.ToString()));
         }
     }
 }

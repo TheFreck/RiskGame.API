@@ -63,8 +63,8 @@ namespace RiskGame.API.Controllers
         }
         [HttpGet("get-games")]
         public ActionResult<List<EconomyOut>> GetGames() => _econService.GetGames();
-        [HttpGet("get-markets")]
-        public ActionResult<List<MarketMetrics>> GetMarkets() => _marketService.GetMarkets();
+        //[HttpGet("get-markets")]
+        //public ActionResult<List<MarketMetrics>> GetMarkets() => _marketService.GetMarkets();
 
         // ****
         // POST

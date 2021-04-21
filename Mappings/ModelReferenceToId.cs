@@ -12,7 +12,7 @@ namespace RiskGame.API.Mappings
     {
         public ModelReferenceToId()
         {
-            CreateMap<ModelReference, SimpleId>();
+            CreateMap<ModelReference , SimpleId>();
         }
     }
 }

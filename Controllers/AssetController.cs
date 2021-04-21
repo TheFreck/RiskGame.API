@@ -36,9 +36,6 @@ namespace RiskGame.API.Controllers
         // ***************************************************************
         // GET GET GET GET GET GET GET GET GET GET GET GET GET GET GET GET
         // ***************************************************************
-        [HttpGet]
-        public async Task<List<Asset>> Get() =>
-            _mapper.Map<List<AssetResource>, List<Asset>>(await _assetService.GetAsync());
         [HttpGet("{id:length(36)}")]
         public ActionResult<Asset> Get(string id) // assetId
         {
@@ -48,29 +45,10 @@ namespace RiskGame.API.Controllers
             if (asset.AssetId == Guid.Empty.ToString()) NotFound("couldn't find it with that Id");
             return _mapper.Map<AssetResource, Asset>(asset);
         }
-        //[HttpGet("cash/{gameId:length(36)}")]
-        //public async Task<ActionResult<AssetWithShares>> GetCash(string gameId)
-        //{
-        //    var isGuid = Guid.TryParse(gameId, out var incomingId);
-        //    if (!isGuid) return NotFound("Me thinks that Id was not a Guid");
-        //    try
-        //    {
-        //        if (true) Ok("anything in here");
-        //        var cash = _assetService.GetGameCash(incomingId);
-        //        var cashShares = _shareService.GetPlayerShareCount(cash).Result;
-        //        return Ok(new AssetWithShares
-        //        {
-        //            Asset = _mapper.Map<AssetResource, Asset>(cash),
-        //            Shares = _mapper.Map<List<ShareResource>, List<Share>>(cashShares)
-        //        });
-        //    }
-        //    catch (Exception e)
-        //    {
-        //        return NotFound(e.Message);
-        //    }
-        //}
+        [HttpGet("cash/{gameId:length(36)}")]
+        public ActionResult<AssetIn> GetCash(Guid gameId) => _mapper.Map<AssetResource,AssetIn>(_assetService.GetGameCash(gameId));
         [HttpGet("shares/{id:length(36)}")]
-        public async Task<ActionResult<AssetWithShares>> GetShares(string id) // assetId
+        public ActionResult<AssetWithShares> GetShares(string id) // assetId
         {
             // Find asset
             var isGuid = Guid.TryParse(id, out var incomingId);
@@ -78,7 +56,7 @@ namespace RiskGame.API.Controllers
             var asset = _assetService.GetAsset(incomingId, ModelTypes.Asset);
             if (asset.AssetId == Guid.Empty.ToString()) return NotFound("couldn't find it with that Id");
             // Get asset shares
-            var shares = await _shareService.GetAssetSharesAsync(asset);
+            var shares = _shareService.GetQueryableShares(Guid.Parse(asset.AssetId));
             // Make sure the shares have Id's
             var returnShares = new List<Share>();
             foreach (var share in shares)
@@ -94,18 +72,17 @@ namespace RiskGame.API.Controllers
             });
         }
         [HttpGet("player-shares/{id:length(36)}/{type}/{qty}")]
-        public async Task<ActionResult<List<ModelReference>>> GetPlayerShares(string id, int type, int qty) // playerId
+        public ActionResult<List<ModelReference>> GetPlayerShares(string playerId, int type, int qty) // playerId
         {
-            //Console.WriteLine("Get shares: " + type);
             var modelType = (ModelTypes)type;
-            var isGuid = Guid.TryParse(id, out var incomingId);
+            var isGuid = Guid.TryParse(playerId, out var incomingId);
             if (!isGuid) return NotFound("Me thinks that Id was not a Guid");
-            var playerRes = _playerService.GetPlayerResource(incomingId);
+            var playerRes = _playerService.GetPlayer(incomingId);
             var playerRef = _playerService.ResToRef(playerRes);
             var asset = _assetService.GetGameAssets(incomingId);
             var shareType = _shareService.GetAllPlayerShares(playerRef, asset[0]);
 
-            var allShares = _mapper.Map<List<ShareResource>, List<ModelReference>>(shareType);
+            var allShares = _mapper.Map<List<ShareResource>, List<ModelReference >>(shareType);
             var allOrNone = 0;
             if (qty == 0) allOrNone = allShares.Count;
             else allOrNone = qty;
@@ -123,7 +100,7 @@ namespace RiskGame.API.Controllers
         // POST POST POST POST POST POST POST POST POST POST POST POST POST
         // ****************************************************************
         [HttpPost]
-        public async Task<ActionResult<AssetIn>> Create([FromBody] AssetIn assetIn)
+        public ActionResult<AssetIn> Create([FromBody] AssetIn assetIn)
         {
             // Build Asset
             var randy = new Random();
@@ -142,10 +119,10 @@ namespace RiskGame.API.Controllers
             // Get the Game
             var isGuid = Guid.TryParse(assetIn.GameId, out var gameId);
             if (!isGuid) return NotFound("Me thinks that Id was not a Guid");
-            var game = _marketService.GetGame(gameId).Result;
+            var game = _marketService.GetGame(gameId);
 
             // Create a new Asset
-            var assetId = _assetService.Create(asset);
+            _assetService.Create(_mapper.Map<Asset,AssetResource>(asset));
             var hausRef = _playerService.GetHAUSRef(gameId);
 
             // Add all game assets including the new one to the Game
@@ -154,11 +131,11 @@ namespace RiskGame.API.Controllers
             var result = _marketService.UpdateGame(game);
 
             // Create Shares
-            var theShares = await _shareService.CreateShares(_mapper.Map<Asset, ModelReference>(asset), asset.SharesOutstanding, hausRef, ModelTypes.Share);
+            _shareService.CreateShares(_mapper.Map<Asset, ModelReference>(asset), asset.SharesOutstanding, hausRef, ModelTypes.Asset);
             return Ok(_mapper.Map<Asset, AssetIn>(asset));
         }
         [HttpPost("add-shares/{id:length(36)}/{qty}/{type}/{gameId:length(36)}")]
-        public async Task<ActionResult<List<ModelReference>>> AddShares(string id, int qty, int type, string gameId) // assetId, number of shares
+        public IActionResult AddShares(string id, int qty, int type, string gameId)
         {
             // check asset id
             var isGuid = Guid.TryParse(id, out var incomingId);
@@ -169,15 +146,16 @@ namespace RiskGame.API.Controllers
             var haus = _playerService.GetHAUS(game);
             var asset = _assetService.GetAsset(incomingId,ModelTypes.Asset);
             if (asset.AssetId == "") NotFound("couldn't find it with that Id");
-            return Ok(await _shareService.CreateShares(_assetService.ResToRef(asset), qty, _playerService.GetHAUSRef(game), (ModelTypes)type));
+            _shareService.CreateShares(_assetService.ResToRef(asset), qty, _playerService.GetHAUSRef(game), ModelTypes.Share);
+            return Ok();
         }
         // ***************************************************************
         // PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT
         // ***************************************************************
         [HttpPut("{id:length(36)}")]
-        public async Task<IActionResult> Update(string id, [FromBody] AssetIn assetIn) // assetId, changeSet
+        public IActionResult Update(string assetId, [FromBody] AssetIn assetIn)
         {
-            var isGuid = Guid.TryParse(id, out var incomingId);
+            var isGuid = Guid.TryParse(assetId, out var incomingId);
             if (!isGuid) return NotFound("Me thinks that Id was not a Guid");
             var foundAsset = _assetService.GetAsset(incomingId,ModelTypes.Asset);
             if (foundAsset == null) return NotFound();
@@ -197,9 +175,9 @@ namespace RiskGame.API.Controllers
             }
         }
         [HttpPut("delete-asset")]
-        public async Task<IActionResult> DeleteAsset([FromBody] string assId) // assetId
+        public IActionResult DeleteAsset([FromBody] string assetId) // assetId
         {
-            var isGuid = Guid.TryParse(assId, out var incomingId);
+            var isGuid = Guid.TryParse(assetId, out var incomingId);
             if (!isGuid) return NotFound("Me thinks that Id was not a Guid");
             var asset = _assetService.GetAsset(incomingId,ModelTypes.Asset);
             if (asset == null)
@@ -207,7 +185,7 @@ namespace RiskGame.API.Controllers
                 return NotFound();
             }
             var filter = Builders<AssetResource>.Filter.Eq("GameId", incomingId);
-            _assetService.RemoveFromGame(filter);
+            _assetService.Remove(asset);
             return NoContent();
         }
         // **************************************************************
@@ -218,8 +196,8 @@ namespace RiskGame.API.Controllers
         {
             var isGuid = Guid.TryParse(gameId, out var incomingId);
             if (!isGuid) return NotFound("Me thinks that Id was not a Guid");
-            var filter = Builders<AssetResource>.Filter.Eq("GameId", incomingId);
-            return Ok(_assetService.RemoveAssetsFromGame(filter));
+            _assetService.RemoveFromGame(incomingId);
+            return Ok();
         }
     }
 }

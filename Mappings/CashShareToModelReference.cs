@@ -12,7 +12,7 @@ namespace RiskGame.API.Mappings
     {
         public CashShareToModelReference()
         {
-            CreateMap<CashShare, ModelReference>();
+            CreateMap<CashShare, ModelReference >();
         }
     }
 }

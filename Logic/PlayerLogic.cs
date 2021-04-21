@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
 using RiskGame.API.Entities;
 using RiskGame.API.Entities.Enums;
+using RiskGame.API.Models;
 using RiskGame.API.Models.AssetFolder;
 using RiskGame.API.Models.MarketFolder;
 using RiskGame.API.Models.PlayerFolder;
@@ -17,32 +18,27 @@ namespace RiskGame.API.Logic
 {
     public class PlayerLogic : IPlayerLogic
     {
-        private readonly IPlayerService _playerService;
-        private readonly IAssetService _assetService;
-        private readonly IShareService _shareService;
         private readonly IMapper _mapper;
-        public PlayerLogic(IMapper mapper, IPlayerService playerService, IAssetService assetService, IShareService shareService)
+        public PlayerLogic(IMapper mapper)
         {
-            _playerService = playerService;
-            _assetService = assetService;
-            _shareService = shareService;
             _mapper = mapper;
         }
-        public PlayerDecision PlayerTurn(PlayerResource player, AssetResource[] assets, MarketMetricsHistory history)
+        public PlayerDecision PlayerTurn(PlayerResource player, Share[] portfolio, AssetResource[] assets, MarketMetricsHistory history)
         {
             var decision = new PlayerDecision();
-            return EvaluateAsset(player, assets, history, Grapevine(AssetAllocation(player, assets, decision)));
+            return EvaluateAsset(player, assets, history, Grapevine(AssetAllocation(player, portfolio, assets, decision)));
         }
-        public PlayerDecision AssetAllocation(PlayerResource player, AssetResource[] assets, PlayerDecision decision)
+        public PlayerDecision AssetAllocation(PlayerResource player, Share[] portfolio, AssetResource[] assets, PlayerDecision decision)
         {
-            var playerRef = _playerService.ResToRef(player);
-            var cash = _assetService.GetQueryableGameAssets(player.GameId).Where(a => a.ModelType == ModelTypes.Cash).FirstOrDefault();
-            var playerWallet = _shareService.GetPlayerShareCount(playerRef.Id, Guid.Parse(cash.AssetId));
-            var playerPortfolio = _shareService.GetPlayerShareCount(playerRef.Id, Guid.Parse(assets[0].AssetId));
-            var lastBuyPrice = assets[0].LastBuyPrice;
-            var lastSellPrice = assets[0].LastSellPrice;
+            var playerRef = _mapper.Map<PlayerResource,ModelReference >(player);
+            var cash = assets.Where(a => a.ModelType == ModelTypes.Cash).FirstOrDefault();
+            var playerWallet = player.Cash;
+            var playerPortfolio = portfolio;
+            var asset = assets.Where(a => a.ModelType == ModelTypes.Asset).FirstOrDefault();
+            var lastBuyPrice = asset.LastBuyPrice;
+            var lastSellPrice = asset.LastSellPrice;
             var lastPrice = (lastBuyPrice + lastSellPrice) / 2;
-            var portfolioValue = playerPortfolio * lastPrice;
+            var portfolioValue = playerPortfolio.Where(s => s._assetId.ToString() == asset.AssetId).Count() * lastPrice;
             double portfolioAllocation = portfolioValue/(portfolioValue + playerWallet);
             int turnType = (int)Math.Floor(
                 (portfolioAllocation - player.RiskTolerance) / (.1 * player.RiskTolerance)) > 2 ?
@@ -51,7 +47,7 @@ namespace RiskGame.API.Logic
                 -2 : 
                 (int)Math.Floor((portfolioAllocation - player.RiskTolerance) / (.1 * player.RiskTolerance));
             decision.Allocation = (TurnTypes)turnType;
-            decision.Qty = (int)Math.Ceiling((playerWallet * player.RiskTolerance) / (1 - player.RiskTolerance)) - playerPortfolio;
+            decision.Qty = (int)Math.Ceiling((playerWallet * player.RiskTolerance) / (1 - player.RiskTolerance)) - playerPortfolio.Count();
             return decision;
         }
         public PlayerDecision Grapevine(PlayerDecision decision)
@@ -84,8 +80,8 @@ namespace RiskGame.API.Logic
     }
     public interface IPlayerLogic
     {
-        PlayerDecision PlayerTurn(PlayerResource player, AssetResource[] assets, MarketMetricsHistory history);
-        PlayerDecision AssetAllocation(PlayerResource player, AssetResource[] assets, PlayerDecision decision);
+        PlayerDecision PlayerTurn(PlayerResource player, Share[] portfolio, AssetResource[] assets, MarketMetricsHistory history);
+        PlayerDecision AssetAllocation(PlayerResource player, Share[] portfolio, AssetResource[] assets, PlayerDecision decision);
         PlayerDecision Grapevine(PlayerDecision decision);
         PlayerDecision EvaluateAsset(PlayerResource player, AssetResource[] assets, MarketMetricsHistory history, PlayerDecision decision);
     }

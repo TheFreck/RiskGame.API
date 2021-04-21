@@ -92,7 +92,7 @@ namespace RiskGame.API.Models.MarketFolder
                 Assets = assets
             };
         }
-        public double GetMetric() => (Red + Orange + Yellow + Green + Blue + Violet) / 6;
+        public double GetAverageMetric() => (Red + Orange + Yellow + Green + Blue + Violet) / 6;
         public double GetMetric(IndustryTypes type)
         {
             switch (type)
@@ -129,7 +129,8 @@ namespace RiskGame.API.Models.MarketFolder
         }
         public Market()
         {
-
+            Red = Orange = Yellow = Green = Blue = Violet = 0;
+            RedDirection = OrangeDirection = YellowDirection = GreenDirection = BlueDirection = VioletDirection = Direction.Up;
         }
     }
 }

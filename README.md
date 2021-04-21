@@ -79,3 +79,7 @@ With additional** testing using the StopWatch class the loop is running at rough
 
 **4/19/21
 Made some** really great progress on the Player decision making and the player loop. In fact, I'm ready to start testing and refining it. So instead of doing that I ran into the reason we do a Repository Class for each model instead of just letting the model's service class handle it. CIRCULAR REFERENCES!!! when the services use each other to access their models GRRRRRRRR... So I created a Player Repo and tomorrow will follow suit with the other models and hopefully I'll be able to test the player loop tomorrow.
+
+**4/20/21
+Spent all day refactoring everything around the Repo classes. That allowed me to sever the ties between the service classes which was causing the circular reference. The server is a much cleaner, more efficient machine but the client is feeling jealous of all the attention the server got today and stopped creating new players and geting cash. So tomorrow I debug that...  
+

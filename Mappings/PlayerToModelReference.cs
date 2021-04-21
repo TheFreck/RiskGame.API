@@ -12,14 +12,14 @@ namespace RiskGame.API.Mappings
     {
         public PlayerToModelReference()
         {
-            CreateMap<Player, ModelReference>();
+            CreateMap<Player, ModelReference >();
         }
     }
     public class ModelReferenceToPlayer : Profile
     {
         public ModelReferenceToPlayer()
         {
-            CreateMap<ModelReference, Player>();
+            CreateMap<ModelReference , Player>();
         }
     }
 }
