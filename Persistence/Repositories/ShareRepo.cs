@@ -16,7 +16,7 @@ namespace RiskGame.API.Persistence.Repositories
             var client = new MongoClient(settings.ConnectionString);
             var db = client.GetDatabase(settings.DatabaseName);
             _settings = settings;
-            _shares = db.GetCollection<ShareResource>(settings.AssetCollectionName);
+            _shares = db.GetCollection<ShareResource>(settings.ShareCollectionName);
         }
         // get one
         public ShareResource GetOne(Guid shareId) => _shares.AsQueryable().Where(p => p.ShareId == shareId.ToString()).FirstOrDefault();

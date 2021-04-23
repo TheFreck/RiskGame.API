@@ -57,6 +57,7 @@ namespace RiskGame.API.Controllers
             var player = _mapper.Map<PlayerIn, Player>(playerIn);
             player.Id = Guid.NewGuid();
             player.PlayerId = player.Id.ToString();
+            player.PlayerId = player.Id.ToString();
             
             var cash = _assetService.GetGameCash(player.GameId);
             var playerRef = _playerService.ToRef(player);

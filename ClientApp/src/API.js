@@ -34,7 +34,7 @@ export default {
         },
         deleteAsset: query => {
             if (!query) return this.messages.badInput;
-            return axios.post(`api/asset/delete-asset`,query);
+            return axios.post(`api/asset/delete-asset`, query);
         },
         // Delete
         deleteGameAssets: query => axios.delete(`api/asset/game-assets/${query}`),
@@ -51,6 +51,7 @@ export default {
         // Post
         createPlayer: query => {
             if (!query) return this.messages.badInput;
+            debugger;
             return axios.post('api/player/new-player', query);
         },
         addSharesToPlayer: query => {
@@ -84,13 +85,14 @@ export default {
     },
     gamePlay: {
         // Get
-        newGame: () => axios.get("api/game/new-game"),
+        newGame: qty => axios.get(`api/game/new-game/${qty}`),
         isGameOn: gameId => axios.get(`api/game/get-game-status/${gameId}`),
         getData: query => axios.get(`api/game/get-records/${query.gameId}/${query.lastFrame}`),
         next: query => axios.get(`api/game/next/${query.frames}/${query.trendiness}`),
         addAssets: () => axios.get("api/game/add-assets"),
         // Post
         onOff: query => axios.post(`api/game/on-off/${query.gameId}/${query.isRunning}`),
+        tradingOnOff: query => axios.post(`api/game/trading-on-off/${query.gameId}/${query.isRunning}`),
         // Put
         initialize: secretCode => axios.put(`api/game/blowup-the-inside-world`, `"${secretCode}"`, { headers: { "content-type": "application/json" } }),
         // Delete

@@ -149,29 +149,23 @@ export const GameHome = props => {
         SETviewPane(<ChartContainer gameId={gameIdRef.current} isRunning={isRunningRef.current} />);
     }
     const newGameClick = () => {
-        API.gamePlay.newGame().then(game => {
+        API.gamePlay.newGame(1).then(game => {
+            //debugger;
             console.log("new: ", game.data);
             SETgameId(game.data);
             SETisRunning(false);
-            createAssets(1, game.data);
-            createPlayers(10, game.data);
+            createPlayers(3, game.data);
         })
     }
-    const createAssets = (num, gameid) => {
-        num--;
-        if (num >= 0) API.asset.createAsset({
-            Name: "Asset_" + num,
-            SharesOutstanding: 100,
-            GameId: gameid
-        }).then(answer => console.log("asset create: ", answer));
-    }
     const createPlayers = (num, gameid) => {
-        num--;
-        if (num >= 0) API.player.createPlayer({
-            Name: "Player_" + num,
-            Gameid: gameid,
-            Cash: 1000
-        }).then(answer => console.log("player create: ", answer));
+        for (let i = 0; i < num; i++) {
+            console.log("Player_" + num);
+            API.player.createPlayer({
+                Name: "Player_" + i,
+                Gameid: gameid,
+                Cash: 1000
+            }).then(answer => console.log("player create: ", answer));
+        }
     }
 
     const tradeButtonMouseEnter = () => {

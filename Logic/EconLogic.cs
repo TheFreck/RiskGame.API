@@ -35,13 +35,19 @@ namespace RiskGame.API.Logic
             // update economy
             precursors.Economy.Assets = grownAssets;
             // update precursors
+            var red = nextMarket.GetMetric(IndustryTypes.Red);
+            var orange = nextMarket.GetMetric(IndustryTypes.Orange);
+            var yellow = nextMarket.GetMetric(IndustryTypes.Yellow);
+            var green = nextMarket.GetMetric(IndustryTypes.Green);
+            var blue = nextMarket.GetMetric(IndustryTypes.Blue);
+            var violet = nextMarket.GetMetric(IndustryTypes.Violet);
             precursors.LastMarket = _mapper.Map<Market,MarketResource>(nextMarket);
-            precursors.Economy.History.Red.Add(nextMarket.GetMetric(IndustryTypes.Red));
-            precursors.Economy.History.Orange.Add(nextMarket.GetMetric(IndustryTypes.Orange));
-            precursors.Economy.History.Yellow.Add(nextMarket.GetMetric(IndustryTypes.Yellow));
-            precursors.Economy.History.Green.Add(nextMarket.GetMetric(IndustryTypes.Green));
-            precursors.Economy.History.Blue.Add(nextMarket.GetMetric(IndustryTypes.Blue));
-            precursors.Economy.History.Violet.Add(nextMarket.GetMetric(IndustryTypes.Violet));
+            precursors.Economy.History.Red.Add(red);
+            precursors.Economy.History.Orange.Add(orange);
+            precursors.Economy.History.Yellow.Add(yellow);
+            precursors.Economy.History.Green.Add(green);
+            precursors.Economy.History.Blue.Add(blue);
+            precursors.Economy.History.Violet.Add(violet);
 
 
 
@@ -53,10 +59,9 @@ namespace RiskGame.API.Logic
             {
                 if (asset.CompanyAsset == null) continue;
                 var period = randy.Next(10, 100);
-                var magnitude = GrowthRate(
-                        market.GetMetric(asset.CompanyAsset.PrimaryIndustry),
-                        market.GetMetric(asset.CompanyAsset.SecondaryIndustry)
-                    ) / period;
+                var primary = market.GetMetric(asset.CompanyAsset.PrimaryIndustry);
+                var secondary = market.GetMetric(asset.CompanyAsset.SecondaryIndustry);
+                var magnitude = GrowthRate(primary, secondary) / period;
                 asset.CompanyAsset.Waves.Add(new Wave {
                     Magnitude = magnitude, 
                     Period = period });

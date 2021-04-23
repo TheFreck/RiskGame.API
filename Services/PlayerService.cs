@@ -14,6 +14,7 @@ using RiskGame.API.Entities.Enums;
 using RiskGame.API.Entities;
 using RiskGame.API.Persistence.Repositories;
 using RiskGame.API.Models.AssetFolder;
+using System.Diagnostics;
 
 namespace RiskGame.API.Services
 {
@@ -37,6 +38,12 @@ namespace RiskGame.API.Services
             _mapper = mapper;
             _transactionService = transactionService;
         }
+
+        public async void TradingStartStop(Guid gameId)
+        {
+            var loopAction = await PlayerLoop(gameId);
+            Console.WriteLine("player loop action: " + loopAction);
+        }
         public Task<string> PlayerLoop(Guid gameId)
         {
             var players = _playerRepo.GetGamePlayers(gameId);
@@ -44,13 +51,16 @@ namespace RiskGame.API.Services
             var game = _econRepo.GetOne(gameId);
             do
             {
-                foreach(var player in players)
+                var timer = new Stopwatch();
+                timer.Start();
+                foreach (var player in players)
                 {
-                    var shares = _shareRepo.GetMany().Where(s => s.CurrentOwner.Id.ToString() == player.PlayerId).ToArray();
+                    var shares = _shareRepo.GetMany();
+                    var theShares = shares.Where(s => s.CurrentOwner.Id.ToString() == player.PlayerId).ToArray();
                     var tradeTicket = new TradeTicket();
                     tradeTicket.GameId = gameId;
                     tradeTicket.Asset = _mapper.Map<AssetResource,ModelReference>(assets[0]);
-                    var outcome = _playerLogic.PlayerTurn(player, _mapper.Map<ShareResource[],Share[]>(shares), assets, game.History);
+                    var outcome = _playerLogic.PlayerTurn(player, _mapper.Map<ShareResource[],Share[]>(theShares), assets, game.History);
                     var total = (TurnTypes)((int)Math.Floor(new int[] {(int)outcome.Allocation, (int)outcome.Asset}.Average()));
                     tradeTicket.Shares = outcome.Qty;
 
@@ -81,14 +91,11 @@ namespace RiskGame.API.Services
                     }
                     var traded = _transactionService.Transact(tradeTicket);
                     // add transaction to board
+                    timer.Stop();
+                    Console.WriteLine(timer.ElapsedMilliseconds);
                 }
             } while (_econRepo.GetOne(gameId).isRunning);
             return Task.FromResult("player loop ended");
-        }
-
-        private int AssetResource(AssetResource assetResource)
-        {
-            throw new NotImplementedException();
         }
 
         public PlayerResource GetHAUS(Guid gameId) => _playerRepo.GetHAUS(gameId);
@@ -122,6 +129,8 @@ namespace RiskGame.API.Services
     }
     public interface IPlayerService
     {
+        void TradingStartStop(Guid gameId);
+        Task<string> PlayerLoop(Guid gameId);
         PlayerResource GetHAUS(Guid gameId);
         ModelReference GetHAUSRef(Guid gameId);
         PlayerResource GetPlayer(Guid playerId);

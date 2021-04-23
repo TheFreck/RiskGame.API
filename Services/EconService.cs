@@ -35,35 +35,38 @@ namespace RiskGame.API.Services
         }
         public string AssetLoop(Guid econId)
         {
-            var marketHistory = new MarketMetricsHistory();
+            //var marketHistory = new MarketMetricsHistory();
             var econFilter = Builders<EconomyResource>.Filter.Eq("GameId", econId);
             var economy = _econRepo.GetOne(econId);
-            var markets = _marketRepo.GetMany().ToList();
             var assets = _assetRepo.GetGameAssets(econId).ToArray();
             var companyAssets = assets.Select(a => a.CompanyAsset).ToArray();
-            if (markets.Count == 0) 
-                _marketRepo.CreateOne(_mapper.Map<Market, MarketResource>(new Market(econId, assets.Select(a => a.CompanyAsset).ToArray(), randy, null)));
+            var market = _mapper.Map<Market, MarketResource>(new Market(econId, companyAssets, randy, null));
             do
             {
+                var timer = new Stopwatch();
+                timer.Start();
                 var loop = new MarketLoopData
                 {
                     EconId = econId,
                     Economy = economy,
                     Assets = assets,
-                    LastMarket = markets.LastOrDefault()
+                    LastMarket = market
                 };
                 var next = _econLogic.LoopRound(loop);
-                _econRepo.ReplaceOne(Builders<EconomyResource>.Filter.Eq("GameId", econId), next.Economy);
+                _econRepo.ReplaceOne(econFilter, next.Economy);
                 _assetRepo.ReplaceOne(Guid.Parse(assets[0].AssetId), next.Assets[0]);
                 _marketRepo.CreateOne(next.LastMarket);
                 economy = next.Economy;
-                marketHistory.Red.Add(next.Market.Red * (int)next.Market.RedDirection);
-                marketHistory.Orange.Add(next.Market.Orange * (int)next.Market.OrangeDirection);
-                marketHistory.Yellow.Add(next.Market.Yellow * (int)next.Market.YellowDirection);
-                marketHistory.Green.Add(next.Market.Green * (int)next.Market.GreenDirection);
-                marketHistory.Blue.Add(next.Market.Blue * (int)next.Market.BlueDirection);
-                marketHistory.Violet.Add(next.Market.Violet * (int)next.Market.VioletDirection);
+                //marketHistory.Red.Add(next.Market.Red * (int)next.Market.RedDirection);
+                //marketHistory.Orange.Add(next.Market.Orange * (int)next.Market.OrangeDirection);
+                //marketHistory.Yellow.Add(next.Market.Yellow * (int)next.Market.YellowDirection);
+                //marketHistory.Green.Add(next.Market.Green * (int)next.Market.GreenDirection);
+                //marketHistory.Blue.Add(next.Market.Blue * (int)next.Market.BlueDirection);
+                //marketHistory.Violet.Add(next.Market.Violet * (int)next.Market.VioletDirection);
                 //Thread.Sleep(1);
+                timer.Stop();
+                Console.WriteLine(timer.ElapsedMilliseconds);
+                Thread.Sleep(1000);
             } while (IsRunning(econId));
             Console.WriteLine("Finito");
             return "that was fun wasn't it?";

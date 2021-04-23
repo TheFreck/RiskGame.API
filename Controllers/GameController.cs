@@ -9,6 +9,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using RiskGame.API.Models.AssetFolder;
+using AutoMapper;
+using RiskGame.API.Entities.Enums;
+using RiskGame.API.Models.PlayerFolder;
 
 namespace RiskGame.API.Controllers
 {
@@ -19,12 +22,17 @@ namespace RiskGame.API.Controllers
     {
         private readonly IMarketService _marketService;
         private readonly IEconService _econService;
+        private readonly IAssetService _assetService;
+        private readonly IPlayerService _playerService;
+        private readonly IMapper _mapper;
         public bool hasAssets;
-        public GameController(IMarketService marketService, IEconService econService)
+        public GameController(IMarketService marketService, IEconService econService, IAssetService assetService, IPlayerService playerService, IMapper mapper)
         {
             _marketService = marketService;
             _econService = econService;
-
+            _assetService = assetService;
+            _playerService = playerService;
+            _mapper = mapper;
         }
         // ***
         // GET
@@ -34,8 +42,27 @@ namespace RiskGame.API.Controllers
         {
             return "got it";
         }
-        [HttpGet("new-game")]
-        public string NewGame() => _marketService.NewGame().ToString();
+        [HttpGet("new-game/{assetQty}")]
+        public string NewGame(int assetQty)
+        {
+            var assets = new List<AssetResource>();
+            for(var i=0; i<assetQty; i++)
+            {
+                var id = Guid.NewGuid();
+                var asset = _mapper.Map<Asset, AssetResource>(new Asset
+                {
+                    Name = $"Asset_{i}",
+                    SharesOutstanding = 100,
+                    Id = id,
+                    AssetId = id.ToString()
+                });
+                _assetService.Create(asset);
+                assets.Add(asset);
+            }
+            var cash = _mapper.Map<Asset, AssetResource>(new Asset(ModelTypes.Cash));
+            _assetService.Create(cash);
+            return _marketService.NewGame(assets.ToArray(), cash).ToString();
+        }
         [HttpGet("get-game-status/{gameId:length(36)}")]
         public ActionResult<bool> GameStatus(string gameId)
         {
@@ -63,19 +90,22 @@ namespace RiskGame.API.Controllers
         }
         [HttpGet("get-games")]
         public ActionResult<List<EconomyOut>> GetGames() => _econService.GetGames();
-        //[HttpGet("get-markets")]
-        //public ActionResult<List<MarketMetrics>> GetMarkets() => _marketService.GetMarkets();
-
         // ****
         // POST
         // ****
         [HttpPost("on-off/{gameId:length(36)}/{isRunning}")]
-        public void OnOff(string gameId, bool isRunning)
+        public void AssetsOnOff(string gameId, bool isRunning)
         {
             var isGuid = Guid.TryParse(gameId, out var incomingId);
-            _marketService.StartStop(incomingId, isRunning);
+            _marketService.AssetsStartStop(incomingId, isRunning);
+            Console.WriteLine("after start stop");
         }
-
+        [HttpPost("trading-on-off/{gameId:length(36)}/{isRunning}")]
+        public void TradingOnOff(string gameId, bool isRunning)
+        {
+            var isGuid = Guid.TryParse(gameId, out var incomingId);
+            _playerService.TradingStartStop(incomingId);
+        }
         // ***
         // PUT
         // ***
@@ -90,10 +120,8 @@ namespace RiskGame.API.Controllers
         public ActionResult<string> BlowUpTheInsideWorld([FromBody] string secretCode)
         {
             Console.WriteLine("secret code: " + secretCode);
-            _marketService.BigBang(secretCode);
-            return Ok("sweet oblivion!");
+            return Ok(_marketService.BigBang(secretCode));
         }
-
         // ******
         // DELETE
         // ******

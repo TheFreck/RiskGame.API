@@ -22,11 +22,16 @@ export const ChartContainer = props => {
     const [isRunning, SETisRunning] = useState(false);
     useEffect(
         () => {
-            isRunningRef.current = isRunning;
+            let yup = true;
+            const onOff = () => {
+                isRunningRef.current = isRunning
+                API.gamePlay.onOff({ gameId: props.gameId, isRunning }).then(outcome => {
+                    console.log("server running: ", outcome.data);
+                });
+                setTimeout(() => startTrading(), 1000);
+            }
+            isRunningRef.current != isRunning ? onOff() : yup = !yup;
             console.log("isRunning: ", isRunning);
-            API.gamePlay.onOff({ gameId: props.gameId, isRunning }).then(outcome => {
-                console.log("server running: ", outcome.data);
-            });
             SETview(<ChartLoop
                 isRunning={isRunning}
                 getData={getData}
@@ -46,6 +51,15 @@ export const ChartContainer = props => {
     // VIEW ****************************************
     const [view, SETview] = useState(<div />);
 
+    // ********
+    // SERVICES
+    // ********
+    const startTrading = () => {
+        var query = {};
+        query.gameId = gameId;
+        query.isRunning = isRunning;
+        API.gamePlay.tradingOnOff(query);
+    }
 
     // **********
     // GO GETTERS

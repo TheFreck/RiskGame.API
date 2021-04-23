@@ -67,7 +67,7 @@ namespace RiskGame.API.Services
             var update = Builders<EconomyResource>.Update.Set("Trendiness", trend);
             return _econRepo.UpdateOne(gameId, update).Result;
         }
-        public void StartStop(Guid gameId, bool running)
+        public void AssetsStartStop(Guid gameId, bool running)
         {
             var filter = Builders<EconomyResource>.Filter.Eq("GameId", gameId);
             var update = Builders<EconomyResource>.Update.Set("isRunning", running);
@@ -94,16 +94,30 @@ namespace RiskGame.API.Services
             await _econRepo.DeleteOne(gameId);
             return "there is nothing left; just the rubble of bits and bytes to be reallocated";
         }
-        public Guid NewGame()
+        public Guid NewGame(AssetResource[] assets, AssetResource cash)
         {
             var newGame = new Economy();
             newGame.Markets = new List<MarketMetrics>();
+            newGame.Assets = assets.Select(a => a.CompanyAsset).ToArray();
             var newMarket = new Market();
-            var assets = _assetRepo.GetMany().Where(a => a.GameId == newGame.GameId).Select(a => a.CompanyAsset).ToArray();
-            newGame.Markets.Add(newMarket.GetMetrics(assets));
+            foreach(var asset in assets)
+            {
+                asset.GameId = newGame.GameId;
+                asset.History = new List<double>();
+            }
+            cash.GameId = newGame.GameId;
+            var update = Builders<AssetResource>.Update.Set("GameId", newGame.GameId);
+            _assetRepo.UpdateOne(Guid.Parse(cash.AssetId), update);
+            _assetRepo.UpdateMany(assets.Select(a => Guid.Parse(a.AssetId)).ToList(),update);
+            //var assets = _assetRepo.GetMany().Where(a => a.GameId == newGame.GameId).Select(a => a.CompanyAsset).ToArray();
+            newGame.Markets.Add(newMarket.GetMetrics(assets.Select(a => a.CompanyAsset).ToArray()));
             _playerRepo.CreateOne(_mapper.Map<Player, PlayerResource>(new Player("HAUS", Guid.NewGuid(), newGame.GameId)));
             newGame.HAUS = _mapper.Map<PlayerResource,Player>(_playerRepo.GetHAUS(newGame.GameId));
-            newGame.CASH = _mapper.Map<AssetResource,Asset>(_assetRepo.GetGameAssets(newGame.GameId).Where(c => c.ModelType == ModelTypes.Cash).FirstOrDefault());
+
+            var gameCashAsset = _assetRepo.GetGameAssets(newGame.GameId);
+            var gameCash = gameCashAsset.Where(c => c.ModelType == ModelTypes.Cash).FirstOrDefault();
+            var newGameCash = _mapper.Map<AssetResource,Asset>(gameCash);
+            newGame.CASH = newGameCash;
             _econRepo.CreateOne(_mapper.Map<Economy,EconomyResource>(newGame));
             return newGame.GameId;
         }
@@ -124,8 +138,8 @@ namespace RiskGame.API.Services
         ChartPixel GetRecords(Guid gameId, int lastSequence);
         UpdateResult SetPixelCount(Guid gameId, int count);
         UpdateResult SetTrendiness(Guid gameId, int trend);
-        void StartStop(Guid gameId, bool running);
-        Guid NewGame();
+        void AssetsStartStop(Guid gameId, bool running);
+        Guid NewGame(AssetResource[] assets, AssetResource cash);
         CompanyAsset[] GetCompanyAssets(Guid gameId);
         Economy GetGame(Guid gameId);
         string UpdateGame(Economy game);

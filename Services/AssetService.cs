@@ -18,8 +18,8 @@ namespace RiskGame.API.Services
     public class AssetService : IAssetService
     {
         private readonly IAssetRepo _assetRepo;
-        private readonly IPlayerRepo _playerRepo;
         private readonly IShareRepo _shareRepo;
+        private readonly IPlayerRepo _playerRepo;
         private readonly IMarketRepo _marketRepo;
         private readonly IEconRepo _econRepo;
         private readonly IMapper _mapper;
@@ -38,7 +38,11 @@ namespace RiskGame.API.Services
         public List<ShareResource> GetShares(Guid assetId, ModelTypes type) => _shareRepo.GetMany().Where(s => s._assetId == assetId).Where(s => s.ModelType == type).ToList();
         public AssetResource GetAsset(Guid id, ModelTypes type) => _assetRepo.GetMany().Where(a => a.AssetId == id.ToString()).Where(a => a.ModelType == type).FirstOrDefault();
         public AssetResource[] GetGameAssets(Guid id) => _assetRepo.GetMany().Where(a => a.GameId == id).Where(a => a.CompanyAsset != null).ToArray();
-        public AssetResource GetGameCash(Guid gameId) => _assetRepo.GetMany().Where(a => a.GameId == gameId).Where(a => a.ModelType == ModelTypes.Cash).FirstOrDefault();
+        public AssetResource GetGameCash(Guid gameId)
+        {
+            var all = _assetRepo.GetMany().Where(a => a.GameId == gameId).Where(a => a.ModelType == ModelTypes.Cash).FirstOrDefault();
+            return all;
+        }
         public void Create(AssetResource asset) => _assetRepo.CreateOne(asset);
         public void Replace(Guid id, Asset assetIn)
         {
@@ -48,8 +52,8 @@ namespace RiskGame.API.Services
         public void Remove(AssetResource assetIn) => _assetRepo.DeleteOne(Guid.Parse(assetIn.AssetId));
         public void RemoveFromGame(Guid assetId) => _assetRepo.DeleteOne(assetId);
         public void RemoveAssetsFromGame(List<Guid> assetIds) => _assetRepo.DeleteMany(assetIds);
-        public ModelReference  ToRef(Asset asset) => _mapper.Map<Asset,ModelReference >(asset);
-        public ModelReference  ResToRef(AssetResource asset) => _mapper.Map<AssetResource, ModelReference >(asset);
+        public ModelReference ToRef(Asset asset) => _mapper.Map<Asset, ModelReference>(asset);
+        public ModelReference ResToRef(AssetResource asset) => _mapper.Map<AssetResource, ModelReference>(asset);
     }
     public interface IAssetService
     {
@@ -65,7 +69,7 @@ namespace RiskGame.API.Services
         void Remove(AssetResource assetIn);
         void RemoveFromGame(Guid assetId);
         void RemoveAssetsFromGame(List<Guid> assetIds);
-        ModelReference  ToRef(Asset asset);
-        ModelReference  ResToRef(AssetResource asset);
+        ModelReference ToRef(Asset asset);
+        ModelReference ResToRef(AssetResource asset);
     }
 }

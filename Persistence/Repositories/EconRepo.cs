@@ -18,7 +18,7 @@ namespace RiskGame.API.Persistence.Repositories
             _dbSettings = settings;
             _client = new MongoClient(settings.ConnectionString);
             var db = _client.GetDatabase(settings.DatabaseName);
-            _econs = db.GetCollection<EconomyResource>(settings.AssetCollectionName);
+            _econs = db.GetCollection<EconomyResource>(settings.EconomyCollectionName);
             _dbName = settings.DatabaseName;
         }
         // get one

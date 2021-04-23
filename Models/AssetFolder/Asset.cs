@@ -35,17 +35,20 @@ namespace RiskGame.API.Models.AssetFolder
         //
         // model type is used to convert this class to a ModelReference
         // it is automatically set and cannot be overridden
-        public readonly ModelTypes ModelType = ModelTypes.Asset;
+        public ModelTypes ModelType { get; }
         public CompanyAsset CompanyAsset { get; set; }
         public int Debt { get; set; }
         public List<double> History { get; set; }
-        public Asset(string name, int sharesOutstanding, Guid id, Guid gameId)
+        public Asset(string name, int sharesOutstanding, Guid id, Guid gameId, int debt)
         {
             Name = name;
             Id = id;
             AssetId = Id.ToString();
             SharesOutstanding = sharesOutstanding;
             GameId = gameId;
+            Debt = debt;
+            ModelType = ModelTypes.Asset;
+            CompanyAsset = new CompanyAsset();
         }
         public Asset(string name, Guid id, Guid gameId)
         {
@@ -53,11 +56,28 @@ namespace RiskGame.API.Models.AssetFolder
             Id = id;
             AssetId = Id.ToString();
             GameId = gameId;
+            Debt = new Random().Next(1, 10);
+            ModelType = ModelTypes.Asset;
+            CompanyAsset = new CompanyAsset();
         }
         public Asset() 
         {
             Id = Guid.NewGuid();
             AssetId = Id.ToString();
+            Debt = new Random().Next(1, 10);
+            ModelType = ModelTypes.Asset;
+            CompanyAsset = new CompanyAsset();
+        }
+        public Asset(ModelTypes cash)
+        {
+            if(cash == ModelTypes.Cash)
+            {
+                Name = ModelTypes.Cash.ToString();
+                ModelType = ModelTypes.Cash;
+                var id = Guid.NewGuid();
+                Id = id;
+                AssetId = id.ToString();
+            }
         }
     }
 }

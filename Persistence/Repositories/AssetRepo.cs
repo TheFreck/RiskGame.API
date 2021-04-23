@@ -22,7 +22,11 @@ namespace RiskGame.API.Persistence.Repositories
         public AssetResource GetOne(Guid assetId) => _assets.AsQueryable().Where(p => p.AssetId == assetId.ToString()).FirstOrDefault();
         // get many
         public List<AssetResource> GetManySpecific(List<Guid> assetIds) => _assets.AsQueryable().Where(p => assetIds.Contains(Guid.Parse(p.AssetId))).ToList();
-        public IQueryable<AssetResource> GetMany() => _assets.AsQueryable();
+        public IQueryable<AssetResource> GetMany()
+        {
+            var sendit = _assets.AsQueryable();
+            return sendit;
+        }
         public AssetResource[] GetGameAssets(Guid gameId) => _assets.AsQueryable().Where(g => g.GameId == gameId).ToArray();
         public void CreateOne(AssetResource asset) => _assets.InsertOne(asset);
         // replace one
@@ -36,8 +40,10 @@ namespace RiskGame.API.Persistence.Repositories
         // update many
         public Task<UpdateResult> UpdateMany(List<Guid> assetIds, UpdateDefinition<AssetResource> updates)
         {
-            var filter = Builders<AssetResource>.Filter.AnyEq("AssetId", assetIds);
-            return _assets.UpdateManyAsync(filter, updates);
+            var filter = Builders<AssetResource>.Filter.In("AssetId", assetIds);
+            var updatedAssets = _assets.UpdateManyAsync(filter, updates);
+            var nupdatedNassets = updatedAssets.Result;
+            return updatedAssets;
         }
         // delete one
         public Task<DeleteResult> DeleteOne(Guid assetId)

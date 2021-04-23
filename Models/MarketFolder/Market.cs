@@ -58,6 +58,11 @@ namespace RiskGame.API.Models.MarketFolder
             else VioletDirection = yester != null ? yester.VioletDirection : Direction.Up;
             Violet = randy.NextDouble() * (int)VioletDirection;
         }
+        public Market()
+        {
+            Red = Orange = Yellow = Green = Blue = Violet = 0;
+            RedDirection = OrangeDirection = YellowDirection = GreenDirection = BlueDirection = VioletDirection = Direction.Up;
+        }
         public MarketMetrics GetMetrics()
         {
             return new MarketMetrics
@@ -126,11 +131,6 @@ namespace RiskGame.API.Models.MarketFolder
                 BlueDirection,
                 VioletDirection
             };
-        }
-        public Market()
-        {
-            Red = Orange = Yellow = Green = Blue = Violet = 0;
-            RedDirection = OrangeDirection = YellowDirection = GreenDirection = BlueDirection = VioletDirection = Direction.Up;
         }
     }
 }

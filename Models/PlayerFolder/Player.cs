@@ -52,5 +52,10 @@ namespace RiskGame.API.Models.PlayerFolder
             PlayerId = id.ToString();
             GameId = gameId;
         }
+        public Player(string name)
+        {
+            Name = name;
+            Id = Guid.NewGuid();
+        }
     }
 }

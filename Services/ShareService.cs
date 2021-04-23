@@ -49,14 +49,10 @@ namespace RiskGame.API.Services
         }
         public UpdateResult UpdateShares(List<ShareResource> shares, UpdateDefinition<ShareResource> update) => _shareRepo.UpdateMany(shares.Select(s => Guid.Parse(s.ShareId)).ToList(), update).Result;
         public DeleteResult ShredShares(Guid assetId) => _shareRepo.DeleteAssetShares(assetId).Result;
-        public ModelReference  ToRef(Share share) =>
-            _mapper.Map<Share, ModelReference >(share);
-        public List<ModelReference > ToRef(List<Share> shares) =>
-            _mapper.Map<List<Share>, List<ModelReference >>(shares);
-        public ModelReference  ResToRef(ShareResource share) =>
-            _mapper.Map<ShareResource, ModelReference >(share);
-        public List<ModelReference > ResToRef(List<ShareResource> shares) =>
-            _mapper.Map<List<ShareResource>, List<ModelReference >>(shares);
+        public ModelReference  ToRef(Share share) => _mapper.Map<Share, ModelReference >(share);
+        public List<ModelReference > ToRef(List<Share> shares) => _mapper.Map<List<Share>, List<ModelReference >>(shares);
+        public ModelReference  ResToRef(ShareResource share) => _mapper.Map<ShareResource, ModelReference >(share);
+        public List<ModelReference > ResToRef(List<ShareResource> shares) => _mapper.Map<List<ShareResource>, List<ModelReference >>(shares);
     }
     public interface IShareService
     {
