@@ -22,7 +22,6 @@ namespace RiskGame.API.Models.SharesFolder
         //
         // Share id is automatically set and can be overridden
         public Guid Id { get; set; }
-        public string ShareId { get; set; }
         [BsonElement("Name")]
         [JsonProperty("Name")]
         public string Name { get; set; }
@@ -39,7 +38,6 @@ namespace RiskGame.API.Models.SharesFolder
         {
             _assetId = assetId;
             Id = Guid.NewGuid();
-            ShareId = Id.ToString();
             Name = name;
             CurrentOwner = owner;
             ModelType = type;
@@ -47,13 +45,11 @@ namespace RiskGame.API.Models.SharesFolder
         public Share(ModelTypes type)
         {
             Id = Guid.NewGuid();
-            ShareId = Id.ToString();
             ModelType = type;
         }
         public Share()
         {
             Id = Guid.NewGuid();
-            ShareId = Id.ToString();
         }
     }
 }

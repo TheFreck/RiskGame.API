@@ -68,15 +68,14 @@ namespace RiskGame.API.Models.AssetFolder
             ModelType = ModelTypes.Asset;
             CompanyAsset = new CompanyAsset();
         }
-        public Asset(ModelTypes cash)
+        public Asset(ModelTypes cash, int shares)
         {
             if(cash == ModelTypes.Cash)
             {
                 Name = ModelTypes.Cash.ToString();
                 ModelType = ModelTypes.Cash;
-                var id = Guid.NewGuid();
-                Id = id;
-                AssetId = id.ToString();
+                Id = Guid.NewGuid();
+                SharesOutstanding = shares;
             }
         }
     }

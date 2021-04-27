@@ -18,7 +18,7 @@ namespace RiskGame.API.Mappings
     {
         public ShareResourceToShare()
         {
-            CreateMap<ShareResource, Share>().ForMember(member => member.Id, config => config.MapFrom(og => Guid.Parse(og.ShareId)));
+            CreateMap<ShareResource, Share>().ForMember(member => member.Id, config => config.MapFrom(og => og.ShareId));
         }
     }
 }

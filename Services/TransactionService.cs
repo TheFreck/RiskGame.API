@@ -70,15 +70,15 @@ namespace RiskGame.API.Services
             // get cash and shares
             var tradeAsset = _assetRepo.GetOne(trade.Asset.Id);
             var cash = _assetRepo.GetMany().Where(c => c.ModelType == ModelTypes.Cash).Where(c => c.GameId == tradeAsset.GameId).FirstOrDefault();
-            var tradeCash = _shareRepo.GetMany().Where(c => c.CurrentOwner.Id.ToString() == buyer.PlayerId).Take(trade.Cash).ToArray();
-            var tradeShares = _shareRepo.GetMany().Where(s => s.CurrentOwner.Id.ToString() == seller.PlayerId).Where(s => s._assetId == trade.Asset.Id).Take(trade.Shares).ToArray();
+            var tradeCash = _shareRepo.GetMany().Where(c => c.CurrentOwner.Id == buyer.PlayerId).Take(trade.Cash).ToArray();
+            var tradeShares = _shareRepo.GetMany().Where(s => s.CurrentOwner.Id == seller.PlayerId).Where(s => s._assetId == trade.Asset.Id).Take(trade.Shares).ToArray();
             try
             {
                 // Transfer ownership of cash and shares
                 var transferredShares = _transactionLogic.TransferShares(buyer, tradeShares, trade.Shares);
                 var transferredCash = _transactionLogic.TransferShares(seller, tradeCash, trade.Cash);
-                var shrs = await _shareRepo.UpdateMany(transferredShares.Select(s => Guid.Parse(s.ShareId)).ToList(),Builders<ShareResource>.Update.Set("CurrentOwner", buyerRef));
-                var csh = await _shareRepo.UpdateMany(transferredCash.Select(s => Guid.Parse(s.ShareId)).ToList(), Builders<ShareResource>.Update.Set("CurrentOwner", sellerRef));
+                var shrs = await _shareRepo.UpdateMany(transferredShares.Select(s => s.ShareId).ToList(),Builders<ShareResource>.Update.Set("CurrentOwner", buyerRef));
+                var csh = await _shareRepo.UpdateMany(transferredCash.Select(s => s.ShareId).ToList(), Builders<ShareResource>.Update.Set("CurrentOwner", sellerRef));
 
                 // complete the trade ticket
                 trade.Message = $"Shares: {shrs.IsModifiedCountAvailable}; Cash: {csh.IsModifiedCountAvailable}";

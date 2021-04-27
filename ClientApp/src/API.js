@@ -51,8 +51,13 @@ export default {
         // Post
         createPlayer: query => {
             if (!query) return this.messages.badInput;
-            debugger;
+            //debugger;
             return axios.post('api/player/new-player', query);
+        },
+        createPlayers: query => {
+            if (!query) return this.messages.badInput;
+            console.log("create players: ", query);
+            return axios.post(`api/player/create-players`, query);
         },
         addSharesToPlayer: query => {
             if (!query) return this.messages.badInput;

@@ -51,25 +51,32 @@ namespace RiskGame.API.Controllers
         // ****************************************************************
         // POST POST POST POST POST POST POST POST POST POST POST POST POST
         // ****************************************************************
+        //
+        // used to create the human player
         [HttpPost("new-player")]
         public ActionResult<PlayerIn> Create([FromBody] PlayerIn playerIn)
         {
-            var player = _mapper.Map<PlayerIn, Player>(playerIn);
+            var player = new Player();
+            player = _mapper.Map<PlayerIn, Player>(playerIn);
             player.Id = Guid.NewGuid();
-            player.PlayerId = player.Id.ToString();
-            player.PlayerId = player.Id.ToString();
-            
-            var cash = _assetService.GetGameCash(player.GameId);
-            var playerRef = _playerService.ToRef(player);
+            var playerRef = _mapper.Map<Player, ModelReference>(player);
 
-            _shareService.CreateShares(_mapper.Map<AssetResource, ModelReference >(cash), player.Cash, playerRef, ModelTypes.Cash);
-            cash.SharesOutstanding += player.Cash;
+
+            var cash = _assetService.GetGameCash(player.GameId);
+            var cashShares = _shareService.GetQueryableShares(cash.AssetId).Where(c => c.CurrentOwner.Name == "HAUS").Take(player.Cash).ToList();
+
+            //var playerRef = _playerService.ToRef(player);
+
+            //_shareService.CreateShares(_mapper.Map<AssetResource, ModelReference>(cash), player.Cash, playerRef, ModelTypes.Cash);
+            //cash.SharesOutstanding += player.Cash;
             try
             {
-                _assetService.Replace(Guid.Parse(cash.AssetId), _mapper.Map<AssetResource, Asset>(cash));
-                _playerService.Create(player);
+                var update = Builders<ShareResource>.Update.Set("CurentOwner", playerRef);
+                _shareService.UpdateShares(cashShares.Select(c => c.ShareId).ToList(), update);
+                _playerService.CreateOne(player);
                 playerIn.GameId = player.GameId;
                 playerIn.Id = player.Id;
+
                 return Ok(playerIn);
             }
             catch (Exception e)
@@ -77,7 +84,25 @@ namespace RiskGame.API.Controllers
                 return NotFound(e.Message);
             }
         }
-        [HttpPost("add-shares/{playerId:length(36)}/{assetId}/{qty}")]
+        [HttpPost("create-players")]
+        public ActionResult<List<PlayerResource>> CreateMany([FromBody] List<PlayerIn> playersIn)
+        {
+            var playerList = new List<Player>();
+            var cash = _assetService.GetGameCash(playersIn[0].GameId);
+            var cashShares = _shareService.GetQueryableShares(cash.AssetId).Where(c => c.CurrentOwner.Name == "HAUS").ToList();
+
+            foreach (var player in playersIn)
+            {
+                player.Id = Guid.NewGuid();
+                var playerCash = cashShares.Take(player.Cash).ToList();
+                var playerRef = _mapper.Map<PlayerIn, ModelReference>(player);
+                var update = Builders<ShareResource>.Update.Set("CurrentOwner", playerRef);
+                var playerCashIds = playerCash.Select(c => c.ShareId).ToList();
+                _shareService.UpdateShares(playerCashIds, update);
+                playerList.Add(new Player(player));
+            }
+            return Ok(_playerService.CreateMany(playerList));
+        }
         // ***************************************************************
         // PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT
         // ***************************************************************

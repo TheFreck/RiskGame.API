@@ -19,12 +19,13 @@ namespace RiskGame.API.Persistence.Repositories
             _shares = db.GetCollection<ShareResource>(settings.ShareCollectionName);
         }
         // get one
-        public ShareResource GetOne(Guid shareId) => _shares.AsQueryable().Where(p => p.ShareId == shareId.ToString()).FirstOrDefault();
+        public ShareResource GetOne(Guid shareId) => _shares.AsQueryable().Where(p => p.ShareId == shareId).FirstOrDefault();
         // get many
-        public IQueryable<ShareResource> GetManySpecific(List<Guid> shareIds) => _shares.AsQueryable().Where(p => shareIds.Contains(Guid.Parse(p.ShareId)));
+        public IQueryable<ShareResource> GetManySpecific(List<Guid> shareIds) => _shares.AsQueryable().Where(p => shareIds.Contains(p.ShareId));
         public IQueryable<ShareResource> GetMany() => _shares.AsQueryable();
         // create one
         public void CreateOne(ShareResource share) => _shares.InsertOne(share);
+        public void CreateMany(IEnumerable<ShareResource> shares) => _shares.InsertMany(shares);
         // update one
         public Task<UpdateResult> UpdateOne(Guid shareId, UpdateDefinition<ShareResource> update)
         {
@@ -32,10 +33,12 @@ namespace RiskGame.API.Persistence.Repositories
             return _shares.UpdateOneAsync(filter, update);
         }
         // update many
-        public Task<UpdateResult> UpdateMany(List<Guid> shareIds, UpdateDefinition<ShareResource> updates)
+        public Task<UpdateResult> UpdateMany(IEnumerable<Guid> shareIds, UpdateDefinition<ShareResource> updates)
         {
-            var filter = Builders<ShareResource>.Filter.AnyEq("ShareId", shareIds);
-            return _shares.UpdateManyAsync(filter, updates);
+            var filter = Builders<ShareResource>.Filter.In("ShareId", shareIds);
+            var result = _shares.UpdateManyAsync(filter, updates);
+            var trueResult = result.Result;
+            return result;
         }
         // delete one
         public Task<DeleteResult> DeleteOne(Guid shareId)
@@ -44,7 +47,7 @@ namespace RiskGame.API.Persistence.Repositories
             return _shares.DeleteOneAsync(filter);
         }
         // delete many
-        public Task<DeleteResult> DeleteMany(List<Guid> shares)
+        public Task<DeleteResult> DeleteMany(IEnumerable<Guid> shares)
         {
             var filter = Builders<ShareResource>.Filter.AnyEq("ShareId", shares);
             return _shares.DeleteManyAsync(filter);
@@ -62,10 +65,11 @@ namespace RiskGame.API.Persistence.Repositories
         IQueryable<ShareResource> GetManySpecific(List<Guid> shareIds);
         IQueryable<ShareResource> GetMany();
         void CreateOne(ShareResource share);
+        void CreateMany(IEnumerable<ShareResource> shares);
         Task<UpdateResult> UpdateOne(Guid shareId, UpdateDefinition<ShareResource> update);
-        Task<UpdateResult> UpdateMany(List<Guid> share, UpdateDefinition<ShareResource> updates);
+        Task<UpdateResult> UpdateMany(IEnumerable<Guid> share, UpdateDefinition<ShareResource> updates);
         Task<DeleteResult> DeleteOne(Guid shareId);
-        Task<DeleteResult> DeleteMany(List<Guid> share);
+        Task<DeleteResult> DeleteMany(IEnumerable<Guid> share);
         Task<DeleteResult> DeleteAssetShares(Guid assetId);
     }
 }

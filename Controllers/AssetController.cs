@@ -42,7 +42,7 @@ namespace RiskGame.API.Controllers
             var isGuid = Guid.TryParse(id, out var incomingId);
             if (!isGuid) return NotFound("Me thinks that Id was not a Guid");
             var asset = _assetService.GetAsset(incomingId, ModelTypes.Asset);
-            if (asset.AssetId == Guid.Empty.ToString()) NotFound("couldn't find it with that Id");
+            if (asset.AssetId == Guid.Empty) NotFound("couldn't find it with that Id");
             return _mapper.Map<AssetResource, Asset>(asset);
         }
         [HttpGet("cash/{gameId:length(36)}")]
@@ -54,15 +54,15 @@ namespace RiskGame.API.Controllers
             var isGuid = Guid.TryParse(id, out var incomingId);
             if (!isGuid) return NotFound("Me thinks that Id was not a Guid");
             var asset = _assetService.GetAsset(incomingId, ModelTypes.Asset);
-            if (asset.AssetId == Guid.Empty.ToString()) return NotFound("couldn't find it with that Id");
+            if (asset.AssetId == Guid.Empty) return NotFound("couldn't find it with that Id");
             // Get asset shares
-            var shares = _shareService.GetQueryableShares(Guid.Parse(asset.AssetId));
+            var shares = _shareService.GetQueryableShares(asset.AssetId);
             // Make sure the shares have Id's
             var returnShares = new List<Share>();
             foreach (var share in shares)
             {
                 var updateShare = _mapper.Map<ShareResource, Share>(share);
-                updateShare.Id = Guid.Parse(updateShare.ShareId);
+                updateShare.Id = updateShare.Id;
                 returnShares.Add(updateShare);
             }
             return Ok(new AssetWithShares
@@ -145,7 +145,7 @@ namespace RiskGame.API.Controllers
             if (!isItGuid) return NotFound("Me thinks that Id was not a Guid");
             var haus = _playerService.GetHAUS(game);
             var asset = _assetService.GetAsset(incomingId,ModelTypes.Asset);
-            if (asset.AssetId == "") NotFound("couldn't find it with that Id");
+            if (asset.AssetId == Guid.Empty) NotFound("couldn't find it with that Id");
             _shareService.CreateShares(_assetService.ResToRef(asset), qty, _playerService.GetHAUSRef(game), ModelTypes.Share);
             return Ok();
         }

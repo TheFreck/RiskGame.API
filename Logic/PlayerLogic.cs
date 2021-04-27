@@ -38,7 +38,7 @@ namespace RiskGame.API.Logic
             var lastBuyPrice = asset.LastBuyPrice;
             var lastSellPrice = asset.LastSellPrice;
             var lastPrice = (lastBuyPrice + lastSellPrice) / 2;
-            var portfolioValue = playerPortfolio.Where(s => s._assetId.ToString() == asset.AssetId).Count() * lastPrice;
+            var portfolioValue = playerPortfolio.Where(s => s._assetId == asset.AssetId).Count() * lastPrice;
             double portfolioAllocation = portfolioValue/(portfolioValue + playerWallet);
             int turnType = (int)Math.Floor(
                 (portfolioAllocation - player.RiskTolerance) / (.1 * player.RiskTolerance)) > 2 ?

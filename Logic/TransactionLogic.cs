@@ -31,8 +31,8 @@ namespace RiskGame.API.Logic
                     share.History.Add(new TradeRecord
                     {
                         Buyer = _mapper.Map<PlayerResource,ModelReference>(receiver),
-                        Asset = new ModelReference { Id = share._assetId, Name = share.Name[9..], ModelType = ModelTypes.Asset},
-                        ShareId = Guid.Parse(share.ShareId),
+                        Asset = new ModelReference(share.Name[9..],share._assetId,ModelTypes.Asset),
+                        ShareId = share.ShareId,
                         Price = price,
                         TradeTime = DateTime.Now
                     });

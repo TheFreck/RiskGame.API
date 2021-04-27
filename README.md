@@ -83,3 +83,5 @@ Made some** really great progress on the Player decision making and the player l
 **4/20/21
 Spent all** day refactoring everything around the Repo classes. That allowed me to sever the ties between the service classes which was causing the circular reference. The server is a much cleaner, more efficient machine but the client is feeling jealous of all the attention the server got today and stopped creating new players and geting cash. So tomorrow I debug that...  
 
+**4/27/21
+Spent the** past few days working on the orchestration of creating a new game, assets and players. The server now creates multiple AI players as it creates the new game.

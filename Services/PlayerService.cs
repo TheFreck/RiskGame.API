@@ -56,7 +56,7 @@ namespace RiskGame.API.Services
                 foreach (var player in players)
                 {
                     var shares = _shareRepo.GetMany();
-                    var theShares = shares.Where(s => s.CurrentOwner.Id.ToString() == player.PlayerId).ToArray();
+                    var theShares = shares.Where(s => s.CurrentOwner.Id == player.PlayerId).ToArray();
                     var tradeTicket = new TradeTicket();
                     tradeTicket.GameId = gameId;
                     tradeTicket.Asset = _mapper.Map<AssetResource,ModelReference>(assets[0]);
@@ -108,11 +108,22 @@ namespace RiskGame.API.Services
         public DeleteResult RemovePlayersFromGame(Guid gameId) => _playerRepo.DeleteMany(_playerRepo.GetGamePlayers(gameId).Select(p => p.GameId).ToList()).Result;
         //
         // Creates a new player from the JSON
-        public PlayerResource Create(Player player)
+        public PlayerResource CreateOne(Player player)
         {
-            var newPlayer = _mapper.Map<Player, PlayerResource>(player);
-            _playerRepo.CreateOne(newPlayer);
-            return newPlayer;
+            var playerResource = _mapper.Map<Player, PlayerResource>(player);
+            var playerCash = _shareRepo.GetMany().Where(s => s.ModelType == ModelTypes.Cash);
+            var update = Builders<ShareResource>.Update.Set("CurrentOwner", ToRef(player));
+            var updated = _shareRepo.UpdateMany(playerCash.Select(c => c.ShareId),update).Result;
+            _playerRepo.CreateOne(playerResource);
+            return playerResource;
+        }
+        //
+        // creates multiple new players
+        public List<PlayerResource> CreateMany(List<Player> players)
+        {
+            var newPlayers = _mapper.Map<List<Player>, List<PlayerResource>>(players);
+            _playerRepo.CreateMany(newPlayers);
+            return newPlayers;
         }
         //
         // Updates attributes of the Player
@@ -135,7 +146,8 @@ namespace RiskGame.API.Services
         ModelReference GetHAUSRef(Guid gameId);
         PlayerResource GetPlayer(Guid playerId);
         DeleteResult RemovePlayersFromGame(Guid gameId);
-        PlayerResource Create(Player player);
+        PlayerResource CreateOne(Player player);
+        List<PlayerResource> CreateMany(List<Player> players);
         UpdateResult Update(Guid id, UpdateDefinition<PlayerResource> update);
         ReplaceOneResult Replace(FilterDefinition<PlayerResource> filter, PlayerResource player);
         DeleteResult Remove(Guid id);

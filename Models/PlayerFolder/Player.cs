@@ -23,7 +23,6 @@ namespace RiskGame.API.Models.PlayerFolder
         // Player id is automatically set and can be overridden
         public Guid Id { get; set; }
         public Guid GameId { get; set; }
-        public string PlayerId { get; set; }
         [BsonElement("Name")]
         [JsonProperty("Name")]
         public string Name { get; set; }
@@ -38,24 +37,30 @@ namespace RiskGame.API.Models.PlayerFolder
         public Player()
         {
             Id = Guid.NewGuid();
-            PlayerId = Id.ToString();
         }
         public Player(Guid id)
         {
             Id = id;
-            PlayerId = Id.ToString();
         }
         public Player(string name, Guid id, Guid gameId)
         {
             Name = name;
             Id = id;
-            PlayerId = id.ToString();
             GameId = gameId;
         }
         public Player(string name)
         {
             Name = name;
             Id = Guid.NewGuid();
+        }
+        public Player(PlayerIn playerIn)
+        {
+            Name = playerIn.Name;
+            Id = playerIn.Id;
+            GameId = playerIn.GameId;
+            Cash = playerIn.Cash;
+            RiskTolerance = playerIn.RiskTolerance;
+            Experience = playerIn.Experience;
         }
     }
 }

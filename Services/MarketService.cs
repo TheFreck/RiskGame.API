@@ -74,7 +74,7 @@ namespace RiskGame.API.Services
             var game = _econRepo.UpdateOne(gameId,update);
             _econService.AssetLoop(gameId);
         }
-        public string BigBang(string secretCode) => _econRepo.DeleteAll(secretCode) ? "the screams of the data as they were being deleted are starting to fade..." : "Not gonna do it";
+        public string BigBang(string secretCode) => _econRepo.DeleteAll(secretCode) ? "the screams of the deleted data are starting to fade..." : "Not gonna do it";
         public async Task<string> EndGame(Guid gameId)
         {
             // Stop game
@@ -84,7 +84,7 @@ namespace RiskGame.API.Services
             // destroy assets and their shares
             foreach(var asset in _assetRepo.GetGameAssets(gameId))
             {
-                await _shareRepo.DeleteAssetShares(Guid.Parse(asset.AssetId));
+                await _shareRepo.DeleteAssetShares(asset.AssetId);
             }
             await _assetRepo.DeleteGameAssets(gameId);
             // delete the markets
@@ -107,9 +107,8 @@ namespace RiskGame.API.Services
             }
             cash.GameId = newGame.GameId;
             var update = Builders<AssetResource>.Update.Set("GameId", newGame.GameId);
-            _assetRepo.UpdateOne(Guid.Parse(cash.AssetId), update);
-            _assetRepo.UpdateMany(assets.Select(a => Guid.Parse(a.AssetId)).ToList(),update);
-            //var assets = _assetRepo.GetMany().Where(a => a.GameId == newGame.GameId).Select(a => a.CompanyAsset).ToArray();
+            _assetRepo.UpdateOne(cash.AssetId, update);
+            _assetRepo.UpdateMany(assets.Select(a => a.AssetId).ToList(),update);
             newGame.Markets.Add(newMarket.GetMetrics(assets.Select(a => a.CompanyAsset).ToArray()));
             _playerRepo.CreateOne(_mapper.Map<Player, PlayerResource>(new Player("HAUS", Guid.NewGuid(), newGame.GameId)));
             newGame.HAUS = _mapper.Map<PlayerResource,Player>(_playerRepo.GetHAUS(newGame.GameId));

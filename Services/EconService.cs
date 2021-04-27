@@ -54,7 +54,7 @@ namespace RiskGame.API.Services
                 };
                 var next = _econLogic.LoopRound(loop);
                 _econRepo.ReplaceOne(econFilter, next.Economy);
-                _assetRepo.ReplaceOne(Guid.Parse(assets[0].AssetId), next.Assets[0]);
+                _assetRepo.ReplaceOne(assets[0].AssetId, next.Assets[0]);
                 _marketRepo.CreateOne(next.LastMarket);
                 economy = next.Economy;
                 //marketHistory.Red.Add(next.Market.Red * (int)next.Market.RedDirection);

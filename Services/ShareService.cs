@@ -31,23 +31,27 @@ namespace RiskGame.API.Services
         public ShareResource GetSpecificShare(Guid id) => _shareRepo.GetOne(id);
         public IQueryable<ShareResource> GetSpecificShares(List<Guid> shares) => _shareRepo.GetManySpecific(shares);
         public int GetPlayerShareCount(Guid playerId, Guid assetId) => _shareRepo.GetMany().Where(s => s.CurrentOwner.Id == playerId).Where(s => s._assetId == assetId).Count();
-        public List<ShareResource> GetPlayerShares(ModelReference playerRef, AssetResource asset, int qty) => _shareRepo.GetMany().Where(s => s.CurrentOwner == playerRef).Where(s => s._assetId.ToString() == asset.AssetId).Take(qty).ToList();
-        public List<ShareResource> GetAllPlayerShares(ModelReference playerRef, AssetResource asset) => _shareRepo.GetMany().Where(s => s.CurrentOwner.Id == playerRef.Id).Where(s => s._assetId.ToString() == asset.AssetId).ToList();
-        public void CreateShares(ModelReference  asset, int qty, ModelReference owner, ModelTypes type)
+        public List<ShareResource> GetPlayerShares(ModelReference playerRef, AssetResource asset, int qty) => _shareRepo.GetMany().Where(s => s.CurrentOwner == playerRef).Where(s => s._assetId == asset.AssetId).Take(qty).ToList();
+        public List<ShareResource> GetAllPlayerShares(ModelReference playerRef, AssetResource asset) => _shareRepo.GetMany().Where(s => s.CurrentOwner.Id == playerRef.Id).Where(s => s._assetId == asset.AssetId).ToList();
+        public List<Guid> CreateShares(ModelReference  asset, int qty, ModelReference owner, ModelTypes type)
         {
+            var listOut = new List<Guid>();
             for (var i = 0; i < qty; i++)
             {
+                var shareId = Guid.NewGuid();
+                listOut.Add(shareId);
                 _shareRepo.CreateOne(new ShareResource()
                 {
                     _assetId = asset.Id,
                     Name = $"Share of {asset.Name}",
-                    ShareId = Guid.NewGuid().ToString(),
+                    ShareId = shareId,
                     CurrentOwner = owner,
                     ModelType = type
                 });
             }
+            return listOut;
         }
-        public UpdateResult UpdateShares(List<ShareResource> shares, UpdateDefinition<ShareResource> update) => _shareRepo.UpdateMany(shares.Select(s => Guid.Parse(s.ShareId)).ToList(), update).Result;
+        public UpdateResult UpdateShares(List<Guid> shares, UpdateDefinition<ShareResource> update) => _shareRepo.UpdateMany(shares, update).Result;
         public DeleteResult ShredShares(Guid assetId) => _shareRepo.DeleteAssetShares(assetId).Result;
         public ModelReference  ToRef(Share share) => _mapper.Map<Share, ModelReference >(share);
         public List<ModelReference > ToRef(List<Share> shares) => _mapper.Map<List<Share>, List<ModelReference >>(shares);
@@ -62,8 +66,8 @@ namespace RiskGame.API.Services
         int GetPlayerShareCount(Guid playerId, Guid assetId);
         List<ShareResource> GetPlayerShares(ModelReference  playerRef, AssetResource asset, int qty);
         List<ShareResource> GetAllPlayerShares(ModelReference  playerRef, AssetResource asset);
-        void CreateShares(ModelReference  asset, int qty, ModelReference  owner, ModelTypes type);
-        UpdateResult UpdateShares(List<ShareResource> shares, UpdateDefinition<ShareResource> update);
+        List<Guid> CreateShares(ModelReference asset, int qty, ModelReference owner, ModelTypes type);
+        UpdateResult UpdateShares(List<Guid> shares, UpdateDefinition<ShareResource> update);
         DeleteResult ShredShares(Guid assetId);
         ModelReference  ToRef(Share share);
         List<ModelReference > ToRef(List<Share> shares);

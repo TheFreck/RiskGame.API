@@ -20,10 +20,10 @@ namespace RiskGame.API.Persistence.Repositories
         }
         //
         // get one
-        public PlayerResource GetOne(Guid playerId) => _players.AsQueryable().Where(p => p.PlayerId == playerId.ToString()).FirstOrDefault();
+        public PlayerResource GetOne(Guid playerId) => _players.AsQueryable().Where(p => p.PlayerId == playerId).FirstOrDefault();
         //
         // get many
-        public IQueryable<PlayerResource> GetManySpecific(List<Guid> playerIds) => _players.AsQueryable().Where(p => playerIds.Contains(Guid.Parse(p.PlayerId)));
+        public IQueryable<PlayerResource> GetManySpecific(List<Guid> playerIds) => _players.AsQueryable().Where(p => playerIds.Contains(p.PlayerId));
         //
         // get game players
         public IQueryable<PlayerResource> GetGamePlayers(Guid gameId) => _players.AsQueryable().Where(p => p.GameId == gameId);
@@ -35,6 +35,7 @@ namespace RiskGame.API.Persistence.Repositories
         public void CreateOne(PlayerResource player) => _players.InsertOne(player);
         //
         // update one
+        public void CreateMany(List<PlayerResource> players) => _players.InsertMany(players);
         public Task<UpdateResult> UpdateOne(Guid playerId, UpdateDefinition<PlayerResource> update)
         {
             var filter = Builders<PlayerResource>.Filter.Eq("PlayerId",playerId.ToString());
@@ -75,6 +76,7 @@ namespace RiskGame.API.Persistence.Repositories
         IQueryable<PlayerResource> GetGamePlayers(Guid gameId);
         PlayerResource GetHAUS(Guid gameId);
         void CreateOne(PlayerResource player);
+        void CreateMany(List<PlayerResource> players);
         Task<UpdateResult> UpdateOne(Guid playerId, UpdateDefinition<PlayerResource> update);
         Task<UpdateResult> UpdateMany(List<Guid> players, UpdateDefinition<PlayerResource> updates);
         ReplaceOneResult Replace(FilterDefinition<PlayerResource> filter, PlayerResource player);

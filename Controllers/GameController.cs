@@ -12,6 +12,7 @@ using RiskGame.API.Models.AssetFolder;
 using AutoMapper;
 using RiskGame.API.Entities.Enums;
 using RiskGame.API.Models.PlayerFolder;
+using RiskGame.API.Models;
 
 namespace RiskGame.API.Controllers
 {
@@ -24,14 +25,16 @@ namespace RiskGame.API.Controllers
         private readonly IEconService _econService;
         private readonly IAssetService _assetService;
         private readonly IPlayerService _playerService;
+        private readonly IShareService _shareService;
         private readonly IMapper _mapper;
         public bool hasAssets;
-        public GameController(IMarketService marketService, IEconService econService, IAssetService assetService, IPlayerService playerService, IMapper mapper)
+        public GameController(IMarketService marketService, IEconService econService, IAssetService assetService, IPlayerService playerService, IShareService shareService, IMapper mapper)
         {
             _marketService = marketService;
             _econService = econService;
             _assetService = assetService;
             _playerService = playerService;
+            _shareService = shareService;
             _mapper = mapper;
         }
         // ***
@@ -43,7 +46,7 @@ namespace RiskGame.API.Controllers
             return "got it";
         }
         [HttpGet("new-game/{assetQty}")]
-        public string NewGame(int assetQty)
+        public async Task<ActionResult<string>> NewGame(int assetQty)
         {
             var assets = new List<AssetResource>();
             for(var i=0; i<assetQty; i++)
@@ -53,15 +56,21 @@ namespace RiskGame.API.Controllers
                 {
                     Name = $"Asset_{i}",
                     SharesOutstanding = 100,
-                    Id = id,
-                    AssetId = id.ToString()
+                    Id = id
                 });
-                _assetService.Create(asset);
+                var outcome = await _assetService.Create(asset);
+                if (outcome == "done") _shareService.CreateShares(_mapper.Map<AssetResource,ModelReference>(asset),asset.SharesOutstanding,new ModelReference("HAUS"),asset.ModelType);
                 assets.Add(asset);
             }
-            var cash = _mapper.Map<Asset, AssetResource>(new Asset(ModelTypes.Cash));
-            _assetService.Create(cash);
-            return _marketService.NewGame(assets.ToArray(), cash).ToString();
+            var cash = _mapper.Map<Asset, AssetResource>(new Asset(ModelTypes.Cash,1000));
+            var result = await _assetService.Create(cash);
+            var sharesCreated = 0;
+            if (result == "done")
+            {
+                sharesCreated = _shareService.CreateShares(_mapper.Map<AssetResource, ModelReference>(cash), cash.SharesOutstanding, new ModelReference("HAUS"), cash.ModelType).Count();
+            }
+            if (sharesCreated == cash.SharesOutstanding) return Ok(_marketService.NewGame(assets.ToArray(), cash).ToString());
+            else return NotFound("failed");
         }
         [HttpGet("get-game-status/{gameId:length(36)}")]
         public ActionResult<bool> GameStatus(string gameId)
@@ -119,7 +128,6 @@ namespace RiskGame.API.Controllers
         [HttpPut("blowup-the-inside-world")]
         public ActionResult<string> BlowUpTheInsideWorld([FromBody] string secretCode)
         {
-            Console.WriteLine("secret code: " + secretCode);
             return Ok(_marketService.BigBang(secretCode));
         }
         // ******

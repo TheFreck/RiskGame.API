@@ -10,6 +10,7 @@ export const TradeTicket = props => {
     const getSeller = () => seller;
     const getCash = () => cash;
     const getShares = () => shares;
+    return { buyer, seller, cash, shares };
 }
 
 export default TradeTicket;

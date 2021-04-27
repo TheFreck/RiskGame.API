@@ -19,18 +19,22 @@ namespace RiskGame.API.Persistence.Repositories
             _assets = db.GetCollection<AssetResource>(settings.AssetCollectionName);
         }
         // get one
-        public AssetResource GetOne(Guid assetId) => _assets.AsQueryable().Where(p => p.AssetId == assetId.ToString()).FirstOrDefault();
+        public AssetResource GetOne(Guid assetId) => _assets.AsQueryable().Where(p => p.AssetId == assetId).FirstOrDefault();
         // get many
-        public List<AssetResource> GetManySpecific(List<Guid> assetIds) => _assets.AsQueryable().Where(p => assetIds.Contains(Guid.Parse(p.AssetId))).ToList();
+        public List<AssetResource> GetManySpecific(List<Guid> assetIds) => _assets.AsQueryable().Where(p => assetIds.Contains(p.AssetId)).ToList();
         public IQueryable<AssetResource> GetMany()
         {
             var sendit = _assets.AsQueryable();
             return sendit;
         }
         public AssetResource[] GetGameAssets(Guid gameId) => _assets.AsQueryable().Where(g => g.GameId == gameId).ToArray();
-        public void CreateOne(AssetResource asset) => _assets.InsertOne(asset);
+        public async Task<string> CreateOne(AssetResource asset)
+        {
+            await _assets.InsertOneAsync(asset);
+            return "done";
+        }
         // replace one
-        public void ReplaceOne(Guid id, AssetResource asset) => _assets.ReplaceOne(asset => asset.AssetId == id.ToString(), asset);
+        public void ReplaceOne(Guid id, AssetResource asset) => _assets.ReplaceOne(asset => asset.AssetId == id, asset);
         // update one
         public Task<UpdateResult> UpdateOne(Guid assetId, UpdateDefinition<AssetResource> update)
         {
@@ -65,7 +69,7 @@ namespace RiskGame.API.Persistence.Repositories
         List<AssetResource> GetManySpecific(List<Guid> playeassetIdsrIds);
         IQueryable<AssetResource> GetMany();
         AssetResource[] GetGameAssets(Guid gameId);
-        void CreateOne(AssetResource asset);
+        Task<string> CreateOne(AssetResource asset);
         void ReplaceOne(Guid id, AssetResource asset);
         Task<UpdateResult> UpdateOne(Guid assetId, UpdateDefinition<AssetResource> update);
         Task<UpdateResult> UpdateMany(List<Guid> assets, UpdateDefinition<AssetResource> updates);

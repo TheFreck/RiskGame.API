@@ -22,7 +22,6 @@ export const ChartContainer = props => {
     const [isRunning, SETisRunning] = useState(false);
     useEffect(
         () => {
-            let yup = true;
             const onOff = () => {
                 isRunningRef.current = isRunning
                 API.gamePlay.onOff({ gameId: props.gameId, isRunning }).then(outcome => {
@@ -30,7 +29,7 @@ export const ChartContainer = props => {
                 });
                 setTimeout(() => startTrading(), 1000);
             }
-            isRunningRef.current != isRunning ? onOff() : yup = !yup;
+            if (isRunningRef.current != isRunning) onOff();
             console.log("isRunning: ", isRunning);
             SETview(<ChartLoop
                 isRunning={isRunning}

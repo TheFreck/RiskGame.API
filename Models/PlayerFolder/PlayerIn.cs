@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
+using RiskGame.API.Entities.Enums;
 using RiskGame.API.Models.AssetFolder;
 
 namespace RiskGame.API.Models.PlayerFolder
@@ -14,6 +15,7 @@ namespace RiskGame.API.Models.PlayerFolder
         public Guid Id { get; set; }
         public Guid GameId { get; set; }
         public int Cash { get; set; }
-        public int? RiskTolerance { get; set; }
+        public double RiskTolerance { get; set; }
+        public Sophistication Experience { get; set; }
     }
 }

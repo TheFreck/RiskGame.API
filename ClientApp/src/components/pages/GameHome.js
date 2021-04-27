@@ -7,6 +7,7 @@ import './../../game.css';
 import Button from 'react-bootstrap/Button';
 import Chart from './../pageComponents/Chart';
 import ChartContainer from './../pageComponents/ChartContainer';
+import Player from './../../assets/Player';
 
 export const GameHome = props => {
     const [player, SETplayer] = useState({});
@@ -157,15 +158,23 @@ export const GameHome = props => {
             createPlayers(3, game.data);
         })
     }
+    const randy = () => {
+        let rand = Math.random();
+        return rand;
+    }
     const createPlayers = (num, gameid) => {
+        let players = [];
         for (let i = 0; i < num; i++) {
-            console.log("Player_" + num);
-            API.player.createPlayer({
-                Name: "Player_" + i,
-                Gameid: gameid,
-                Cash: 1000
-            }).then(answer => console.log("player create: ", answer));
+            console.log("Player_" + i);
+            players.push({
+                name: "Player_" + i,
+                gameId: gameid,
+                cash: Math.floor(100 + randy() * 100),
+                riskTolerance: Math.floor(randy() * 100) / 100,
+                experience: Math.floor(randy() * 2)
+            })
         }
+        API.player.createPlayers(players).then(answer => console.log("player create: ", answer));
     }
 
     const tradeButtonMouseEnter = () => {

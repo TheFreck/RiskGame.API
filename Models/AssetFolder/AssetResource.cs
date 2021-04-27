@@ -15,7 +15,7 @@ namespace RiskGame.API.Models.AssetFolder
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
         public string ObjectId { get; set; }
-        public string AssetId { get; set; }
+        public Guid AssetId { get; set; }
         public Guid GameId { get; set; }
         [BsonElement("Name")]
         [JsonProperty("Name")]

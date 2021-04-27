@@ -12,5 +12,19 @@ namespace RiskGame.API.Models
         public Guid Id { get; set; }
         public ModelTypes ModelType { get; set; }
         public string Message { get; set; }
+        public ModelReference(string name, Guid id, ModelTypes type)
+        {
+            Name = name;
+            Id = id;
+            ModelType = type;
+        }
+        public ModelReference(string name)
+        {
+            Name = name;
+        }
+        public ModelReference()
+        {
+
+        }
     }
 }

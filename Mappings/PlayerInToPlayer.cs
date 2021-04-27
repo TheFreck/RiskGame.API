@@ -22,4 +22,11 @@ namespace RiskGame.API.Mappings
             CreateMap<Player, PlayerIn>();
         }
     }
+    public class PlayerInToModelReference : Profile
+    {
+        public PlayerInToModelReference()
+        {
+            CreateMap<PlayerIn, ModelReference>().ForMember(member => member.Id, config => config.MapFrom(og => og.Id));
+        }
+    }
 }

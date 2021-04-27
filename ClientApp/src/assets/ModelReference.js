@@ -8,4 +8,5 @@ export const ModelReference = props => {
     const getName = () => name;
     const getId = () => id;
     const getType = () => type;
+    return { name, id, type };
 }
