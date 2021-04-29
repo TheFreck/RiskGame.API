@@ -17,6 +17,14 @@ export const ChartContainer = props => {
         },
         []
     );
+    const assetsRef = useRef();
+    const [assets, SETassets] = useState(props.getAssets);
+    useEffect(
+        () => {
+            assetsRef.current = assets;
+        },
+        [assets]
+    )
     // IS RUNNING **********************************
     const isRunningRef = useRef(false);
     const [isRunning, SETisRunning] = useState(false);
@@ -64,7 +72,7 @@ export const ChartContainer = props => {
     // GO GETTERS
     // **********
     const getData = cb => {
-        API.gamePlay.getData({ gameId: gameIdRef.current, lastFrame: lastFrameRef.current }).then(data => {
+        API.gamePlay.getData({ gameId: gameIdRef.current, assetId: assetsRef.current[0], lastFrame: lastFrameRef.current }).then(data => {
             SETlastFrame(data.data.lastFrame)
             if (data.status === 200 && data.data.volume > 0) cb(data.data);
             else console.log("nothing came back");

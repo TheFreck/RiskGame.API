@@ -1,4 +1,5 @@
-﻿using MongoDB.Driver;
+﻿using MongoDB.Bson;
+using MongoDB.Driver;
 using RiskGame.API.Models.AssetFolder;
 using System;
 using System.Collections.Generic;
@@ -10,11 +11,12 @@ namespace RiskGame.API.Persistence.Repositories
     public class AssetRepo : IAssetRepo
     {
         private readonly IDatabaseSettings _settings;
+        private readonly IMongoDatabase db;
         private readonly IMongoCollection<AssetResource> _assets;
         public AssetRepo(IDatabaseSettings settings)
         {
             var client = new MongoClient(settings.ConnectionString);
-            var db = client.GetDatabase(settings.DatabaseName);
+            db = client.GetDatabase(settings.DatabaseName);
             _settings = settings;
             _assets = db.GetCollection<AssetResource>(settings.AssetCollectionName);
         }
@@ -32,6 +34,22 @@ namespace RiskGame.API.Persistence.Repositories
         {
             await _assets.InsertOneAsync(asset);
             return "done";
+        }
+        // copy all assets
+        public void CopyAssets()
+        {
+            var aggDoc = new Dictionary<string, object>
+            {
+                {"aggregate", _settings.AssetCollectionName },
+                {"pipeline",new object[]
+                {
+                    new Dictionary<string,object>{ { "$match", new BsonDocument() } },
+                    new Dictionary<string,object>{{"$out", _settings.NewAssetCollectionName}}
+                } }
+            };
+            var doc = new BsonDocument(aggDoc);
+            var command = new BsonDocumentCommand<BsonDocument>(doc);
+            db.RunCommand(command);
         }
         // replace one
         public void ReplaceOne(Guid id, AssetResource asset) => _assets.ReplaceOne(asset => asset.AssetId == id, asset);
@@ -70,6 +88,7 @@ namespace RiskGame.API.Persistence.Repositories
         IQueryable<AssetResource> GetMany();
         AssetResource[] GetGameAssets(Guid gameId);
         Task<string> CreateOne(AssetResource asset);
+        void CopyAssets();
         void ReplaceOne(Guid id, AssetResource asset);
         Task<UpdateResult> UpdateOne(Guid assetId, UpdateDefinition<AssetResource> update);
         Task<UpdateResult> UpdateMany(List<Guid> assets, UpdateDefinition<AssetResource> updates);

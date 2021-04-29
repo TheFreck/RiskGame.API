@@ -43,6 +43,15 @@ export const GameHome = props => {
         },
         [gameId]
     )
+    // ASSET ID *************************************************
+    const assetsRef = useRef([]);
+    const [asset, SETasset] = useState();
+    useEffect(
+        () => {
+            assetsRef.current.push(asset);
+        },
+        [assets]
+    )
     // IS RUNNING ***********************************************
     const isRunningRef = useRef();
     const [isRunning, SETisRunning] = useState();
@@ -90,6 +99,7 @@ export const GameHome = props => {
         assetsLoaded: [assetsLoaded, SETassetsLoaded],
         playersLoaded: [playersLoaded, SETplayersLoaded],
     };
+    const getAssets = () => assetsRef.current;
 
     // ********
     // SERVICES
@@ -147,16 +157,20 @@ export const GameHome = props => {
         SETviewPane(<Transaction updateState={updateState} state={state} />);
     }
     const chartButtonClick = () => {
-        SETviewPane(<ChartContainer gameId={gameIdRef.current} isRunning={isRunningRef.current} />);
+        SETviewPane(<ChartContainer gameId={gameIdRef.current} isRunning={isRunningRef.current} getAssets={getAssets}/>);
     }
     const newGameClick = () => {
         API.gamePlay.newGame(1).then(game => {
             //debugger;
             console.log("new: ", game.data);
-            SETgameId(game.data);
+            SETgameId(game.data.gamId);
+            for (let anAsset in game.data.assets) SETasset(anAsset);
             SETisRunning(false);
             createPlayers(3, game.data);
         })
+    }
+    const restartClick = () => {
+        // get game id's and restart
     }
     const randy = () => {
         let rand = Math.random();
@@ -180,10 +194,10 @@ export const GameHome = props => {
     const tradeButtonMouseEnter = () => {
         SETtradeButtonMessage("Create an asset and a player to start");
         setTimeout(() => SETtradeButtonMessage(""), 3333);
-    }
+    };
     const tradeButtonMouseLeave = () => {
         SETtradeButtonMessage("");
-    }
+    };
 
     // ***************
     //  SUB COMPONENTS
@@ -192,7 +206,7 @@ export const GameHome = props => {
         "borderRadius": "50%",
         "borderColor": "darkred",
         "borderWidth": "5px"
-    }
+    };
     const SelfDestructButton = () => <Button
         onClick={selfDestruct}
         style={initStyle}
@@ -209,26 +223,30 @@ export const GameHome = props => {
         else {
             return <Button onMouseEnter={tradeButtonMouseEnter} variant="secondary" disabled>Place a Trade</Button>;
         }
-    }
+    };
     const AssetButton = () => <Button
         onClick={assetButtonClick}
         variant="light"
-    >Create an Asset</Button>
+    >Create an Asset</Button>;
     const PlayerButton = () => <Button
         onClick={playerButtonClick}
         variant="light"
-    >Create a Player</Button>
+    >Create a Player</Button>;
     const NewGameButton = () => <Button
         onClick={newGameClick}
         variant="light"
-    >New Game</Button>
+    >New Game</Button>;
+    const RestartGame = () => <Button
+        onClick={restartClick}
+        variant="light"
+    >Restart Game</Button>;
 
     return <>
         <SelfDestructButton />
         <GameOverButton />
         <NewGameButton />
         {viewPane}
-    </>
+    </>;
 }
 
 export default GameHome;

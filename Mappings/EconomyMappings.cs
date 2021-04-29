@@ -11,7 +11,7 @@ namespace RiskGame.API.Mappings
     {
         public EconomyMappings()
         {
-            CreateMap<EconomyResource, EconomyOut>();
+            CreateMap<EconomyResource, EconomyOut>().ForMember(member => member.Assets, config => config.MapFrom(og => og.Assets.Select(g => g.AssetId)));
         }
     }
 }

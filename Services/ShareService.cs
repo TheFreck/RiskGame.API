@@ -21,11 +21,13 @@ namespace RiskGame.API.Services
     public class ShareService : IShareService
     {
         private readonly IShareRepo _shareRepo;
+        private readonly IPlayerRepo _playerRepo;
         private readonly IMapper _mapper;
-        public ShareService(IShareRepo shareRepo, IMapper mapper)
+        public ShareService(IShareRepo shareRepo, IPlayerRepo playerRepo, IMapper mapper)
         {
             _mapper = mapper;
             _shareRepo = shareRepo;
+            _playerRepo = playerRepo;
         }
         public IQueryable<ShareResource> GetQueryableShares(Guid assetId) => _shareRepo.GetMany().Where(s => s._assetId == assetId);
         public ShareResource GetSpecificShare(Guid id) => _shareRepo.GetOne(id);
@@ -44,7 +46,7 @@ namespace RiskGame.API.Services
                 {
                     _assetId = asset.Id,
                     Name = $"Share of {asset.Name}",
-                    ShareId = shareId,
+                    Id = shareId,
                     CurrentOwner = owner,
                     ModelType = type
                 });
@@ -57,6 +59,61 @@ namespace RiskGame.API.Services
         public List<ModelReference > ToRef(List<Share> shares) => _mapper.Map<List<Share>, List<ModelReference >>(shares);
         public ModelReference  ResToRef(ShareResource share) => _mapper.Map<ShareResource, ModelReference >(share);
         public List<ModelReference > ResToRef(List<ShareResource> shares) => _mapper.Map<List<ShareResource>, List<ModelReference >>(shares);
+        public List<ShareResource> CashExchange(List<ShareResource> sharesIn, Guid gameId)
+        {
+            // get denominations
+            _shareRepo.CreateMany(sharesIn);
+            var owner = sharesIn[0].CurrentOwner;
+            var haus = _mapper.Map<PlayerResource,ModelReference>(_playerRepo.GetHAUS());
+            var updateBase = Builders<ShareResource>.Update;
+            var updateOwner = updateBase.Set("CurrentOwner", haus);
+            var update10 = updateBase.Set("Denomination", 1).Set("Name","Ten").Set("CurrentOwner",owner);
+            var update100 = updateBase.Set("Denomination", 2).Set("Name","Hundred").Set("CurrentOwner", owner);
+            var update1000 = updateBase.Set("Denomination", 3).Set("Name","Thousand").Set("CurrentOwner", owner);
+            var update10000 = updateBase.Set("Denomination", 4).Set("Name","TenThousand").Set("CurrentOwner", owner);
+            // all cash shares go back to Haus
+            _shareRepo.UpdateMany(sharesIn.Select(s => s.Id), updateOwner);
+            // build change
+            var output = new List<ShareResource>();
+            
+            var ones = sharesIn.Count % 10;
+            var singleShares = sharesIn.Take(ones).ToList();
+            sharesIn.RemoveAll(s => singleShares.Contains(s));
+            output.AddRange(singleShares);
+
+            var tens = (sharesIn.Count - ones)/10 % 10;
+            var tenShares = sharesIn.Take(tens).ToList();
+            _shareRepo.UpdateMany(tenShares.Select(s => s.Id), update10);
+            sharesIn.RemoveAll(s => tenShares.Contains(s));
+            output.AddRange(tenShares);
+
+            var hundreds = (sharesIn.Count - tens - ones)/100 % 10;
+            var hundredShares = sharesIn.Take(hundreds).ToList();
+            _shareRepo.UpdateMany(hundredShares.Select(s => s.Id), update100);
+            sharesIn.RemoveAll(s => hundredShares.Contains(s));
+            output.AddRange(hundredShares);
+
+            var thousands = (sharesIn.Count - hundreds - tens - ones)/1000 % 10;
+            var thousandShares = sharesIn.Take(thousands).ToList();
+            _shareRepo.UpdateMany(thousandShares.Select(s => s.Id), update1000);
+            sharesIn.RemoveAll(s => thousandShares.Contains(s));
+            output.AddRange(thousandShares);
+
+            //var tenThousands = (sharesIn.Count - thousands - hundreds - tens - ones)/10000 % 10;
+            //var tenThousandShares = sharesIn.Take(tenThousands).ToList();
+            //_shareRepo.UpdateMany(tenThousandShares.Select(s => s.Id), update10000);
+            var shareIds = output.Select(s => s.Id).ToList();
+            var giveBack = _shareRepo.GetMany();
+            var sendit = new List<ShareResource>();
+            foreach(var item in giveBack)
+            {
+                if (shareIds.Contains(item.Id))
+                {
+                    sendit.Add(item);
+                }
+            }
+            return giveBack.ToList();
+        }
     }
     public interface IShareService
     {
@@ -73,5 +130,6 @@ namespace RiskGame.API.Services
         List<ModelReference > ToRef(List<Share> shares);
         ModelReference  ResToRef(ShareResource share);
         List<ModelReference > ResToRef(List<ShareResource> shares);
+        List<ShareResource> CashExchange(List<ShareResource> sharesIn, Guid gameId);
     }
 }

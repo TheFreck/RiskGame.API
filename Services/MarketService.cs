@@ -74,7 +74,7 @@ namespace RiskGame.API.Services
             var game = _econRepo.UpdateOne(gameId,update);
             _econService.AssetLoop(gameId);
         }
-        public string BigBang(string secretCode) => _econRepo.DeleteAll(secretCode) ? "the screams of the deleted data are starting to fade..." : "Not gonna do it";
+        public string BigBang(string secretCode) => _econRepo.DeleteAll(secretCode) ? "the screams of the deleted data are beginning to fade..." : "Not gonna do it";
         public async Task<string> EndGame(Guid gameId)
         {
             // Stop game
@@ -111,7 +111,7 @@ namespace RiskGame.API.Services
             _assetRepo.UpdateMany(assets.Select(a => a.AssetId).ToList(),update);
             newGame.Markets.Add(newMarket.GetMetrics(assets.Select(a => a.CompanyAsset).ToArray()));
             _playerRepo.CreateOne(_mapper.Map<Player, PlayerResource>(new Player("HAUS", Guid.NewGuid(), newGame.GameId)));
-            newGame.HAUS = _mapper.Map<PlayerResource,Player>(_playerRepo.GetHAUS(newGame.GameId));
+            newGame.HAUS = _mapper.Map<PlayerResource,Player>(_playerRepo.GetHAUS(/*newGame.GameId*/));
 
             var gameCashAsset = _assetRepo.GetGameAssets(newGame.GameId);
             var gameCash = gameCashAsset.Where(c => c.ModelType == ModelTypes.Cash).FirstOrDefault();

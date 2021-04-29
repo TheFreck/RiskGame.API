@@ -85,3 +85,6 @@ Spent all** day refactoring everything around the Repo classes. That allowed me 
 
 **4/27/21
 Spent the** past few days working on the orchestration of creating a new game, assets and players. The server now creates multiple AI players as it creates the new game.
+
+**4/28/21
+I've been** looking for a way to speed up the creation of cash shares. It really takes a long time to create enough to begin trading. One thought I had was to simply spend the few minutes creating the Assets and Shares collections and then copying them to new collections for the game. But apparently there's only a command line way in C#. So instead I'm going to create denominations that scale by 10. That should cut back on initialization time as well as expand the amount of cash that can be created. Ultimately, though, there will likely need to be a combination of both. Started working on an exchange method. Finish that tomorrow.

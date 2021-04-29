@@ -9,6 +9,7 @@ namespace RiskGame.API.Models.AssetFolder
 {
     public class CompanyAsset
     {
+        public Guid AssetId { get; set; }
         public IndustryTypes PrimaryIndustry { get; set; }
         public IndustryTypes SecondaryIndustry { get; set; }
         public double Value { get; set; }

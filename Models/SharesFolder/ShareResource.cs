@@ -19,15 +19,17 @@ namespace RiskGame.API.Models.SharesFolder
         public Guid _assetId { get; set; }
         //
         // Share id is automatically set and can be overridden
-        [BsonElement("ShareId")]
-        [JsonProperty("ShareId")]
-        public Guid ShareId { get; set; }
+        [BsonElement("Id")]
+        [JsonProperty("Id")]
+        public Guid Id { get; set; }
         public string Name { get; set; }
         //
         // the history will eventually preserve a record of each trade this share has been a part of
         public List<TradeRecord> History { get; set; }
         [Required]
         public ModelReference  CurrentOwner { get; set; }
+        public int DividendOutstanding { get; set; }
+        public int Denomination { get; set; }
         //
         // model type is used to convert this class to a ModelReference
         // it is automatically set and cannot be overridden

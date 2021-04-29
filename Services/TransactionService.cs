@@ -59,7 +59,7 @@ namespace RiskGame.API.Services
                 return trade;
             } // OUT seller has insufficient shares
             // get Haus
-            var haus = _playerRepo.GetHAUS(trade.GameId);
+            var haus = _playerRepo.GetHAUS(/*trade.GameId*/);
             // get Buyer
             var buyer = trade.Buyer != null ? _playerRepo.GetOne(trade.Buyer.Id) : haus;
             // get Seller
@@ -77,8 +77,8 @@ namespace RiskGame.API.Services
                 // Transfer ownership of cash and shares
                 var transferredShares = _transactionLogic.TransferShares(buyer, tradeShares, trade.Shares);
                 var transferredCash = _transactionLogic.TransferShares(seller, tradeCash, trade.Cash);
-                var shrs = await _shareRepo.UpdateMany(transferredShares.Select(s => s.ShareId).ToList(),Builders<ShareResource>.Update.Set("CurrentOwner", buyerRef));
-                var csh = await _shareRepo.UpdateMany(transferredCash.Select(s => s.ShareId).ToList(), Builders<ShareResource>.Update.Set("CurrentOwner", sellerRef));
+                var shrs = await _shareRepo.UpdateMany(transferredShares.Select(s => s.Id).ToList(),Builders<ShareResource>.Update.Set("CurrentOwner", buyerRef));
+                var csh = await _shareRepo.UpdateMany(transferredCash.Select(s => s.Id).ToList(), Builders<ShareResource>.Update.Set("CurrentOwner", sellerRef));
 
                 // complete the trade ticket
                 trade.Message = $"Shares: {shrs.IsModifiedCountAvailable}; Cash: {csh.IsModifiedCountAvailable}";

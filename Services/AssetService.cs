@@ -43,7 +43,24 @@ namespace RiskGame.API.Services
             var all = _assetRepo.GetMany().Where(a => a.GameId == gameId).Where(a => a.ModelType == ModelTypes.Cash).FirstOrDefault();
             return all;
         }
+        public ChartPixel GetAssetPrices(Guid gameId, Guid assetId, int frame)
+        {
+            var assets = _assetRepo.GetMany().Where(a => a.GameId == gameId).Where(a => a.AssetId == assetId).Select(a => a.TradeHistory).FirstOrDefault();
+            var target = assets.GetRange(frame, assets.Count - 1);
+            var open = target.FirstOrDefault();
+            var descending = target.OrderByDescending(t => t.Item2);
+            return new ChartPixel
+            {
+                Open = target.FirstOrDefault().Item2,
+                Close = target.LastOrDefault().Item2,
+                High = descending.FirstOrDefault().Item2,
+                Low = descending.LastOrDefault().Item2,
+                Volume = target.Count(),
+                LastFrame = assets.Count()
+            };
+        }
         public async Task<string> Create(AssetResource asset) => await _assetRepo.CreateOne(asset);
+        public void CopyData() =>_assetRepo.CopyAssets();
         public void Replace(Guid id, Asset assetIn)
         {
             var assetRes = _mapper.Map<Asset, AssetResource>(assetIn);
@@ -64,7 +81,9 @@ namespace RiskGame.API.Services
         AssetResource GetAsset(Guid id, ModelTypes type);
         AssetResource[] GetGameAssets(Guid id);
         AssetResource GetGameCash(Guid gameId);
+        ChartPixel GetAssetPrices(Guid gameId, Guid assetId, int frame);
         Task<string> Create(AssetResource asset);
+        void CopyData();
         void Replace(Guid id, Asset assetIn);
         void Remove(AssetResource assetIn);
         void RemoveFromGame(Guid assetId);

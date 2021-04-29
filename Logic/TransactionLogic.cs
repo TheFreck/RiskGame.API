@@ -32,7 +32,7 @@ namespace RiskGame.API.Logic
                     {
                         Buyer = _mapper.Map<PlayerResource,ModelReference>(receiver),
                         Asset = new ModelReference(share.Name[9..],share._assetId,ModelTypes.Asset),
-                        ShareId = share.ShareId,
+                        ShareId = share.Id,
                         Price = price,
                         TradeTime = DateTime.Now
                     });

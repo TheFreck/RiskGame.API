@@ -65,7 +65,7 @@ namespace RiskGame.API.Services
                 //marketHistory.Violet.Add(next.Market.Violet * (int)next.Market.VioletDirection);
                 //Thread.Sleep(1);
                 timer.Stop();
-                Console.WriteLine(timer.ElapsedMilliseconds);
+                Console.WriteLine("econ: " + timer.ElapsedMilliseconds);
                 Thread.Sleep(1000);
             } while (IsRunning(econId));
             Console.WriteLine("Finito");

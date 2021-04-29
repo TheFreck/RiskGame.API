@@ -92,13 +92,13 @@ namespace RiskGame.API.Services
                     var traded = _transactionService.Transact(tradeTicket);
                     // add transaction to board
                     timer.Stop();
-                    Console.WriteLine(timer.ElapsedMilliseconds);
                 }
+                Console.WriteLine("player: " + timer.ElapsedMilliseconds);
             } while (_econRepo.GetOne(gameId).isRunning);
             return Task.FromResult("player loop ended");
         }
 
-        public PlayerResource GetHAUS(Guid gameId) => _playerRepo.GetHAUS(gameId);
+        public PlayerResource GetHAUS(Guid gameId) => _playerRepo.GetHAUS(/*gameId*/);
         public ModelReference GetHAUSRef(Guid gameId) => ResToRef(GetHAUS(gameId));
         //
         // Gets the player attached to the given id
@@ -113,7 +113,7 @@ namespace RiskGame.API.Services
             var playerResource = _mapper.Map<Player, PlayerResource>(player);
             var playerCash = _shareRepo.GetMany().Where(s => s.ModelType == ModelTypes.Cash);
             var update = Builders<ShareResource>.Update.Set("CurrentOwner", ToRef(player));
-            var updated = _shareRepo.UpdateMany(playerCash.Select(c => c.ShareId),update).Result;
+            var updated = _shareRepo.UpdateMany(playerCash.Select(c => c.Id),update).Result;
             _playerRepo.CreateOne(playerResource);
             return playerResource;
         }

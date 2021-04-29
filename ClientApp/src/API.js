@@ -90,9 +90,10 @@ export default {
     },
     gamePlay: {
         // Get
+        getGames: () => axios.get('api/game/get-games'),
         newGame: qty => axios.get(`api/game/new-game/${qty}`),
         isGameOn: gameId => axios.get(`api/game/get-game-status/${gameId}`),
-        getData: query => axios.get(`api/game/get-records/${query.gameId}/${query.lastFrame}`),
+        getData: query => axios.get(`api/asset/get-asset-prices/${query.gameId}/${query.assetId}/${query.lastFrame}`),
         next: query => axios.get(`api/game/next/${query.frames}/${query.trendiness}`),
         addAssets: () => axios.get("api/game/add-assets"),
         // Post

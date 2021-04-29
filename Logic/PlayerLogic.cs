@@ -35,9 +35,7 @@ namespace RiskGame.API.Logic
             var playerWallet = player.Cash;
             var playerPortfolio = portfolio;
             var asset = assets.Where(a => a.ModelType == ModelTypes.Asset).FirstOrDefault();
-            var lastBuyPrice = asset.LastBuyPrice;
-            var lastSellPrice = asset.LastSellPrice;
-            var lastPrice = (lastBuyPrice + lastSellPrice) / 2;
+            var lastPrice = asset.TradeHistory.LastOrDefault().Item2;
             var portfolioValue = playerPortfolio.Where(s => s._assetId == asset.AssetId).Count() * lastPrice;
             double portfolioAllocation = portfolioValue/(portfolioValue + playerWallet);
             int turnType = (int)Math.Floor(

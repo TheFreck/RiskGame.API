@@ -46,31 +46,33 @@ namespace RiskGame.API.Controllers
             return "got it";
         }
         [HttpGet("new-game/{assetQty}")]
-        public async Task<ActionResult<string>> NewGame(int assetQty)
+        public async Task<ActionResult<EconomyOut>> NewGame(int assetQty)
         {
             var assets = new List<AssetResource>();
-            for(var i=0; i<assetQty; i++)
+            for (var i = 0; i < assetQty; i++)
             {
                 var id = Guid.NewGuid();
                 var asset = _mapper.Map<Asset, AssetResource>(new Asset
                 {
                     Name = $"Asset_{i}",
                     SharesOutstanding = 100,
+                    TradeHistory = new List<Tuple<TradeType, double>> { new Tuple<TradeType, double>(TradeType.Buy, 100) },
+                    LastDividendPayout = 100,
                     Id = id
                 });
                 var outcome = await _assetService.Create(asset);
-                if (outcome == "done") _shareService.CreateShares(_mapper.Map<AssetResource,ModelReference>(asset),asset.SharesOutstanding,new ModelReference("HAUS"),asset.ModelType);
+                if (outcome == "done") _shareService.CreateShares(_mapper.Map<AssetResource, ModelReference>(asset), asset.SharesOutstanding, new ModelReference("HAUS"), asset.ModelType);
                 assets.Add(asset);
             }
-            var cash = _mapper.Map<Asset, AssetResource>(new Asset(ModelTypes.Cash,1000));
+            var cash = _mapper.Map<Asset, AssetResource>(new Asset(ModelTypes.Cash, 1000));
             var result = await _assetService.Create(cash);
             var sharesCreated = 0;
             if (result == "done")
             {
                 sharesCreated = _shareService.CreateShares(_mapper.Map<AssetResource, ModelReference>(cash), cash.SharesOutstanding, new ModelReference("HAUS"), cash.ModelType).Count();
             }
-            if (sharesCreated == cash.SharesOutstanding) return Ok(_marketService.NewGame(assets.ToArray(), cash).ToString());
-            else return NotFound("failed");
+            if (sharesCreated == cash.SharesOutstanding) return Ok(new EconomyOut { GameId = _marketService.NewGame(assets.ToArray(), cash), Assets = assets.Select(a => a.AssetId).ToArray()});
+            else return NotFound(new EconomyOut { Message = "didn't work"});
         }
         [HttpGet("get-game-status/{gameId:length(36)}")]
         public ActionResult<bool> GameStatus(string gameId)
@@ -99,6 +101,19 @@ namespace RiskGame.API.Controllers
         }
         [HttpGet("get-games")]
         public ActionResult<List<EconomyOut>> GetGames() => _econService.GetGames();
+        [HttpGet("copy")]
+        public ActionResult CopyData()
+        {
+            try
+            {
+                _assetService.CopyData();
+                return Ok();
+            }
+            catch (Exception e)
+            {
+                return NotFound(e);
+            }
+        }
         // ****
         // POST
         // ****

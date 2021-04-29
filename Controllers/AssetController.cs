@@ -96,6 +96,36 @@ namespace RiskGame.API.Controllers
             if (!isGuid) return NotFound("Me thinks that Id was not a Guid");
             return _assetService.GetCompanyAssets(incomingId);
         }
+        [HttpGet("get-asset-prices/{gameId:length(36)}/{assetId}/{frame}")]
+        public ActionResult<ChartPixel> GetAssetPrices(string gameId, string assetId, int frame)
+        {
+            var isGameGuid = Guid.TryParse(gameId, out var game);
+            if (!isGameGuid) return NotFound("Me thinks that Id was not a Guid");
+            var isAssetGuid = Guid.TryParse(assetId, out var asset);
+            if (!isAssetGuid) return NotFound("Me thinks that Id was not a Guid");
+            try
+            {
+                return Ok(_assetService.GetAssetPrices(game, asset, frame));
+            }
+            catch (Exception e)
+            {
+                return NotFound(e);
+            }
+        }
+        [HttpGet("exchange")]
+        public ActionResult<List<Share>> Exchange()
+        {
+            var gameId = Guid.Parse("89d131f7-76d6-498d-9afc-7503339e7b84");
+            var cash = _assetService.GetGameCash(gameId);
+            var shares = new List<Share>();
+            for(var i = 1234; i> 0; i--)
+            {
+                var owner = new ModelReference("Jerry");
+                var share = new Share(cash.AssetId, "Share of Cash", owner, ModelTypes.Cash, 3);
+                shares.Add(share);
+            }
+            return Ok(_shareService.CashExchange(_mapper.Map<List<Share>,List<ShareResource>>(shares),gameId));
+        }
         // ****************************************************************
         // POST POST POST POST POST POST POST POST POST POST POST POST POST
         // ****************************************************************

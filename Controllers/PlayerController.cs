@@ -72,7 +72,7 @@ namespace RiskGame.API.Controllers
             try
             {
                 var update = Builders<ShareResource>.Update.Set("CurentOwner", playerRef);
-                _shareService.UpdateShares(cashShares.Select(c => c.ShareId).ToList(), update);
+                _shareService.UpdateShares(cashShares.Select(c => c.Id).ToList(), update);
                 _playerService.CreateOne(player);
                 playerIn.GameId = player.GameId;
                 playerIn.Id = player.Id;
@@ -97,11 +97,18 @@ namespace RiskGame.API.Controllers
                 var playerCash = cashShares.Take(player.Cash).ToList();
                 var playerRef = _mapper.Map<PlayerIn, ModelReference>(player);
                 var update = Builders<ShareResource>.Update.Set("CurrentOwner", playerRef);
-                var playerCashIds = playerCash.Select(c => c.ShareId).ToList();
+                var playerCashIds = playerCash.Select(c => c.Id).ToList();
                 _shareService.UpdateShares(playerCashIds, update);
                 playerList.Add(new Player(player));
             }
-            return Ok(_playerService.CreateMany(playerList));
+            try
+            {
+                return Ok(_playerService.CreateMany(playerList));
+            }
+            catch (Exception e)
+            {
+                return NotFound(e);
+            }
         }
         // ***************************************************************
         // PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT

@@ -10,7 +10,7 @@ namespace RiskGame.API.Models.EconomyFolder
     public class EconomyOut
     {
         public Guid GameId { get; set; }
-        public CompanyAsset[] Assets { get; set; }
-        public bool isRunning { get; set; }
+        public Guid[] Assets { get; set; }
+        public string Message { get; set; }
     }
 }

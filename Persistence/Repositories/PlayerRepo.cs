@@ -29,7 +29,7 @@ namespace RiskGame.API.Persistence.Repositories
         public IQueryable<PlayerResource> GetGamePlayers(Guid gameId) => _players.AsQueryable().Where(p => p.GameId == gameId);
         //
         // get haus
-        public PlayerResource GetHAUS(Guid gameId) => _players.AsQueryable().Where(p => p.Name == "HAUS").FirstOrDefault();
+        public PlayerResource GetHAUS(/*Guid gameId*/) => _players.AsQueryable().Where(p => p.Name == "HAUS").FirstOrDefault();
         //
         // create one
         public void CreateOne(PlayerResource player) => _players.InsertOne(player);
@@ -74,7 +74,7 @@ namespace RiskGame.API.Persistence.Repositories
         PlayerResource GetOne(Guid playerId);
         IQueryable<PlayerResource> GetManySpecific(List<Guid> playerIds);
         IQueryable<PlayerResource> GetGamePlayers(Guid gameId);
-        PlayerResource GetHAUS(Guid gameId);
+        PlayerResource GetHAUS(/*Guid gameId*/);
         void CreateOne(PlayerResource player);
         void CreateMany(List<PlayerResource> players);
         Task<UpdateResult> UpdateOne(Guid playerId, UpdateDefinition<PlayerResource> update);
