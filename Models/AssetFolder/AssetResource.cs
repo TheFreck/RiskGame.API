@@ -15,22 +15,22 @@ namespace RiskGame.API.Models.AssetFolder
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
         public string ObjectId { get; set; }
-        public Guid AssetId { get; set; }
         public Guid GameId { get; set; }
+        public Guid AssetId { get; set; }
         [BsonElement("Name")]
         [JsonProperty("Name")]
         public string Name { get; set; }
         public int SharesOutstanding { get; set; }
-        public List<Tuple<TradeType,double>> TradeHistory { get; set; }
-        public double LastBuyPrice { get; set; }
-        public double LastSellPrice { get; set; }
-        public double MostRecentValue { get; set; }
+        public List<Tuple<TradeType, decimal>> TradeHistory { get; set; }
+        public decimal LastBuyPrice { get; set; }
+        public decimal LastSellPrice { get; set; }
+        public decimal MostRecentValue { get; set; }
         public int LastDividendPayout { get; set; }
         public DateTime LastDividendDate { get; set; }
         public string Message { get; set; }
         public ModelTypes ModelType { get; set; }
         public CompanyAsset CompanyAsset { get; set; }
         public int Debt { get; set; }
-        public List<double> History { get; set; }
+        public List<Tuple<DateTime, decimal>> CompanyHistory { get; set; }
     }
 }

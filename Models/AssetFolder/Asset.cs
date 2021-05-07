@@ -18,18 +18,17 @@ namespace RiskGame.API.Models.AssetFolder
         [BsonRepresentation(BsonType.ObjectId)]
         public string ObjectId { get; set; }
         //
-        // Asset id is automatically set and can be overridden
-        public  Guid Id { get; set; }
-        public string AssetId { get; set; }
+        // automatically set and can be overridden
+        public Guid AssetId { get; set; }
         public Guid GameId { get; set; }
         [BsonElement("Name")]
         [JsonProperty("Name")]
         public string Name { get; set; }
         public int SharesOutstanding { get; set; }
-        public List<Tuple<TradeType, double>> TradeHistory { get; set; }
+        public List<Tuple<TradeType, decimal>> TradeHistory { get; set; }
         public int LastBuyPrice { get; set; }
         public int LastSellPrice { get; set; }
-        public double MostRecentValue { get; set; }
+        public decimal MostRecentValue { get; set; }
         public int LastDividendPayout { get; set; }
         public DateTime LastDividendDate { get; set; }
         public string Message { get; set; }
@@ -39,45 +38,32 @@ namespace RiskGame.API.Models.AssetFolder
         public ModelTypes ModelType { get; }
         public CompanyAsset CompanyAsset { get; set; }
         public int Debt { get; set; }
-        public List<double> History { get; set; }
-        public Asset(string name, int sharesOutstanding, Guid id, Guid gameId, int debt)
+        public List<Tuple<DateTime, decimal>> CompanyHistory { get; set; }
+        public Asset(string name, int sharesOutstanding, Guid assetId, Guid gameId, int debt)
         {
             Name = name;
-            Id = id;
-            AssetId = Id.ToString();
+            AssetId = assetId;
             SharesOutstanding = sharesOutstanding;
             GameId = gameId;
             Debt = debt;
             ModelType = ModelTypes.Asset;
             CompanyAsset = new CompanyAsset();
         }
-        public Asset(string name, Guid id, Guid gameId)
+        public Asset(string name, Guid assetId, Guid gameId)
         {
             Name = name;
-            Id = id;
-            AssetId = Id.ToString();
+            AssetId = assetId;
             GameId = gameId;
             Debt = new Random().Next(1, 10);
             ModelType = ModelTypes.Asset;
             CompanyAsset = new CompanyAsset();
         }
-        public Asset() 
+        public Asset()
         {
-            Id = Guid.NewGuid();
-            AssetId = Id.ToString();
+            AssetId = Guid.NewGuid();
             Debt = new Random().Next(1, 10);
             ModelType = ModelTypes.Asset;
             CompanyAsset = new CompanyAsset();
-        }
-        public Asset(ModelTypes cash, int shares)
-        {
-            if(cash == ModelTypes.Cash)
-            {
-                Name = ModelTypes.Cash.ToString();
-                ModelType = ModelTypes.Cash;
-                Id = Guid.NewGuid();
-                SharesOutstanding = shares;
-            }
         }
     }
 }

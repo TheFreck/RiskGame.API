@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef, useContext } from 'react';
 import AssetCreate from '../forms/AssetCreate';
 import PlayerCreate from './../forms/PlayerCreate';
 import Transaction from './../forms/Transaction';
@@ -8,10 +8,13 @@ import Button from 'react-bootstrap/Button';
 import Chart from './../pageComponents/Chart';
 import ChartContainer from './../pageComponents/ChartContainer';
 import Player from './../../assets/Player';
+import { Context } from '../../stateManagement/Store';
 
 export const GameHome = props => {
+    const [state, dispatch] = useContext(Context);
+
     const [player, SETplayer] = useState({});
-    const [assets, SETassets] = useState([]);
+    //const [assets, SETassets] = useState([]);
     const [assetsLoaded, SETassetsLoaded] = useState(false);
     const [playersLoaded, SETplayersLoaded] = useState(false);
     const [gotEm, SETgotEm] = useState(false);
@@ -24,12 +27,12 @@ export const GameHome = props => {
     // **********
     // GO GETTERS
     // **********
-    const updateState = changeSet => {
-        if ((player || changeSet.player) && (cash || changeSet.cash) && (assets.length || changeSet.assets)) SETgotEm(true);
-        SETplayer(changeSet.player ? changeSet.player : player.player);
-        SETcash(changeSet.csh ? changeSet.csh : cash.cash);
-        SETassets(changeSet.asst ? assets.concat(changeSet.asst) : assets.assets);
-    };
+    //const updateState = changeSet => {
+    //    if ((player || changeSet.player) && (cash || changeSet.cash) && (assets.length || changeSet.assets)) SETgotEm(true);
+    //    SETplayer(changeSet.player ? changeSet.player : player.player);
+    //    SETcash(changeSet.csh ? changeSet.csh : cash.cash);
+    //    SETassets(changeSet.asst ? assets.concat(changeSet.asst) : assets.assets);
+    //};
     // GAME ID **************************************************
     const gameIdRef = useRef();
     const [gameId, SETgameId] = useState();
@@ -45,10 +48,12 @@ export const GameHome = props => {
     )
     // ASSET ID *************************************************
     const assetsRef = useRef([]);
-    const [asset, SETasset] = useState();
+    const [assets, SETassets] = useState();
     useEffect(
         () => {
-            assetsRef.current.push(asset);
+            assetsRef.current = assets;
+            dispatch({ type: 'SET_ASSETS', payload: assetsRef.current });
+            console.log("dispatched assets");
         },
         [assets]
     )
@@ -62,28 +67,28 @@ export const GameHome = props => {
         [isRunning]
     )
     // CASH *****************************************************
-    const cashRef = useRef();
-    const [cash, SETcash] = useState({ cash: {} });
-    useEffect(
-        () => {
-            if(cashRef.current != cash) cashRef.current = cash;
-            else if (gameIdRef.current) {
-                getCash(gameIdRef.current, cash => {
-                    console.log("cash: ", cash);
-                });
-            }
-        }, [gameId]
-    );
-    const getCash = (csh, cb) => {
-        //let gmid = "";
-        //if (gameId) gmid = gameId;
-        //else if (csh) gmid = csh;
-        //else return;
-        API.asset.getCash(csh).then(data => {
-            console.log("cash back: ", data);
-            cb(data.data)
-        });
-    }
+    //const cashRef = useRef();
+    //const [cash, SETcash] = useState({ cash: {} });
+    //useEffect(
+    //    () => {
+    //        if(cashRef.current != cash) cashRef.current = cash;
+    //        else if (gameIdRef.current) {
+    //            getCash(gameIdRef.current, cash => {
+    //                console.log("cash: ", cash);
+    //            });
+    //        }
+    //    }, [gameId]
+    //);
+    //const getCash = (csh, cb) => {
+    //    //let gmid = "";
+    //    //if (gameId) gmid = gameId;
+    //    //else if (csh) gmid = csh;
+    //    //else return;
+    //    API.asset.getCash(csh).then(data => {
+    //        console.log("cash back: ", data);
+    //        cb(data.data)
+    //    });
+    //}
     // VIEW PANE ************************************************
     const viewPaneRef = useRef();
     const [viewPane, SETviewPane] = useState(<></>);
@@ -91,14 +96,13 @@ export const GameHome = props => {
     // **********
     // GO SETTERS
     // **********
-    let state = {
-        player: [player, SETplayer],
-        cash: [cash, SETcash],
-        assets: [assets, SETassets],
-        gameId: [gameId, SETgameId],
-        assetsLoaded: [assetsLoaded, SETassetsLoaded],
-        playersLoaded: [playersLoaded, SETplayersLoaded],
-    };
+    //let state = {
+    //    player: [player, SETplayer],
+    //    assets: [assets, SETassets],
+    //    gameId: [gameId, SETgameId],
+    //    assetsLoaded: [assetsLoaded, SETassetsLoaded],
+    //    playersLoaded: [playersLoaded, SETplayersLoaded],
+    //};
     const getAssets = () => assetsRef.current;
 
     // ********
@@ -134,7 +138,7 @@ export const GameHome = props => {
             console.log("init: ", init);
         })
         SETplayer({ player: {} });
-        SETcash({ cash: {} });
+        //SETcash({ cash: {} });
         SETassets({ assets: {} });
         SETgotEm(false);
         SETtradeButtonMessageDisplay(false);
@@ -145,50 +149,49 @@ export const GameHome = props => {
             console.log(answer);
         })
     }
-    const assetButtonClick = gameid => {
-        SETviewPane(<AssetCreate updateState={updateState} playerButtonClick={playerButtonClick} gameId={gameIdRef.current} state={state} />);
-        SETisChartOn(false);
-    }
-    const playerButtonClick = gameid => {
-        SETviewPane(<PlayerCreate updateState={updateState} chartButtonClick={chartButtonClick} gameId={gameIdRef.current} state={state} />);
-        SETisChartOn(false);
-    }
-    const tradeButtonClick = () => {
-        SETviewPane(<Transaction updateState={updateState} state={state} />);
-    }
-    const chartButtonClick = () => {
-        SETviewPane(<ChartContainer gameId={gameIdRef.current} isRunning={isRunningRef.current} getAssets={getAssets}/>);
-    }
+    //const assetButtonClick = gameid => {
+    //    SETviewPane(<AssetCreate updateState={updateState} playerButtonClick={playerButtonClick} gameId={gameIdRef.current} state={state} />);
+    //    SETisChartOn(false);
+    //}
+    //const playerButtonClick = gameid => {
+    //    SETviewPane(<PlayerCreate updateState={updateState} chartButtonClick={chartButtonClick} gameId={gameIdRef.current} state={state} />);
+    //    SETisChartOn(false);
+    //}
+    //const tradeButtonClick = () => {
+    //    SETviewPane(<Transaction updateState={updateState} state={state} />);
+    //}
+    //const chartButtonClick = () => {
+    //    SETviewPane(<ChartContainer gameId={gameIdRef.current} isRunning={isRunningRef.current} getAssets={getAssets}/>);
+    //}
     const newGameClick = () => {
         API.gamePlay.newGame(1).then(game => {
             //debugger;
             console.log("new: ", game.data);
-            SETgameId(game.data.gamId);
-            for (let anAsset in game.data.assets) SETasset(anAsset);
+            SETassets(game.data.assets);
             SETisRunning(false);
-            createPlayers(3, game.data);
-        })
+            createPlayers(3, game.data.gameId);
+        });
     }
     const restartClick = () => {
         // get game id's and restart
     }
-    const randy = () => {
-        let rand = Math.random();
-        return rand;
-    }
+    const randy = () =>  Math.random();
     const createPlayers = (num, gameid) => {
+        //console.log("create players gameId: ", gameid);
         let players = [];
         for (let i = 0; i < num; i++) {
-            console.log("Player_" + i);
+            //console.log("Player_" + i);
             players.push({
                 name: "Player_" + i,
-                gameId: gameid,
                 cash: Math.floor(100 + randy() * 100),
                 riskTolerance: Math.floor(randy() * 100) / 100,
                 experience: Math.floor(randy() * 2)
-            })
+            });
         }
-        API.player.createPlayers(players).then(answer => console.log("player create: ", answer));
+        API.player.createPlayers({ gameid, players }).then(answer => {
+            SETgameId(answer.data[0].gameId);
+            //console.log("player create: ", answer);
+        });
     }
 
     const tradeButtonMouseEnter = () => {
@@ -216,30 +219,30 @@ export const GameHome = props => {
         onClick={gameOver}
         variant="light"
     >Game Over</Button>;
-    const TradeButton = gotEm => {
-        if (gotEm.gotEm) {
-            return <Button onClick={tradeButtonClick} variant="dark">Place a Trade</Button>;
-        }
-        else {
-            return <Button onMouseEnter={tradeButtonMouseEnter} variant="secondary" disabled>Place a Trade</Button>;
-        }
-    };
-    const AssetButton = () => <Button
-        onClick={assetButtonClick}
-        variant="light"
-    >Create an Asset</Button>;
-    const PlayerButton = () => <Button
-        onClick={playerButtonClick}
-        variant="light"
-    >Create a Player</Button>;
+    //const TradeButton = gotEm => {
+    //    if (gotEm.gotEm) {
+    //        return <Button onClick={tradeButtonClick} variant="dark">Place a Trade</Button>;
+    //    }
+    //    else {
+    //        return <Button onMouseEnter={tradeButtonMouseEnter} variant="secondary" disabled>Place a Trade</Button>;
+    //    }
+    //};
+    //const AssetButton = () => <Button
+    //    onClick={assetButtonClick}
+    //    variant="light"
+    //>Create an Asset</Button>;
+    //const PlayerButton = () => <Button
+    //    onClick={playerButtonClick}
+    //    variant="light"
+    //>Create a Player</Button>;
     const NewGameButton = () => <Button
         onClick={newGameClick}
         variant="light"
     >New Game</Button>;
-    const RestartGame = () => <Button
-        onClick={restartClick}
-        variant="light"
-    >Restart Game</Button>;
+    //const RestartGame = () => <Button
+    //    onClick={restartClick}
+    //    variant="light"
+    //>Restart Game</Button>;
 
     return <>
         <SelfDestructButton />

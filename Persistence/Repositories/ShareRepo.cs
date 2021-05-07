@@ -19,9 +19,9 @@ namespace RiskGame.API.Persistence.Repositories
             _shares = db.GetCollection<ShareResource>(settings.ShareCollectionName);
         }
         // get one
-        public ShareResource GetOne(Guid shareId) => _shares.AsQueryable().Where(p => p.Id == shareId).FirstOrDefault();
+        public ShareResource GetOne(Guid shareId) => _shares.AsQueryable().Where(p => p.ShareId == shareId).FirstOrDefault();
         // get many
-        public IQueryable<ShareResource> GetManySpecific(List<Guid> shareIds) => _shares.AsQueryable().Where(p => shareIds.Contains(p.Id));
+        public IQueryable<ShareResource> GetManySpecific(List<Guid> shareIds) => _shares.AsQueryable().Where(p => shareIds.Contains(p.ShareId));
         public IQueryable<ShareResource> GetMany() => _shares.AsQueryable();
         // create one
         public void CreateOne(ShareResource share) => _shares.InsertOne(share);

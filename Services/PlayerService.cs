@@ -113,7 +113,7 @@ namespace RiskGame.API.Services
             var playerResource = _mapper.Map<Player, PlayerResource>(player);
             var playerCash = _shareRepo.GetMany().Where(s => s.ModelType == ModelTypes.Cash);
             var update = Builders<ShareResource>.Update.Set("CurrentOwner", ToRef(player));
-            var updated = _shareRepo.UpdateMany(playerCash.Select(c => c.Id),update).Result;
+            var updated = _shareRepo.UpdateMany(playerCash.Select(c => c.ShareId),update).Result;
             _playerRepo.CreateOne(playerResource);
             return playerResource;
         }

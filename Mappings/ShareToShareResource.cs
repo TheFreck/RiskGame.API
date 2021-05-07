@@ -11,14 +11,14 @@ namespace RiskGame.API.Mappings
     {
         public ShareToShareResource()
         {
-            CreateMap<Share, ShareResource>().ForMember(member => member.Id, config => config.MapFrom(og => og.Id.ToString()));
+            CreateMap<Share, ShareResource>().ForMember(member => member.ShareId, config => config.MapFrom(og => og.Id.ToString()));
         }
     }
     public class ShareResourceToShare: Profile
     {
         public ShareResourceToShare()
         {
-            CreateMap<ShareResource, Share>().ForMember(member => member.Id, config => config.MapFrom(og => og.Id));
+            CreateMap<ShareResource, Share>().ForMember(member => member.Id, config => config.MapFrom(og => og.ShareId));
         }
     }
 }

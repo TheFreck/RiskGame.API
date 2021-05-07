@@ -35,7 +35,6 @@ namespace RiskGame.API.Services
         }
         public string AssetLoop(Guid econId)
         {
-            //var marketHistory = new MarketMetricsHistory();
             var econFilter = Builders<EconomyResource>.Filter.Eq("GameId", econId);
             var economy = _econRepo.GetOne(econId);
             var assets = _assetRepo.GetGameAssets(econId).ToArray();

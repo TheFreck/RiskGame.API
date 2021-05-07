@@ -35,17 +35,19 @@ namespace RiskGame.API
             services.Configure<DatabaseSettings>(
                 Configuration?.GetSection("RiskGameDatabaseSettings"));
 
-            services.AddSingleton<ITransactionService,TransactionService>();
             services.AddSingleton<IDatabaseSettings>(sp =>
                 sp.GetRequiredService<IOptions<DatabaseSettings>>().Value);
 
-            // SERVICES
+            // SINGLETON SERVICES
             services.AddSingleton<IPlayerService,PlayerService>();
             services.AddSingleton<IAssetService,AssetService>();
             services.AddSingleton<IShareService,ShareService>();
             services.AddSingleton<IMarketService, MarketService>();
             services.AddSingleton<IEconService, EconService>();
             services.AddSingleton<ITransactionService, TransactionService>();
+
+            // SERVICES
+            services.Add(new ServiceDescriptor(typeof(TransactionContext), new TransactionContext(Configuration.GetConnectionString("MySqlConnectionString"))));
 
             // LOGIC
             services.AddSingleton<IPlayerLogic, PlayerLogic>();

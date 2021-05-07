@@ -56,31 +56,29 @@ namespace RiskGame.API.Controllers
                 {
                     Name = $"Asset_{i}",
                     SharesOutstanding = 100,
-                    TradeHistory = new List<Tuple<TradeType, double>> { new Tuple<TradeType, double>(TradeType.Buy, 100) },
+                    TradeHistory = new List<Tuple<TradeType, decimal>> { new Tuple<TradeType, decimal>(TradeType.Buy, 100) },
                     LastDividendPayout = 100,
-                    Id = id
+                    AssetId = id
                 });
                 var outcome = await _assetService.Create(asset);
                 if (outcome == "done") _shareService.CreateShares(_mapper.Map<AssetResource, ModelReference>(asset), asset.SharesOutstanding, new ModelReference("HAUS"), asset.ModelType);
                 assets.Add(asset);
             }
-            var cash = _mapper.Map<Asset, AssetResource>(new Asset(ModelTypes.Cash, 1000));
-            var result = await _assetService.Create(cash);
-            var sharesCreated = 0;
-            if (result == "done")
-            {
-                sharesCreated = _shareService.CreateShares(_mapper.Map<AssetResource, ModelReference>(cash), cash.SharesOutstanding, new ModelReference("HAUS"), cash.ModelType).Count();
-            }
-            if (sharesCreated == cash.SharesOutstanding) return Ok(new EconomyOut { GameId = _marketService.NewGame(assets.ToArray(), cash), Assets = assets.Select(a => a.AssetId).ToArray()});
-            else return NotFound(new EconomyOut { Message = "didn't work"});
+            return Ok(new EconomyOut { GameId = _marketService.NewGame(assets.ToArray()), Assets = assets.Select(a => a.AssetId).ToArray()});
         }
         [HttpGet("get-game-status/{gameId:length(36)}")]
         public ActionResult<bool> GameStatus(string gameId)
         {
             var isGuid = Guid.TryParse(gameId, out var incomingId);
             if (!isGuid) return NotFound("Me thinks that Id was not a Guid");
-
-            return Ok(_econService.IsRunning(incomingId));
+            try
+            {
+                return Ok(_econService.IsRunning(incomingId));
+            }
+            catch (Exception e)
+            {
+                return NotFound(e.Message);
+            }
         }
         [HttpGet("get-records/{gameId:length(36)}/{lastSequence}")]
         public ActionResult<ChartPixel> GetRecords(string gameId, int lastSequence)

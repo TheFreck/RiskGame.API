@@ -32,20 +32,13 @@ namespace RiskGame.API.Logic
                     {
                         Buyer = _mapper.Map<PlayerResource,ModelReference>(receiver),
                         Asset = new ModelReference(share.Name[9..],share._assetId,ModelTypes.Asset),
-                        ShareId = share.Id,
+                        ShareId = share.ShareId,
                         Price = price,
                         TradeTime = DateTime.Now
                     });
                     share.CurrentOwner = _mapper.Map<PlayerResource, ModelReference>(receiver);
                 }
 
-            }
-            else if(shares[0].ModelType == ModelTypes.Cash)
-            {
-                foreach(var share in shares)
-                {
-                    share.CurrentOwner = _mapper.Map<PlayerResource, ModelReference>(receiver);
-                }
             }
             return shares;
         }

@@ -8,9 +8,9 @@ namespace RiskGame.API.Entities
 {
     public class IncomeSheet
     {
-        public double GrossIncome { get; set; }
-        public double DebtService { get; set; }
+        public decimal GrossIncome { get; set; }
+        public decimal DebtService { get; set; }
         public int Dividends { get; set; }
-        public double EquityGrowth { get; set; }
+        public decimal EquityGrowth { get; set; }
     }
 }

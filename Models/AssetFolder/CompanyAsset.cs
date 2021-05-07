@@ -12,7 +12,7 @@ namespace RiskGame.API.Models.AssetFolder
         public Guid AssetId { get; set; }
         public IndustryTypes PrimaryIndustry { get; set; }
         public IndustryTypes SecondaryIndustry { get; set; }
-        public double Value { get; set; }
+        public decimal Value { get; set; }
         public List<Wave> Waves { get; set; }
         public CompanyAsset()
         {

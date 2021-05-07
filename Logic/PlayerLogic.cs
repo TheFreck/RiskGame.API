@@ -31,7 +31,7 @@ namespace RiskGame.API.Logic
         public PlayerDecision AssetAllocation(PlayerResource player, Share[] portfolio, AssetResource[] assets, PlayerDecision decision)
         {
             var playerRef = _mapper.Map<PlayerResource,ModelReference >(player);
-            var cash = assets.Where(a => a.ModelType == ModelTypes.Cash).FirstOrDefault();
+            //var cash = assets.Where(a => a.ModelType == ModelTypes.Cash).FirstOrDefault();
             var playerWallet = player.Cash;
             var playerPortfolio = portfolio;
             var asset = assets.Where(a => a.ModelType == ModelTypes.Asset).FirstOrDefault();

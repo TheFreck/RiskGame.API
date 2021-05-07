@@ -29,9 +29,8 @@ namespace RiskGame.API.Models.EconomyFolder
         public int PixelCount { get; set; }
         public int Trendiness { get; set; }
         public CompanyAsset[] Assets { get; set; }
-        public List<MarketMetrics> Markets = new List<MarketMetrics>();
+        public List<Tuple<DateTime, MarketMetrics>> Markets = new List<Tuple<DateTime, MarketMetrics>>();
         public MarketMetricsHistory History = new MarketMetricsHistory();
         public Player HAUS { get; set; }
-        public Asset CASH { get; set; }
     }
 }

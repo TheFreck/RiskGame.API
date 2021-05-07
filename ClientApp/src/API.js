@@ -4,9 +4,6 @@ export default {
     asset: {
         // Get
         getAssets: () => axios.get('api/asset'),
-        getCash: query => {
-            return axios.get(`api/asset/cash/${query}`);
-        },
         getAsset: query => {
             if (!query) return this.messages.badInput;
             return axios.get(`api/asset/${query}`)
@@ -51,13 +48,13 @@ export default {
         // Post
         createPlayer: query => {
             if (!query) return this.messages.badInput;
-            //debugger;
             return axios.post('api/player/new-player', query);
         },
         createPlayers: query => {
             if (!query) return this.messages.badInput;
-            console.log("create players: ", query);
-            return axios.post(`api/player/create-players`, query);
+            //console.log("create players: ", query);
+            //console.log("create players url: ", `api/player/create-players/${query.gameid}`);
+            return axios.post(`api/player/create-players/${query.gameid}`, query.players);
         },
         addSharesToPlayer: query => {
             if (!query) return this.messages.badInput;
@@ -93,7 +90,7 @@ export default {
         getGames: () => axios.get('api/game/get-games'),
         newGame: qty => axios.get(`api/game/new-game/${qty}`),
         isGameOn: gameId => axios.get(`api/game/get-game-status/${gameId}`),
-        getData: query => axios.get(`api/asset/get-asset-prices/${query.gameId}/${query.assetId}/${query.lastFrame}`),
+        getData: query => query.gameId && query.assetId && query.lastFrame ? axios.get(`api/asset/get-asset-prices/${query.gameId}/${query.assetId}/${query.lastFrame}`) : "Something went wrong",
         next: query => axios.get(`api/game/next/${query.frames}/${query.trendiness}`),
         addAssets: () => axios.get("api/game/add-assets"),
         // Post

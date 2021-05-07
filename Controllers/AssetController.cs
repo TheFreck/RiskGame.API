@@ -45,8 +45,8 @@ namespace RiskGame.API.Controllers
             if (asset.AssetId == Guid.Empty) NotFound("couldn't find it with that Id");
             return _mapper.Map<AssetResource, Asset>(asset);
         }
-        [HttpGet("cash/{gameId:length(36)}")]
-        public ActionResult<AssetIn> GetCash(Guid gameId) => _mapper.Map<AssetResource,AssetIn>(_assetService.GetGameCash(gameId));
+        //[HttpGet("cash/{gameId:length(36)}")]
+        //public ActionResult<AssetIn> GetCash(Guid gameId) => _mapper.Map<AssetResource,AssetIn>(_assetService.GetGameCash(gameId));
         [HttpGet("shares/{id:length(36)}")]
         public ActionResult<AssetWithShares> GetShares(string id) // assetId
         {
@@ -112,20 +112,26 @@ namespace RiskGame.API.Controllers
                 return NotFound(e);
             }
         }
-        [HttpGet("exchange")]
-        public ActionResult<List<Share>> Exchange()
-        {
-            var gameId = Guid.Parse("89d131f7-76d6-498d-9afc-7503339e7b84");
-            var cash = _assetService.GetGameCash(gameId);
-            var shares = new List<Share>();
-            for(var i = 1234; i> 0; i--)
-            {
-                var owner = new ModelReference("Jerry");
-                var share = new Share(cash.AssetId, "Share of Cash", owner, ModelTypes.Cash, 3);
-                shares.Add(share);
-            }
-            return Ok(_shareService.CashExchange(_mapper.Map<List<Share>,List<ShareResource>>(shares),gameId));
-        }
+        //[HttpGet("exchange/{amount}")]
+        //public ActionResult<List<Share>> Exchange(int amount)
+        //{
+        //    var cash = new AssetResource
+        //    {
+        //        Name = "Cash",
+        //        AssetId = Guid.NewGuid()
+        //    };
+        //    _assetService.Create(cash);
+        //    //var shares = new List<ShareResource>();
+        //    var owner = new ModelReference("Jerry");
+        //    //for(var i = amount; i> 0; i--)
+        //    //{
+        //    //    var share = new Share(cash.AssetId, "One", owner, ModelTypes.Cash, 1);
+        //    //    shares.Add(_mapper.Map<Share,ShareResource>(share));
+        //    //}
+        //    var created = _shareService.CreateShares(_mapper.Map<AssetResource, ModelReference>(cash), amount, owner, ModelTypes.Cash);
+        //    var createdShares = _shareService.GetSpecificShares(created).ToList();
+        //    return Ok(_shareService.CashExchange(createdShares));
+        //}
         // ****************************************************************
         // POST POST POST POST POST POST POST POST POST POST POST POST POST
         // ****************************************************************
@@ -136,8 +142,7 @@ namespace RiskGame.API.Controllers
             var randy = new Random();
             var asset = new Asset();
             asset = _mapper.Map<AssetIn, Asset>(assetIn);
-            asset.Id = Guid.NewGuid();
-            asset.AssetId = asset.Id.ToString();
+            asset.AssetId = Guid.NewGuid();
             asset.GameId = Guid.Parse(assetIn.GameId);
             asset.CompanyAsset = new CompanyAsset
             {
@@ -145,6 +150,7 @@ namespace RiskGame.API.Controllers
                 SecondaryIndustry = (IndustryTypes)randy.Next(5),
                 Value = asset.SharesOutstanding
             };
+            asset.CompanyHistory = new List<Tuple<DateTime, decimal>>();
 
             // Get the Game
             var isGuid = Guid.TryParse(assetIn.GameId, out var gameId);
@@ -193,7 +199,7 @@ namespace RiskGame.API.Controllers
             if (assetIn.Name == null) assetIn.Name = foundAsset.Name;
 
             var update = _mapper.Map<AssetIn, Asset>(assetIn);
-            update.Id = incomingId;
+            update.AssetId = incomingId;
             try
             {
                 _assetService.Replace(incomingId, update);

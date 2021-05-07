@@ -59,27 +59,27 @@ namespace RiskGame.API.Logic
             {
                 if (asset.CompanyAsset == null) continue;
                 var period = randy.Next(10, 100);
-                var primary = market.GetMetric(asset.CompanyAsset.PrimaryIndustry);
-                var secondary = market.GetMetric(asset.CompanyAsset.SecondaryIndustry);
-                var magnitude = GrowthRate(primary, secondary) / period;
+                decimal primary = (decimal)market.GetMetric(asset.CompanyAsset.PrimaryIndustry);
+                decimal secondary = (decimal)market.GetMetric(asset.CompanyAsset.SecondaryIndustry);
+                double magnitude = (double)GrowthRate(primary, secondary) / period;
                 asset.CompanyAsset.Waves.Add(new Wave {
                     Magnitude = magnitude, 
                     Period = period });
-                double growthRate = 0;
+                decimal growthRate = 0;
                 foreach(var wave in asset.CompanyAsset.Waves)
                 {
-                    growthRate += wave.Magnitude;
+                    growthRate += (decimal)wave.Magnitude;
                     wave.Period--;
                 }
                 asset.CompanyAsset.Waves = asset.CompanyAsset.Waves.Where(c => c.Period > 0).ToList();
                 var value = asset.CompanyAsset.Value * (1 + growthRate);
                 asset.CompanyAsset.Value = value;
-                asset.History.Add(value);
+                asset.CompanyHistory.Add(new Tuple<DateTime, decimal>(DateTime.Now,value));
                 //_assetService.Replace(Guid.Parse(asset.AssetId), _mapper.Map<AssetResource, Asset>(asset));
             }
             return assets;
         }
-        private double GrowthRate(double primaryIndustryGrowth, double secondaryIndustryGrowth) => (7 * primaryIndustryGrowth - 3 * secondaryIndustryGrowth) / 100;
+        private decimal GrowthRate(decimal primaryIndustryGrowth, decimal secondaryIndustryGrowth) => (7 * primaryIndustryGrowth - 3 * secondaryIndustryGrowth) / 100;
     }
     public interface IEconLogic
     {

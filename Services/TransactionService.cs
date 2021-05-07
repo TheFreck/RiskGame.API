@@ -14,6 +14,7 @@ using MongoDB.Driver;
 using RiskGame.API.Logic;
 using RiskGame.API.Entities.Enums;
 using RiskGame.API.Persistence.Repositories;
+using RiskGame.API.Models.TransactionFolder;
 
 namespace RiskGame.API.Services
 {
@@ -51,37 +52,37 @@ namespace RiskGame.API.Services
                 trade.Message = "No cash was included in the ticket";
                 trade.SuccessfulTrade = false;
                 return trade;
-            } // OUT buyer has insufficient cash
+            } // OUT no cash offered
             if(trade.Seller != null && trade.Shares == 0)
             {
                 trade.Message = "No shares were included in the ticket";
                 trade.SuccessfulTrade = false;
                 return trade;
-            } // OUT seller has insufficient shares
+            } // OUT no shares offered
             // get Haus
             var haus = _playerRepo.GetHAUS(/*trade.GameId*/);
             // get Buyer
             var buyer = trade.Buyer != null ? _playerRepo.GetOne(trade.Buyer.Id) : haus;
+            buyer.Cash -= trade.Cash;
+
             // get Seller
             var seller = trade.Seller != null ? _playerRepo.GetOne(trade.Seller.Id) : haus;
+            seller.Cash += trade.Cash;
             // get References
             var sellerRef = _mapper.Map<PlayerResource,ModelReference>(seller);
             var buyerRef = _mapper.Map<PlayerResource, ModelReference>(buyer);
             // get cash and shares
             var tradeAsset = _assetRepo.GetOne(trade.Asset.Id);
-            var cash = _assetRepo.GetMany().Where(c => c.ModelType == ModelTypes.Cash).Where(c => c.GameId == tradeAsset.GameId).FirstOrDefault();
-            var tradeCash = _shareRepo.GetMany().Where(c => c.CurrentOwner.Id == buyer.PlayerId).Take(trade.Cash).ToArray();
             var tradeShares = _shareRepo.GetMany().Where(s => s.CurrentOwner.Id == seller.PlayerId).Where(s => s._assetId == trade.Asset.Id).Take(trade.Shares).ToArray();
             try
             {
-                // Transfer ownership of cash and shares
+                // Transfer ownership of shares
                 var transferredShares = _transactionLogic.TransferShares(buyer, tradeShares, trade.Shares);
-                var transferredCash = _transactionLogic.TransferShares(seller, tradeCash, trade.Cash);
-                var shrs = await _shareRepo.UpdateMany(transferredShares.Select(s => s.Id).ToList(),Builders<ShareResource>.Update.Set("CurrentOwner", buyerRef));
-                var csh = await _shareRepo.UpdateMany(transferredCash.Select(s => s.Id).ToList(), Builders<ShareResource>.Update.Set("CurrentOwner", sellerRef));
-
+                var shrs = await _shareRepo.UpdateMany(transferredShares.Select(s => s.ShareId).ToList(),Builders<ShareResource>.Update.Set("CurrentOwner", buyerRef));
+                var updateBuilder = Builders<PlayerResource>.Update;
+                await _playerRepo.UpdateOne(buyer.PlayerId, updateBuilder.Set("Cash", buyer.Cash));
+                await _playerRepo.UpdateOne(seller.PlayerId, updateBuilder.Set("Cash", seller.Cash));
                 // complete the trade ticket
-                trade.Message = $"Shares: {shrs.IsModifiedCountAvailable}; Cash: {csh.IsModifiedCountAvailable}";
                 trade.TradeTime = DateTime.Now;
                 trade.SuccessfulTrade = true;
                 return trade;

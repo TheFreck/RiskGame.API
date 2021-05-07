@@ -23,10 +23,9 @@ namespace RiskGame.API.Models.EconomyFolder
         [JsonProperty("GameId")]
         public Guid GameId { get; set; }
         public CompanyAsset[] Assets { get; set; }
-        public List<MarketMetrics> Markets { get; set; }
+        public List<Tuple<DateTime,MarketMetrics>> Markets { get; set; }
         public MarketMetricsHistory History { get; set; }
         public bool isRunning { get; set; }
-        public int PixelCount { get; set; }
         public int Trendiness { get; set; }
     }
 }

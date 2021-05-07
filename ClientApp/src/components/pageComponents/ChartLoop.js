@@ -11,7 +11,7 @@ export const ChartLoop = props => {
     useEffect(
         () => {
             isRunningRef.current = props.isRunning;
-            if (props.isRunning) bounce();
+            if (props.isRunning) setTimeout(() => bounce(),1000);
         },
         [props.isRunning]
     )

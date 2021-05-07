@@ -4,6 +4,7 @@ import { Layout } from './components/Layout';
 import { createBrowserHistory as createHistory } from "history";
 import $ from 'jquery';
 import { GameHome } from './components/pages/GameHome';
+import Store from './stateManagement/Store';
 
 import './custom.css'
 const history = createHistory();
@@ -47,14 +48,15 @@ export default class App extends Component {
 
     render() {
         return (
-            <Router
-                onMouseMove={this.mouseMove}
-                history={history}
-            >
-                <Route exact path='/' component={GameHome} />
-                <Route path='/game' component={GameHome} />
-            </Router>
-
+            <Store>
+                <Router
+                    onMouseMove={this.mouseMove}
+                    history={history}
+                >
+                    <Route exact path='/' component={GameHome} />
+                    <Route path='/game' component={GameHome} />
+                </Router>
+            </Store>
         );
     }
 }

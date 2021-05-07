@@ -7,11 +7,12 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace RiskGame.API.Entities
+namespace RiskGame.API.Models.TransactionFolder
 {
     public class TradeTicket
     {
         public Guid GameId { get; set; }
+        public Guid TradeId { get; set; }
         public ModelReference  Buyer { get; set; }
         public ModelReference  Seller { get; set; }
         public ModelReference  Asset { get; set; }
