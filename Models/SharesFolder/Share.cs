@@ -10,6 +10,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using RiskGame.API.Entities.Enums;
+using RiskGame.API.Models.TransactionFolder;
 
 namespace RiskGame.API.Models.SharesFolder
 {

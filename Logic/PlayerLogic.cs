@@ -37,7 +37,7 @@ namespace RiskGame.API.Logic
             var asset = assets.Where(a => a.ModelType == ModelTypes.Asset).FirstOrDefault();
             var lastPrice = asset.TradeHistory.LastOrDefault().Item2;
             var portfolioValue = playerPortfolio.Where(s => s._assetId == asset.AssetId).Count() * lastPrice;
-            double portfolioAllocation = portfolioValue/(portfolioValue + playerWallet);
+            double portfolioAllocation = (double)(portfolioValue/(portfolioValue + playerWallet));
             int turnType = (int)Math.Floor(
                 (portfolioAllocation - player.RiskTolerance) / (.1 * player.RiskTolerance)) > 2 ?
                 2 : 
@@ -60,7 +60,7 @@ namespace RiskGame.API.Logic
             var news = new Newspaper(history).ReadNewspaper(player.Experience, assets[0]);
             var successRatio = (.7 * news.PrimarySuccessRatio + .3 * news.SecondarySuccessRatio);
             var weightedGrowth = (.7 * news.PrimaryGrowth + .3 * news.MarketGrowth);
-            var currentValueEstimate = news.LastDividendValue * (1 + weightedGrowth * news.CyclesSinceLastDividend);
+            decimal currentValueEstimate = (decimal)(news.LastDividendValue * (1 + weightedGrowth * news.CyclesSinceLastDividend));
             if(currentValueEstimate > assets[0].LastBuyPrice)
             {
                 recommendation++;
@@ -71,7 +71,7 @@ namespace RiskGame.API.Logic
             }
             if (successRatio > .5) recommendation++;
             else recommendation--;
-            decision.Value = currentValueEstimate;
+            decision.Value = (double)currentValueEstimate;
 
             return decision;
         }

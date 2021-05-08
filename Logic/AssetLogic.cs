@@ -49,7 +49,7 @@ namespace RiskGame.API.Logic
             var recentValue = asset.MostRecentValue;
             var currentValue = asset.CompanyAsset.Value;
             var grossIncome = (currentValue - recentValue) * asset.Debt;
-            var debtService = .02 * asset.Debt * recentValue;
+            var debtService = (decimal).02 * asset.Debt * recentValue;
             var growthAfterDebtService = grossIncome - debtService;
             var dividends = (int)Math.Floor(growthAfterDebtService / 2) - ((int)Math.Floor(growthAfterDebtService / 2) % asset.SharesOutstanding);
             var equityGrowth = growthAfterDebtService - dividends;

@@ -26,8 +26,9 @@ namespace RiskGame.API.Services
         private readonly IShareRepo _shareRepo;
         private readonly IMarketRepo _marketRepo;
         private readonly IEconRepo _econRepo;
+        private readonly TransactionContext _transactionContext;
         private readonly IMapper _mapper;
-        public TransactionService(ITransactionLogic transactionLogic, IAssetRepo assetRepo, IPlayerRepo playerRepo, IShareRepo shareRepo, IMarketRepo marketRepo, IEconRepo econRepo, IMapper mapper)
+        public TransactionService(ITransactionLogic transactionLogic, IAssetRepo assetRepo, IPlayerRepo playerRepo, IShareRepo shareRepo, IMarketRepo marketRepo, IEconRepo econRepo, TransactionContext transactionContext, IMapper mapper)
         {
             _mapper = mapper;
             _transactionLogic = transactionLogic;
@@ -36,8 +37,9 @@ namespace RiskGame.API.Services
             _shareRepo = shareRepo;
             _marketRepo = marketRepo;
             _econRepo = econRepo;
+            _transactionContext = transactionContext;
         }
-
+        public List<TransactionResource> GetTransactions(Guid gameId) => _transactionContext.GetAll(gameId);
         public async Task<TradeTicket> Transact(TradeTicket trade)
         {
             // early outs
@@ -83,8 +85,8 @@ namespace RiskGame.API.Services
                 await _playerRepo.UpdateOne(buyer.PlayerId, updateBuilder.Set("Cash", buyer.Cash));
                 await _playerRepo.UpdateOne(seller.PlayerId, updateBuilder.Set("Cash", seller.Cash));
                 // complete the trade ticket
-                trade.TradeTime = DateTime.Now;
                 trade.SuccessfulTrade = true;
+                _transactionContext.AddTrade(_mapper.Map<TradeTicket, TransactionResource>(trade));
                 return trade;
             }
             catch (Exception e)
@@ -95,9 +97,12 @@ namespace RiskGame.API.Services
                 return trade;
             }
         }
+        public void InsertTrade(TransactionResource trade) => _transactionContext.AddTrade(trade);
     }
     public interface ITransactionService
     {
+        List<TransactionResource> GetTransactions(Guid gameId);
         Task<TradeTicket> Transact(TradeTicket trade);
+        void InsertTrade(TransactionResource trade);
     }
 }

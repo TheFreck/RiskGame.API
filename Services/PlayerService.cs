@@ -15,6 +15,7 @@ using RiskGame.API.Entities;
 using RiskGame.API.Persistence.Repositories;
 using RiskGame.API.Models.AssetFolder;
 using System.Diagnostics;
+using RiskGame.API.Models.TransactionFolder;
 
 namespace RiskGame.API.Services
 {

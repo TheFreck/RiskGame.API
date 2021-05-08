@@ -47,13 +47,13 @@ namespace RiskGame.API
             services.AddSingleton<ITransactionService, TransactionService>();
 
             // SERVICES
-            services.Add(new ServiceDescriptor(typeof(TransactionContext), new TransactionContext(Configuration.GetConnectionString("MySqlConnectionString"))));
+            services.Add(new ServiceDescriptor(typeof(TransactionContext), new TransactionContext(Configuration?.GetSection("RiskGameDatabaseSettings").GetChildren().Where(v => v.Key == "MySqlConnectionString").Select(v => v.Value).FirstOrDefault().ToString())));
 
             // LOGIC
-            services.AddSingleton<IPlayerLogic, PlayerLogic>();
-            services.AddSingleton<IAssetLogic, AssetLogic>();
-            services.AddSingleton<ITransactionLogic,TransactionLogic>();
-            services.AddSingleton<IEconLogic, EconLogic>();
+            services.AddTransient<IPlayerLogic, PlayerLogic>();
+            services.AddTransient<IAssetLogic, AssetLogic>();
+            services.AddTransient<ITransactionLogic,TransactionLogic>();
+            services.AddTransient<IEconLogic, EconLogic>();
 
             // REPOSITORIES
             services.AddSingleton<IAssetRepo, AssetRepo>();

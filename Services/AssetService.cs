@@ -22,14 +22,16 @@ namespace RiskGame.API.Services
         private readonly IPlayerRepo _playerRepo;
         private readonly IMarketRepo _marketRepo;
         private readonly IEconRepo _econRepo;
+        private readonly TransactionContext _transactionContext;
         private readonly IMapper _mapper;
-        public AssetService(IAssetRepo assetRepo, IPlayerRepo playerRepo, IShareRepo shareRepo, IMarketRepo marketRepo, IEconRepo econRepo, IMapper mapper)
+        public AssetService(IAssetRepo assetRepo, IPlayerRepo playerRepo, IShareRepo shareRepo, IMarketRepo marketRepo, IEconRepo econRepo, TransactionContext transactionContext, IMapper mapper)
         {
             _assetRepo = assetRepo;
             _playerRepo = playerRepo;
             _shareRepo = shareRepo;
             _marketRepo = marketRepo;
             _econRepo = econRepo;
+            _transactionContext = transactionContext;
             _mapper = mapper;
 
         }
@@ -59,6 +61,24 @@ namespace RiskGame.API.Services
                 LastFrame = assets.Count()
             };
         }
+        public List<ChartPixel> GetTrades(Guid gameId, Guid assetId, DateTime since)
+        {
+            var tradesOut = new List<ChartPixel>();
+            var trades = _transactionContext.GetMany(gameId, assetId, since);
+            var allTrades = trades.GroupBy(t => t.TradeTime.Second);
+            foreach(var tradeGroup in allTrades)
+            {
+                tradesOut.Add(new ChartPixel
+                {
+                    Open = tradeGroup.OrderByDescending(t => t.Sequence).FirstOrDefault().Price,
+                    Close = tradeGroup.OrderBy(t => t.Sequence).FirstOrDefault().Price,
+                    High = tradeGroup.OrderByDescending(t => t.Price).FirstOrDefault().Price,
+                    Low = tradeGroup.OrderBy(t => t.Price).FirstOrDefault().Price,
+                    Volume = tradeGroup.Count(),
+                });
+            }
+            return tradesOut;
+        }
         public async Task<string> Create(AssetResource asset) => await _assetRepo.CreateOne(asset);
         public void CopyData() =>_assetRepo.CopyAssets();
         public void Replace(Guid id, Asset assetIn)
@@ -80,8 +100,8 @@ namespace RiskGame.API.Services
         List<ShareResource> GetShares(Guid id, ModelTypes type);
         AssetResource GetAsset(Guid id, ModelTypes type);
         AssetResource[] GetGameAssets(Guid id);
-        //AssetResource GetGameCash(Guid gameId);
         ChartPixel GetAssetPrices(Guid gameId, Guid assetId, int frame);
+        List<ChartPixel> GetTrades(Guid gameId, Guid assetId, DateTime since);
         Task<string> Create(AssetResource asset);
         void CopyData();
         void Replace(Guid id, Asset assetIn);

@@ -88,3 +88,7 @@ Spent the** past few days working on the orchestration of creating a new game, a
 
 **4/28/21
 I've been** looking for a way to speed up the creation of cash shares. It really takes a long time to create enough to begin trading. One thought I had was to simply spend the few minutes creating the Assets and Shares collections and then copying them to new collections for the game. But apparently there's only a command line way in C#. So instead I'm going to create denominations that scale by 10. That should cut back on initialization time as well as expand the amount of cash that can be created. Ultimately, though, there will likely need to be a combination of both. Started working on an exchange method. Finish that tomorrow.
+
+**5/7/2021
+Did some** major refactoring and renovations. Cash is no longer an asset or shares but is rather just a balance line item. I made it all the way through creating a method to convert bills into higher denominations but then remembered the only reason I wanted cash to be individual entities in the db was so I could track them through various transactions. Converting the shares into other denominations would change them from their original form and make them not trackable. Ha! c'est la vie'.  
+The other thing I did was to wire up a MySQL db to store the transactions. Created a TransactionContext to handle what the Repo class does for the Mongo entity models. Created a new method to pass chart pixels up to the chart that queries the MySQL db instead of Mongo.

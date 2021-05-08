@@ -112,6 +112,16 @@ namespace RiskGame.API.Controllers
                 return NotFound(e);
             }
         }
+        [HttpGet("get-trades/{gameId:length(36)}/{assetId}/{since}")]
+        public ActionResult<List<ChartPixel>> GetTrades(string gameId, string assetId, DateTime since)
+        {
+            var isGameGuid = Guid.TryParse(gameId, out var game);
+            if (!isGameGuid) return NotFound("Me thinks that Id was not a Guid");
+            var isAssetGuid = Guid.TryParse(assetId, out var asset);
+            if (!isAssetGuid) return NotFound("Me thinks that Id was not a Guid");
+
+            return _assetService.GetTrades(game, asset, since);
+        }
         //[HttpGet("exchange/{amount}")]
         //public ActionResult<List<Share>> Exchange(int amount)
         //{

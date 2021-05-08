@@ -6,6 +6,7 @@ using RiskGame.API.Models;
 using RiskGame.API.Models.AssetFolder;
 using RiskGame.API.Models.PlayerFolder;
 using RiskGame.API.Models.SharesFolder;
+using RiskGame.API.Models.TransactionFolder;
 using RiskGame.API.Services;
 using System;
 using System.Collections.Generic;

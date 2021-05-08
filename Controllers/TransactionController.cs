@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using RiskGame.API.Entities;
 using RiskGame.API.Models.AssetFolder;
 using RiskGame.API.Models.PlayerFolder;
+using RiskGame.API.Models.TransactionFolder;
+using RiskGame.API.Persistence;
 using RiskGame.API.Services;
 using System;
 using System.Collections.Generic;
@@ -29,19 +31,18 @@ namespace RiskGame.API.Controllers
         // ***************************************************************
         [HttpGet]
         public ActionResult<string> Get() => Ok("you are connected to the transactions controller");
+        [HttpGet("transactions")]
+        public List<TransactionResource> GetTransactions(Guid gameId) => _transactionService.GetTransactions(gameId);
         // ****************************************************************
         // POST POST POST POST POST POST POST POST POST POST POST POST POST
         // ****************************************************************
-        [HttpPost]
-        public async Task<ActionResult<TradeTicket>> Trade(TradeTicket trade)
+        [HttpPost("trade")]
+        public ActionResult<TradeClient> Trade([FromBody]TradeClient trade)
         {
             try
             {
-                var outcome = new TradeTicket();
-                outcome = await _transactionService.Transact(trade);
-                if (outcome.SuccessfulTrade) return Ok(outcome);
-                else return NotFound(outcome);
-
+                _transactionService.InsertTrade(_mapper.Map<TradeClient,TransactionResource>(trade));
+                return Ok();
             }
             catch (Exception e)
             {
