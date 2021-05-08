@@ -19,11 +19,13 @@ namespace RiskGame.API.Controllers
     public class TransactionController : ControllerBase
     {
         private readonly ITransactionService _transactionService;
+        private readonly IAssetService _assetService;
         private readonly IMapper _mapper;
 
-        public TransactionController(ITransactionService transactionService, IMapper mapper)
+        public TransactionController(ITransactionService transactionService, IAssetService assetService, IMapper mapper)
         {
             _transactionService = transactionService;
+            _assetService = assetService;
             _mapper = mapper;
         }
         // ***************************************************************
@@ -33,6 +35,16 @@ namespace RiskGame.API.Controllers
         public ActionResult<string> Get() => Ok("you are connected to the transactions controller");
         [HttpGet("transactions")]
         public List<TransactionResource> GetTransactions(Guid gameId) => _transactionService.GetTransactions(gameId);
+        [HttpGet("get-trades/{gameId:length(36)}/{assetId}/{since}")]
+        public ActionResult<List<ChartPixel>> GetTrades(string gameId, string assetId, DateTime since)
+        {
+            var isGameGuid = Guid.TryParse(gameId, out var game);
+            if (!isGameGuid) return NotFound("Me thinks that Id was not a Guid");
+            var isAssetGuid = Guid.TryParse(assetId, out var asset);
+            if (!isAssetGuid) return NotFound("Me thinks that Id was not a Guid");
+
+            return _assetService.GetTrades(game, asset, since);
+        }
         // ****************************************************************
         // POST POST POST POST POST POST POST POST POST POST POST POST POST
         // ****************************************************************
