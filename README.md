@@ -94,4 +94,7 @@ I've been** looking for a way to speed up the creation of cash shares. It really
 
 **5/7/2021
 Did some** major refactoring and renovations. Cash is no longer an asset or shares but is rather just a balance line item. I made it all the way through creating a method to convert bills into higher denominations but then remembered the only reason I wanted cash to be individual entities in the db was so I could track them through various transactions. Converting the shares into other denominations would change them from their original form and make them not trackable. Ha! c'est la vie'.  
-The other thing I did was to wire up a MySQL db to store the transactions. Created a TransactionContext to handle what the Repo class does for the Mongo entity models. Created a new method to pass chart pixels up to the chart that queries the MySQL db instead of Mongo.
+  
+The other thing I did was to wire up a MySQL db to store the transactions. Created a TransactionContext to handle what the Repo class does for the Mongo entity models. Created a new method to pass chart pixels up to the chart that queries the MySQL db instead of Mongo.  
+  
+I also started transferring my notes to the Wiki and linked it to the top of the ReadMe.  
