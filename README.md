@@ -1,4 +1,7 @@
 # RiskGame.API
+
+## This is mainly a timeline of my thought processes and the tasks I worked on. For documentation please see the Wiki
+
 **3/9/2021
 This is** ostensibly a game to explore risk, but it's really a good way to practice working with the full stack. The back end is written in **C#** and uses **MongoDB** for storage and is served up by IIS Express.  
 So far there is a database set up with three collections:  
