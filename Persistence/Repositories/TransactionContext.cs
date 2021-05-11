@@ -43,8 +43,8 @@ namespace RiskGame.API.Persistence.Repositories
                         one.TradeTime = Convert.ToDateTime(reader["trade_time"]);
                         one.CompanyAssetValue = Convert.ToDecimal(reader["company_asset_value"]);
                     }
+                    conn.Close();
                 }
-                conn.Close();
             }
             return one;
         }
@@ -73,8 +73,8 @@ namespace RiskGame.API.Persistence.Repositories
                             CompanyAssetValue = Convert.ToDecimal(reader["company_asset_value"])
                         });
                     }
+                    conn.Close();
                 }
-                conn.Close();
             }
             return many;
         }
@@ -102,8 +102,8 @@ namespace RiskGame.API.Persistence.Repositories
                             CompanyAssetValue = Convert.ToDecimal(reader["company_asset_value"])
                         });
                     }
+                    conn.Close();
                 }
-                conn.Close();
             }
             return transactions;
         }

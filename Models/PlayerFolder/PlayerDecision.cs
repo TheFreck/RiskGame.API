@@ -8,10 +8,15 @@ namespace RiskGame.API.Models.PlayerFolder
 {
     public class PlayerDecision
     {
-        public TurnTypes Allocation { get; set; }
-        public TurnTypes Grapevine { get; set; }
-        public TurnTypes Asset { get; set; }
-        public double Value { get; set; }
+        //
+        // AssetAllocation() determines Qty
+        // Qty < 0 = decision to sell
+        // Qty > 0 = decision to buy
+        // EvaluateAsset() determines the Price willing to pay
+        // Grapevine() adds an enhancement of QuickBuy or QuickSell
+        public ModelReference Asset { get; set; }
+        public TurnTypes Action { get; set; }
+        public double Price { get; set; }
         public int Qty { get; set; }
     }
 }

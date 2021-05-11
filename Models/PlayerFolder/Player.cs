@@ -21,42 +21,43 @@ namespace RiskGame.API.Models.PlayerFolder
         public string ObjectId { get; set; }
         //
         // Player id is automatically set and can be overridden
-        public Guid Id { get; set; }
+        public Guid PlayerId { get; set; }
         public Guid GameId { get; set; }
         [BsonElement("Name")]
         [JsonProperty("Name")]
         public string Name { get; set; }
-        public int Cash { get; set; }
+        public decimal Cash { get; set; }
         public double RiskTolerance { get; set; }
         public Sophistication Experience { get; set; }
         public List<Issue> TradeHistory { get; set; }
+        public int DecisionFrequency { get; set; }
         //
         // model type is used to convert this class to a ModelReference
         // it is automatically set and cannot be overridden
         public readonly ModelTypes ModelType = ModelTypes.Player;
         public Player()
         {
-            Id = Guid.NewGuid();
+            PlayerId = Guid.NewGuid();
         }
-        public Player(Guid id)
+        public Player(Guid playerId)
         {
-            Id = id;
+            PlayerId = playerId;
         }
-        public Player(string name, Guid id, Guid gameId)
+        public Player(string name, Guid playerId, Guid gameId)
         {
             Name = name;
-            Id = id;
+            PlayerId = playerId;
             GameId = gameId;
         }
         public Player(string name)
         {
             Name = name;
-            Id = Guid.NewGuid();
+            PlayerId = Guid.NewGuid();
         }
         public Player(PlayerIn playerIn)
         {
             Name = playerIn.Name;
-            Id = playerIn.Id;
+            PlayerId = playerIn.PlayerId;
             GameId = playerIn.GameId;
             Cash = playerIn.Cash;
             RiskTolerance = playerIn.RiskTolerance;

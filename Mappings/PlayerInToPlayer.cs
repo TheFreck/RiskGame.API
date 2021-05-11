@@ -26,7 +26,7 @@ namespace RiskGame.API.Mappings
     {
         public PlayerInToModelReference()
         {
-            CreateMap<PlayerIn, ModelReference>().ForMember(member => member.Id, config => config.MapFrom(og => og.Id));
+            CreateMap<PlayerIn, ModelReference>().ForMember(member => member.Id, config => config.MapFrom(og => og.PlayerId));
         }
     }
 }

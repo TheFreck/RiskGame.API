@@ -14,7 +14,6 @@ export const GameHome = props => {
     const [state, dispatch] = useContext(Context);
 
     const [player, SETplayer] = useState({});
-    //const [assets, SETassets] = useState([]);
     const [assetsLoaded, SETassetsLoaded] = useState(false);
     const [playersLoaded, SETplayersLoaded] = useState(false);
     const [gotEm, SETgotEm] = useState(false);
@@ -27,12 +26,6 @@ export const GameHome = props => {
     // **********
     // GO GETTERS
     // **********
-    //const updateState = changeSet => {
-    //    if ((player || changeSet.player) && (cash || changeSet.cash) && (assets.length || changeSet.assets)) SETgotEm(true);
-    //    SETplayer(changeSet.player ? changeSet.player : player.player);
-    //    SETcash(changeSet.csh ? changeSet.csh : cash.cash);
-    //    SETassets(changeSet.asst ? assets.concat(changeSet.asst) : assets.assets);
-    //};
     // GAME ID **************************************************
     const gameIdRef = useRef();
     const [gameId, SETgameId] = useState();
@@ -66,29 +59,6 @@ export const GameHome = props => {
         },
         [isRunning]
     )
-    // CASH *****************************************************
-    //const cashRef = useRef();
-    //const [cash, SETcash] = useState({ cash: {} });
-    //useEffect(
-    //    () => {
-    //        if(cashRef.current != cash) cashRef.current = cash;
-    //        else if (gameIdRef.current) {
-    //            getCash(gameIdRef.current, cash => {
-    //                console.log("cash: ", cash);
-    //            });
-    //        }
-    //    }, [gameId]
-    //);
-    //const getCash = (csh, cb) => {
-    //    //let gmid = "";
-    //    //if (gameId) gmid = gameId;
-    //    //else if (csh) gmid = csh;
-    //    //else return;
-    //    API.asset.getCash(csh).then(data => {
-    //        console.log("cash back: ", data);
-    //        cb(data.data)
-    //    });
-    //}
     // VIEW PANE ************************************************
     const viewPaneRef = useRef();
     const [viewPane, SETviewPane] = useState(<></>);
@@ -96,13 +66,6 @@ export const GameHome = props => {
     // **********
     // GO SETTERS
     // **********
-    //let state = {
-    //    player: [player, SETplayer],
-    //    assets: [assets, SETassets],
-    //    gameId: [gameId, SETgameId],
-    //    assetsLoaded: [assetsLoaded, SETassetsLoaded],
-    //    playersLoaded: [playersLoaded, SETplayersLoaded],
-    //};
     const getAssets = () => assetsRef.current;
 
     // ********
@@ -138,7 +101,6 @@ export const GameHome = props => {
             console.log("init: ", init);
         })
         SETplayer({ player: {} });
-        //SETcash({ cash: {} });
         SETassets({ assets: {} });
         SETgotEm(false);
         SETtradeButtonMessageDisplay(false);
@@ -149,23 +111,22 @@ export const GameHome = props => {
             console.log(answer);
         })
     }
-    //const assetButtonClick = gameid => {
-    //    SETviewPane(<AssetCreate updateState={updateState} playerButtonClick={playerButtonClick} gameId={gameIdRef.current} state={state} />);
-    //    SETisChartOn(false);
-    //}
-    //const playerButtonClick = gameid => {
-    //    SETviewPane(<PlayerCreate updateState={updateState} chartButtonClick={chartButtonClick} gameId={gameIdRef.current} state={state} />);
-    //    SETisChartOn(false);
-    //}
-    //const tradeButtonClick = () => {
-    //    SETviewPane(<Transaction updateState={updateState} state={state} />);
-    //}
-    //const chartButtonClick = () => {
-    //    SETviewPane(<ChartContainer gameId={gameIdRef.current} isRunning={isRunningRef.current} getAssets={getAssets}/>);
-    //}
+    const assetButtonClick = gameid => {
+        SETviewPane(<AssetCreate playerButtonClick={playerButtonClick} gameId={gameIdRef.current} state={state} />);
+        SETisChartOn(false);
+    }
+    const playerButtonClick = gameid => {
+        SETviewPane(<PlayerCreate chartButtonClick={chartButtonClick} gameId={gameIdRef.current} state={state} />);
+        SETisChartOn(false);
+    }
+    const tradeButtonClick = () => {
+        SETviewPane(<Transaction state={state} />);
+    }
+    const chartButtonClick = () => {
+        SETviewPane(<ChartContainer gameId={gameIdRef.current} isRunning={isRunningRef.current} getAssets={getAssets}/>);
+    }
     const newGameClick = () => {
         API.gamePlay.newGame(1).then(game => {
-            //debugger;
             console.log("new: ", game.data);
             SETassets(game.data.assets);
             SETisRunning(false);
@@ -177,10 +138,8 @@ export const GameHome = props => {
     }
     const randy = () =>  Math.random();
     const createPlayers = (num, gameid) => {
-        //console.log("create players gameId: ", gameid);
         let players = [];
         for (let i = 0; i < num; i++) {
-            //console.log("Player_" + i);
             players.push({
                 name: "Player_" + i,
                 cash: Math.floor(100 + randy() * 100),
@@ -190,7 +149,6 @@ export const GameHome = props => {
         }
         API.player.createPlayers({ gameid, players }).then(answer => {
             SETgameId(answer.data[0].gameId);
-            //console.log("player create: ", answer);
         });
     }
 
@@ -219,31 +177,32 @@ export const GameHome = props => {
         onClick={gameOver}
         variant="light"
     >Game Over</Button>;
-    //const TradeButton = gotEm => {
-    //    if (gotEm.gotEm) {
-    //        return <Button onClick={tradeButtonClick} variant="dark">Place a Trade</Button>;
-    //    }
-    //    else {
-    //        return <Button onMouseEnter={tradeButtonMouseEnter} variant="secondary" disabled>Place a Trade</Button>;
-    //    }
-    //};
-    //const AssetButton = () => <Button
-    //    onClick={assetButtonClick}
-    //    variant="light"
-    //>Create an Asset</Button>;
-    //const PlayerButton = () => <Button
-    //    onClick={playerButtonClick}
-    //    variant="light"
-    //>Create a Player</Button>;
     const NewGameButton = () => <Button
         onClick={newGameClick}
         variant="light"
     >New Game</Button>;
-    //const RestartGame = () => <Button
-    //    onClick={restartClick}
-    //    variant="light"
-    //>Restart Game</Button>;
-
+    {
+        //const TradeButton = gotEm => {
+        //    if (gotEm.gotEm) {
+        //        return <Button onClick={tradeButtonClick} variant="dark">Place a Trade</Button>;
+        //    }
+        //    else {
+        //        return <Button onMouseEnter={tradeButtonMouseEnter} variant="secondary" disabled>Place a Trade</Button>;
+        //    }
+        //};
+        //const AssetButton = () => <Button
+        //    onClick={assetButtonClick}
+        //    variant="light"
+        //>Create an Asset</Button>;
+        //const PlayerButton = () => <Button
+        //    onClick={playerButtonClick}
+        //    variant="light"
+        //>Create a Player</Button>;
+        //const RestartGame = () => <Button
+        //    onClick={restartClick}
+        //    variant="light"
+        //>Restart Game</Button>;
+    }
     return <>
         <SelfDestructButton />
         <GameOverButton />

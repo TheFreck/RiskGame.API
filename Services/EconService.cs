@@ -56,13 +56,6 @@ namespace RiskGame.API.Services
                 _assetRepo.ReplaceOne(assets[0].AssetId, next.Assets[0]);
                 _marketRepo.CreateOne(next.LastMarket);
                 economy = next.Economy;
-                //marketHistory.Red.Add(next.Market.Red * (int)next.Market.RedDirection);
-                //marketHistory.Orange.Add(next.Market.Orange * (int)next.Market.OrangeDirection);
-                //marketHistory.Yellow.Add(next.Market.Yellow * (int)next.Market.YellowDirection);
-                //marketHistory.Green.Add(next.Market.Green * (int)next.Market.GreenDirection);
-                //marketHistory.Blue.Add(next.Market.Blue * (int)next.Market.BlueDirection);
-                //marketHistory.Violet.Add(next.Market.Violet * (int)next.Market.VioletDirection);
-                //Thread.Sleep(1);
                 timer.Stop();
                 Console.WriteLine("econ: " + timer.ElapsedMilliseconds);
                 Thread.Sleep(1000);

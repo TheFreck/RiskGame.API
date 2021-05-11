@@ -27,8 +27,9 @@ namespace RiskGame.API.Services
         private readonly IShareRepo _shareRepo;
         private readonly IEconRepo _econRepo;
         private readonly ITransactionService _transactionService;
-
         private readonly IPlayerLogic _playerLogic;
+        private readonly Random randy;
+
         public PlayerService(IShareRepo shareRepo, IAssetRepo assetRepo, IPlayerRepo playerRepo, IEconRepo econRepo, IPlayerLogic playerLogic, IMapper mapper, ITransactionService transactionService)
         {
             _shareRepo = shareRepo;
@@ -38,16 +39,17 @@ namespace RiskGame.API.Services
             _playerLogic = playerLogic;
             _mapper = mapper;
             _transactionService = transactionService;
+            randy = new Random();
         }
 
-        public async void TradingStartStop(Guid gameId)
+        public async void TradingStartStop(Guid gameId, bool isRunning)
         {
             var loopAction = await PlayerLoop(gameId);
             Console.WriteLine("player loop action: " + loopAction);
         }
         public Task<string> PlayerLoop(Guid gameId)
         {
-            var players = _playerRepo.GetGamePlayers(gameId);
+            var players = _playerRepo.GetGamePlayers(gameId).Where(p => p.Name != "HAUS");
             var assets = _assetRepo.GetGameAssets(gameId);
             var game = _econRepo.GetOne(gameId);
             do
@@ -56,38 +58,45 @@ namespace RiskGame.API.Services
                 timer.Start();
                 foreach (var player in players)
                 {
-                    var shares = _shareRepo.GetMany();
-                    var theShares = shares.Where(s => s.CurrentOwner.Id == player.PlayerId).ToArray();
+                    if(player.SkipsTilTurn == 0)
+                    {
+                        player.SkipsTilTurn = player.DecisionFrequency;
+                        var ach = _playerRepo.UpdateOne(player.PlayerId, Builders<PlayerResource>.Update.Set("TurnsToSkip", player.DecisionFrequency)).Result;
+                        continue;
+                    }
+                    player.SkipsTilTurn--;
+                    var shares = _shareRepo.GetMany(); // all shares
+                    var playerShares = shares.Where(s => s.CurrentOwner.Id == player.PlayerId).ToArray(); // player shares
                     var tradeTicket = new TradeTicket();
                     tradeTicket.GameId = gameId;
                     tradeTicket.Asset = _mapper.Map<AssetResource,ModelReference>(assets[0]);
-                    var outcome = _playerLogic.PlayerTurn(player, _mapper.Map<ShareResource[],Share[]>(theShares), assets, game.History);
-                    var total = (TurnTypes)((int)Math.Floor(new int[] {(int)outcome.Allocation, (int)outcome.Asset}.Average()));
-                    tradeTicket.Shares = outcome.Qty;
+                    var decision = _playerLogic.PlayerTurn(player, _mapper.Map<ShareResource[],Share[]>(playerShares), assets, game.History);
+                    var total = decision.Asset;
+                    tradeTicket.Shares = decision.Qty;
 
-                    switch (total)
+                    switch (decision.Action)
                     {
                         case TurnTypes.QuickSell:
                             tradeTicket.Buyer = GetHAUSRef(gameId);
                             tradeTicket.Seller = ResToRef(player);
-                            tradeTicket.Cash = (int)Math.Floor(.95*(outcome.Value * outcome.Qty));
+                            tradeTicket.Cash = (int)Math.Floor(.95*(decision.Price * decision.Qty));
                             break;
                         case TurnTypes.Sell:
                             tradeTicket.Buyer = GetHAUSRef(gameId);
                             tradeTicket.Seller = ResToRef(player);
-                            tradeTicket.Cash = (int)Math.Ceiling(.99*(outcome.Value * outcome.Qty));
+                            tradeTicket.Cash = (int)Math.Ceiling(.99*(decision.Price * decision.Qty));
                             break;
                         case TurnTypes.Hold:
                             continue;
                         case TurnTypes.Buy:
                             tradeTicket.Buyer = ResToRef(player);
                             tradeTicket.Seller = GetHAUSRef(gameId);
-                            tradeTicket.Cash = (int)Math.Floor(1.01*(outcome.Value * outcome.Qty));
+                            tradeTicket.Cash = (int)Math.Floor(1.01*(decision.Price * decision.Qty));
                             break;
                         case TurnTypes.QuickBuy:
                             tradeTicket.Buyer = ResToRef(player);
                             tradeTicket.Seller = GetHAUSRef(gameId);
-                            tradeTicket.Cash = (int)Math.Ceiling(1.05 * (outcome.Value * outcome.Qty));
+                            tradeTicket.Cash = (int)Math.Ceiling(1.05 * (decision.Price * decision.Qty));
                             break;
                     }
                     var traded = _transactionService.Transact(tradeTicket);
@@ -111,6 +120,8 @@ namespace RiskGame.API.Services
         // Creates a new player from the JSON
         public PlayerResource CreateOne(Player player)
         {
+            player.PlayerId = Guid.NewGuid();
+            player.DecisionFrequency = player.DecisionFrequency < 5 ? randy.Next(5, 11) : player.DecisionFrequency;
             var playerResource = _mapper.Map<Player, PlayerResource>(player);
             var playerCash = _shareRepo.GetMany().Where(s => s.ModelType == ModelTypes.Cash);
             var update = Builders<ShareResource>.Update.Set("CurrentOwner", ToRef(player));
@@ -122,6 +133,7 @@ namespace RiskGame.API.Services
         // creates multiple new players
         public List<PlayerResource> CreateMany(List<Player> players)
         {
+            players.ForEach(p => p.PlayerId = Guid.NewGuid());
             var newPlayers = _mapper.Map<List<Player>, List<PlayerResource>>(players);
             _playerRepo.CreateMany(newPlayers);
             return newPlayers;
@@ -141,7 +153,7 @@ namespace RiskGame.API.Services
     }
     public interface IPlayerService
     {
-        void TradingStartStop(Guid gameId);
+        void TradingStartStop(Guid gameId, bool isRunning);
         Task<string> PlayerLoop(Guid gameId);
         PlayerResource GetHAUS(Guid gameId);
         ModelReference GetHAUSRef(Guid gameId);

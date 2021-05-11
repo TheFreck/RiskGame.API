@@ -23,64 +23,48 @@ namespace RiskGame.API.Logic
         {
             _mapper = mapper;
         }
-        public PlayerDecision PlayerTurn(PlayerResource player, Share[] portfolio, AssetResource[] assets, MarketMetricsHistory history)
+        public PlayerDecision PlayerTurn(PlayerResource player, Share[] portfolio, AssetResource[] assets, MarketMetricsHistory history) => AssetAllocation(player, portfolio, assets, Grapevine(EvaluateAsset(player, assets, history, new PlayerDecision())));
+        private PlayerDecision AssetAllocation(PlayerResource player, Share[] portfolio, AssetResource[] assets, PlayerDecision decision)
         {
-            var decision = new PlayerDecision();
-            return EvaluateAsset(player, assets, history, Grapevine(AssetAllocation(player, portfolio, assets, decision)));
-        }
-        public PlayerDecision AssetAllocation(PlayerResource player, Share[] portfolio, AssetResource[] assets, PlayerDecision decision)
-        {
-            var playerRef = _mapper.Map<PlayerResource,ModelReference >(player);
-            //var cash = assets.Where(a => a.ModelType == ModelTypes.Cash).FirstOrDefault();
-            var playerWallet = player.Cash;
-            var playerPortfolio = portfolio;
             var asset = assets.Where(a => a.ModelType == ModelTypes.Asset).FirstOrDefault();
-            var lastPrice = asset.TradeHistory.LastOrDefault().Item2;
-            var portfolioValue = playerPortfolio.Where(s => s._assetId == asset.AssetId).Count() * lastPrice;
+            var price = decision.Price;
+            var lastPrice = asset.TradeHistory.OrderByDescending(t => t.Item1).LastOrDefault().Item2;
+            decimal playerWallet = player.Cash;
+
+            var portfolioValue = portfolio.Where(s => s._assetId == asset.AssetId).Where(s => s.CurrentOwner.Id == player.PlayerId).Count() * lastPrice;
             double portfolioAllocation = (double)(portfolioValue/(portfolioValue + playerWallet));
-            int turnType = (int)Math.Floor(
-                (portfolioAllocation - player.RiskTolerance) / (.1 * player.RiskTolerance)) > 2 ?
-                2 : 
-                (int)Math.Floor((portfolioAllocation - player.RiskTolerance) / (.1 * player.RiskTolerance)) < -2 ? 
-                -2 : 
-                (int)Math.Floor((portfolioAllocation - player.RiskTolerance) / (.1 * player.RiskTolerance));
-            decision.Allocation = (TurnTypes)turnType;
-            decision.Qty = (int)Math.Ceiling((playerWallet * player.RiskTolerance) / (1 - player.RiskTolerance)) - playerPortfolio.Count();
+
+            if(Math.Abs(portfolioAllocation - player.RiskTolerance) > .2)
+            {
+                decision.Qty = (int)Math.Ceiling(((double)playerWallet * player.RiskTolerance) / (1 - player.RiskTolerance)) - portfolio.Count();
+            }
+            var turnType = portfolioAllocation - player.RiskTolerance > .2 ? 1 : portfolioAllocation - player.RiskTolerance < -.2 ? -1 : 0;
+            decision.Asset = _mapper.Map<AssetResource, ModelReference>(asset);
             return decision;
         }
-        public PlayerDecision Grapevine(PlayerDecision decision)
+        private PlayerDecision Grapevine(PlayerDecision decision)
         {
             // check on other traders
-            decision.Grapevine = TurnTypes.Hold;
+            // if there's excitement among other traders then change a Buy into a QuickBuy and a Sell into a QuickSell
             return decision;
         }
-        public PlayerDecision EvaluateAsset(PlayerResource player, AssetResource[] assets, MarketMetricsHistory history, PlayerDecision decision)
+        private PlayerDecision EvaluateAsset(PlayerResource player, AssetResource[] assets, MarketMetricsHistory history, PlayerDecision decision)
         {
-            var recommendation = 0;
-            var news = new Newspaper(history).ReadNewspaper(player.Experience, assets[0]);
+            var asset = assets.Where(a => a.ModelType == ModelTypes.Asset).FirstOrDefault();
+            decision.Asset = _mapper.Map<AssetResource,ModelReference>(asset);
+            var news = new Newspaper(history).ReadNewspaper(player.Experience, asset);
             var successRatio = (.7 * news.PrimarySuccessRatio + .3 * news.SecondarySuccessRatio);
             var weightedGrowth = (.7 * news.PrimaryGrowth + .3 * news.MarketGrowth);
-            decimal currentValueEstimate = (decimal)(news.LastDividendValue * (1 + weightedGrowth * news.CyclesSinceLastDividend));
-            if(currentValueEstimate > assets[0].LastBuyPrice)
-            {
-                recommendation++;
-            }
-            if(currentValueEstimate < assets[0].LastSellPrice)
-            {
-                recommendation--;
-            }
-            if (successRatio > .5) recommendation++;
-            else recommendation--;
-            decision.Value = (double)currentValueEstimate;
-
+            decimal currentValueEstimate = (decimal)(news.LastDividendValue * (1 + successRatio * weightedGrowth * news.CyclesSinceLastDividend)) / assets[0].SharesOutstanding;
+            
+            decision.Price = (double)currentValueEstimate;
+            if (currentValueEstimate < assets[0].TradeHistory.OrderByDescending(a => a.Item1).FirstOrDefault().Item2) decision.Action = TurnTypes.Sell;
+            else decision.Action = TurnTypes.Buy;
             return decision;
         }
     }
     public interface IPlayerLogic
     {
         PlayerDecision PlayerTurn(PlayerResource player, Share[] portfolio, AssetResource[] assets, MarketMetricsHistory history);
-        PlayerDecision AssetAllocation(PlayerResource player, Share[] portfolio, AssetResource[] assets, PlayerDecision decision);
-        PlayerDecision Grapevine(PlayerDecision decision);
-        PlayerDecision EvaluateAsset(PlayerResource player, AssetResource[] assets, MarketMetricsHistory history, PlayerDecision decision);
     }
 }

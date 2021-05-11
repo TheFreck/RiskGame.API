@@ -90,7 +90,7 @@ export default {
         getGames: () => axios.get('api/game/get-games'),
         newGame: qty => axios.get(`api/game/new-game/${qty}`),
         isGameOn: gameId => axios.get(`api/game/get-game-status/${gameId}`),
-        getData: query => query.gameId && query.assetId && query.lastFrame ? axios.get(`api/asset/get-asset-prices/${query.gameId}/${query.assetId}/${query.lastFrame}`) : "Something went wrong",
+        getData: query => query.gameId && query.assetId && query.since ? axios.get(`api/transaction/get-trades/${query.gameId}/${query.assetId}/${query.since}`) : "Something went wrong",
         next: query => axios.get(`api/game/next/${query.frames}/${query.trendiness}`),
         addAssets: () => axios.get("api/game/add-assets"),
         // Post

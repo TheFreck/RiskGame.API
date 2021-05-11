@@ -22,9 +22,12 @@ namespace RiskGame.API.Models.PlayerFolder
         [BsonElement("Name")]
         [JsonProperty("Name")]
         public string Name { get; set; }
-        public int Cash { get; set; }
+        public decimal Cash { get; set; }
         public double RiskTolerance { get; set; }
         public Sophistication Experience { get; set; }
+        public List<Issue> TradeHistory { get; set; }
+        public int DecisionFrequency { get; set; }
+        public int SkipsTilTurn { get; set; }
         //
         // model type is used to convert this class to a ModelReference
         // it is automatically set and cannot be overridden

@@ -58,13 +58,12 @@ namespace RiskGame.API.Controllers
         {
             var player = new Player();
             player = _mapper.Map<PlayerIn, Player>(playerIn);
-            player.Id = Guid.NewGuid();
             var playerRef = _mapper.Map<Player, ModelReference>(player);
             try
             {
                 _playerService.CreateOne(player);
                 playerIn.GameId = player.GameId;
-                playerIn.Id = player.Id;
+                playerIn.PlayerId = player.PlayerId;
 
                 return Ok(playerIn);
             }
@@ -83,7 +82,6 @@ namespace RiskGame.API.Controllers
             foreach (var player in playersIn)
             {
                 player.GameId = incomingId;
-                player.Id = Guid.NewGuid();
                 var playerRef = _mapper.Map<PlayerIn, ModelReference>(player);
                 playerList.Add(new Player(player));
             }
@@ -110,7 +108,7 @@ namespace RiskGame.API.Controllers
 
             if (playerIn.Name == null) playerIn.Name = foundPlayer.Name;
             var update = _mapper.Map<PlayerIn, Player>(playerIn);
-            update.Id = incomingId;
+            update.PlayerId = incomingId;
             update.ObjectId = foundPlayer.ObjectId;
 
             try

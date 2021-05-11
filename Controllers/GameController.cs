@@ -55,9 +55,9 @@ namespace RiskGame.API.Controllers
                 var asset = _mapper.Map<Asset, AssetResource>(new Asset
                 {
                     Name = $"Asset_{i}",
-                    SharesOutstanding = 100,
-                    TradeHistory = new List<Tuple<TradeType, decimal>> { new Tuple<TradeType, decimal>(TradeType.Buy, 100) },
-                    LastDividendPayout = 100,
+                    SharesOutstanding = 1000,
+                    TradeHistory = new List<Tuple<TradeType, decimal>> { new Tuple<TradeType, decimal>(TradeType.Buy, 10) },
+                    LastDividendPayout = 10,
                     AssetId = id
                 });
                 var outcome = await _assetService.Create(asset);
@@ -126,7 +126,7 @@ namespace RiskGame.API.Controllers
         public void TradingOnOff(string gameId, bool isRunning)
         {
             var isGuid = Guid.TryParse(gameId, out var incomingId);
-            _playerService.TradingStartStop(incomingId);
+            _playerService.TradingStartStop(incomingId, isRunning);
         }
         // ***
         // PUT

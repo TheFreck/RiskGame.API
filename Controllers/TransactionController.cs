@@ -35,7 +35,7 @@ namespace RiskGame.API.Controllers
         public ActionResult<string> Get() => Ok("you are connected to the transactions controller");
         [HttpGet("transactions")]
         public List<TransactionResource> GetTransactions(Guid gameId) => _transactionService.GetTransactions(gameId);
-        [HttpGet("get-trades/{gameId:length(36)}/{assetId}/{since}")]
+        [HttpGet("get-trades/{gameId:length(36)}/{assetId:length(36)}/{since}")]
         public ActionResult<List<ChartPixel>> GetTrades(string gameId, string assetId, DateTime since)
         {
             var isGameGuid = Guid.TryParse(gameId, out var game);

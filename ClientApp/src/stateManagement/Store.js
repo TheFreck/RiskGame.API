@@ -3,6 +3,7 @@ import Reducer from './Reducer'
 
 
 const initialState = {
+    assets: [],
     posts: [],
     error: null
 };

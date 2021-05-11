@@ -37,13 +37,15 @@ export const ChartContainer = props => {
                 isRunningRef.current = isRunning
                 API.gamePlay.onOff({ gameId: props.gameId, isRunning }).then(outcome => {
                     console.log("server running: ", outcome.data);
-                    startTrading();
                 });
-                setTimeout(() => {
-                    setChartView();
-                }, 1000);
-                let setChartView = () => SETview(<ChartLoop
-                    isRunning={isRunning}
+                setTimeout(() => startTrading({ gameId: props.gameId, isRunning }).then(after => {
+                    setTimeout(() => {
+                        setChartView(isRunning);
+                    }, 1111);
+                }), 1111);
+                
+                let setChartView = running => SETview(<ChartLoop
+                    isRunning={running}
                     getData={getData}
                 />);
             }
@@ -67,7 +69,7 @@ export const ChartContainer = props => {
     // ********
     // SERVICES
     // ********
-    const startTrading = () => API.gamePlay.tradingOnOff({ gameId, isRunning });
+    const startTrading = schtuff => API.gamePlay.tradingOnOff({ gameId: schtuff.gameId, isRunning: schtuff.isRunning });
 
     // **********
     // GO GETTERS
@@ -80,11 +82,12 @@ export const ChartContainer = props => {
         },
         [justaSec]
     )
+    console.log("now: ", new Date().toLocaleTimeString());
     const getData = cb => {
-        console.log(`gameId: ${gameIdRef.current}; assetId: ${assetsRef.current}; lastFrame: ${lastFrameRef.current}`);
         debugger;
-        API.gamePlay.getData({ gameId: gameIdRef.current, assetId: assetsRef.current[0], lastFrame: lastFrameRef.current }).then(data => {
-            console.log("volume: ", data.data.volume);
+        let now = new Date();
+        API.gamePlay.getData({ gameId: gameIdRef.current, assetId: assetsRef.current[0], since: new Date(now.getTime() - 60000).toLocaleTimeString() }).then(data => {
+            console.log("data: ", data.data);
             debugger;
             SETlastFrame(data.data.lastFrame)
             if (data.status === 200 && data.data.volume > 0) cb(data.data);

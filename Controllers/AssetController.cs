@@ -96,45 +96,10 @@ namespace RiskGame.API.Controllers
             if (!isGuid) return NotFound("Me thinks that Id was not a Guid");
             return _assetService.GetCompanyAssets(incomingId);
         }
-        [HttpGet("get-asset-prices/{gameId:length(36)}/{assetId}/{frame}")]
-        public ActionResult<ChartPixel> GetAssetPrices(string gameId, string assetId, int frame)
-        {
-            var isGameGuid = Guid.TryParse(gameId, out var game);
-            if (!isGameGuid) return NotFound("Me thinks that Id was not a Guid");
-            var isAssetGuid = Guid.TryParse(assetId, out var asset);
-            if (!isAssetGuid) return NotFound("Me thinks that Id was not a Guid");
-            try
-            {
-                return Ok(_assetService.GetAssetPrices(game, asset, frame));
-            }
-            catch (Exception e)
-            {
-                return NotFound(e);
-            }
-        }
-        //[HttpGet("exchange/{amount}")]
-        //public ActionResult<List<Share>> Exchange(int amount)
-        //{
-        //    var cash = new AssetResource
-        //    {
-        //        Name = "Cash",
-        //        AssetId = Guid.NewGuid()
-        //    };
-        //    _assetService.Create(cash);
-        //    //var shares = new List<ShareResource>();
-        //    var owner = new ModelReference("Jerry");
-        //    //for(var i = amount; i> 0; i--)
-        //    //{
-        //    //    var share = new Share(cash.AssetId, "One", owner, ModelTypes.Cash, 1);
-        //    //    shares.Add(_mapper.Map<Share,ShareResource>(share));
-        //    //}
-        //    var created = _shareService.CreateShares(_mapper.Map<AssetResource, ModelReference>(cash), amount, owner, ModelTypes.Cash);
-        //    var createdShares = _shareService.GetSpecificShares(created).ToList();
-        //    return Ok(_shareService.CashExchange(createdShares));
-        //}
         // ****************************************************************
         // POST POST POST POST POST POST POST POST POST POST POST POST POST
         // ****************************************************************
+
         [HttpPost]
         public ActionResult<AssetIn> Create([FromBody] AssetIn assetIn)
         {
