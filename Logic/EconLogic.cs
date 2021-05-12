@@ -58,6 +58,7 @@ namespace RiskGame.API.Logic
             foreach (var asset in assets)
             {
                 if (asset.CompanyAsset == null) continue;
+                asset.PeriodsSinceDividend++;
                 var period = randy.Next(10, 100);
                 decimal primary = (decimal)market.GetMetric(asset.CompanyAsset.PrimaryIndustry);
                 decimal secondary = (decimal)market.GetMetric(asset.CompanyAsset.SecondaryIndustry);
@@ -79,7 +80,7 @@ namespace RiskGame.API.Logic
             }
             return assets;
         }
-        private decimal GrowthRate(decimal primaryIndustryGrowth, decimal secondaryIndustryGrowth) => (7 * primaryIndustryGrowth - 3 * secondaryIndustryGrowth) / 100;
+        private decimal GrowthRate(decimal primaryIndustryGrowth, decimal secondaryIndustryGrowth) => (7 * primaryIndustryGrowth - 3 * secondaryIndustryGrowth) / 10000;
     }
     public interface IEconLogic
     {

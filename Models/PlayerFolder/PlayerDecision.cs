@@ -16,7 +16,7 @@ namespace RiskGame.API.Models.PlayerFolder
         // Grapevine() adds an enhancement of QuickBuy or QuickSell
         public ModelReference Asset { get; set; }
         public TurnTypes Action { get; set; }
-        public double Price { get; set; }
+        public decimal Price { get; set; }
         public int Qty { get; set; }
     }
 }

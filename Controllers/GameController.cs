@@ -48,6 +48,7 @@ namespace RiskGame.API.Controllers
         [HttpGet("new-game/{assetQty}")]
         public async Task<ActionResult<EconomyOut>> NewGame(int assetQty)
         {
+            var haus = _playerService.CreateOne(new Player("HAUS"));
             var assets = new List<AssetResource>();
             for (var i = 0; i < assetQty; i++)
             {
@@ -61,7 +62,7 @@ namespace RiskGame.API.Controllers
                     AssetId = id
                 });
                 var outcome = await _assetService.Create(asset);
-                if (outcome == "done") _shareService.CreateShares(_mapper.Map<AssetResource, ModelReference>(asset), asset.SharesOutstanding, new ModelReference("HAUS"), asset.ModelType);
+                if (outcome == "done") _shareService.CreateShares(_mapper.Map<AssetResource, ModelReference>(asset), asset.SharesOutstanding, _mapper.Map<PlayerResource,ModelReference>(haus), asset.ModelType);
                 assets.Add(asset);
             }
             return Ok(new EconomyOut { GameId = _marketService.NewGame(assets.ToArray()), Assets = assets.Select(a => a.AssetId).ToArray()});

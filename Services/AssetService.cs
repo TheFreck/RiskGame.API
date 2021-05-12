@@ -40,11 +40,6 @@ namespace RiskGame.API.Services
         public List<ShareResource> GetShares(Guid assetId, ModelTypes type) => _shareRepo.GetMany().Where(s => s._assetId == assetId).Where(s => s.ModelType == type).ToList();
         public AssetResource GetAsset(Guid id, ModelTypes type) => _assetRepo.GetMany().Where(a => a.AssetId == id).Where(a => a.ModelType == type).FirstOrDefault();
         public AssetResource[] GetGameAssets(Guid id) => _assetRepo.GetMany().Where(a => a.GameId == id).Where(a => a.CompanyAsset != null).ToArray();
-        //public AssetResource GetGameCash(Guid gameId)
-        //{
-        //    var all = _assetRepo.GetMany().Where(a => a.GameId == gameId).Where(a => a.ModelType == ModelTypes.Cash).FirstOrDefault();
-        //    return all;
-        //}
         public ChartPixel GetAssetPrices(Guid gameId, Guid assetId, int frame)
         {
             var assets = _assetRepo.GetMany().Where(a => a.GameId == gameId).Where(a => a.AssetId == assetId).Select(a => a.TradeHistory).FirstOrDefault();
@@ -86,6 +81,7 @@ namespace RiskGame.API.Services
             var assetRes = _mapper.Map<Asset, AssetResource>(assetIn);
             _assetRepo.ReplaceOne(id, assetRes);
         }
+        public void Update(Guid id, UpdateDefinition<AssetResource> update) => _assetRepo.UpdateOne(id, update);
         public void Remove(AssetResource assetIn) => _assetRepo.DeleteOne(assetIn.AssetId);
         public void RemoveFromGame(Guid assetId) => _assetRepo.DeleteOne(assetId);
         public void RemoveAssetsFromGame(List<Guid> assetIds) => _assetRepo.DeleteMany(assetIds);

@@ -37,6 +37,7 @@ namespace RiskGame.API.Services
         public List<ShareResource> GetAllPlayerShares(ModelReference playerRef, AssetResource asset) => _shareRepo.GetMany().Where(s => s.CurrentOwner.Id == playerRef.Id).Where(s => s._assetId == asset.AssetId).ToList();
         public List<Guid> CreateShares(ModelReference  asset, int qty, ModelReference owner, ModelTypes type)
         {
+            // make sure owner has a PlayerId
             var listOut = new List<Guid>();
             for (var i = 0; i < qty; i++)
             {

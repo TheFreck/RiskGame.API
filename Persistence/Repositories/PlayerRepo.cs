@@ -38,7 +38,7 @@ namespace RiskGame.API.Persistence.Repositories
         public void CreateMany(List<PlayerResource> players) => _players.InsertMany(players);
         public Task<UpdateResult> UpdateOne(Guid playerId, UpdateDefinition<PlayerResource> update)
         {
-            var filter = Builders<PlayerResource>.Filter.Eq("PlayerId",playerId.ToString());
+            var filter = Builders<PlayerResource>.Filter.Eq("PlayerId",playerId);
             return _players.UpdateOneAsync(filter, update);
         }
         //

@@ -25,7 +25,11 @@ namespace RiskGame.API.Mappings
     {
         public TradeTicketToTransactionResource()
         {
-            CreateMap<TradeTicket, TransactionResource>();
+            CreateMap<TradeTicket, TransactionResource>().ForMember(member => member.Buyer, config => config.MapFrom(og => og.Buyer.Id))
+                .ForMember(member => member.Seller, config => config.MapFrom(og => og.Seller.Id))
+                .ForMember(member => member.Asset, config => config.MapFrom(og => og.Asset.Id))
+                .ForMember(member => member.Price, config => config.MapFrom(og => og.Cash / og.Shares));
+
         }
     }
     public class TradeClientToTransactionResource : Profile

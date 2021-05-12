@@ -41,7 +41,7 @@ namespace RiskGame.API.Persistence.Repositories
                         one.Asset = Guid.Parse(reader["asset"].ToString());
                         one.Price = Convert.ToDecimal(reader["price"]);
                         one.TradeTime = Convert.ToDateTime(reader["trade_time"]);
-                        one.CompanyAssetValue = Convert.ToDecimal(reader["company_asset_value"]);
+                        //one.CompanyAssetValue = Convert.ToDecimal(reader["company_asset_value"]);
                     }
                     conn.Close();
                 }
@@ -70,7 +70,7 @@ namespace RiskGame.API.Persistence.Repositories
                             Seller = Guid.Parse(reader["seller"].ToString()),
                             Asset = Guid.Parse(reader["asset"].ToString()),
                             Price = Convert.ToDecimal(reader["price"]),
-                            CompanyAssetValue = Convert.ToDecimal(reader["company_asset_value"])
+                            //CompanyAssetValue = Convert.ToDecimal(reader["company_asset_value"])
                         });
                     }
                     conn.Close();
@@ -99,7 +99,7 @@ namespace RiskGame.API.Persistence.Repositories
                             Seller = Guid.Parse(reader["seller"].ToString()),
                             Asset = Guid.Parse(reader["asset"].ToString()),
                             Price = Convert.ToInt32(reader["price"]),
-                            CompanyAssetValue = Convert.ToDecimal(reader["company_asset_value"])
+                            //CompanyAssetValue = Convert.ToDecimal(reader["company_asset_value"])
                         });
                     }
                     conn.Close();
@@ -114,7 +114,7 @@ namespace RiskGame.API.Persistence.Repositories
             var one = new TransactionResource();
             using (MySqlConnection conn = GetConnection())
             {
-                var commandText = $"INSERT INTO `transactions`.`asset_trades` ( `trade_id`, `game_id`, `buyer`, `seller`, `asset`, `price`, `company_asset_value` ) values('{trade.TradeId}','{trade.GameId}','{trade.Buyer}','{trade.Seller}','{trade.Asset}','{trade.Price}','{trade.CompanyAssetValue}')";
+                var commandText = $"INSERT INTO `transactions`.`asset_trades` ( `trade_id`, `game_id`, `buyer`, `seller`, `asset`, `price` ) values('{trade.TradeId}','{trade.GameId}','{trade.Buyer}','{trade.Seller}','{trade.Asset}','{trade.Price}')";
                 MySqlCommand cmd = new MySqlCommand(commandText, conn);
                 conn.Open();
                 var reader = cmd.ExecuteReader();

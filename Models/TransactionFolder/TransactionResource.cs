@@ -15,6 +15,5 @@ namespace RiskGame.API.Models.TransactionFolder
         public Guid Asset { get; set; }
         public decimal Price { get; set; }
         public DateTime TradeTime { get; set; }
-        public decimal CompanyAssetValue { get; set; }
     }
 }

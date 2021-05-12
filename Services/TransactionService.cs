@@ -64,20 +64,22 @@ namespace RiskGame.API.Services
             // get Haus
             var haus = _playerRepo.GetHAUS(/*trade.GameId*/);
             // get Buyer
-            var buyer = trade.Buyer != null ? _playerRepo.GetOne(trade.Buyer.Id) : haus;
-            buyer.Cash -= trade.Cash;
+            var buyer = trade.Buyer != null  && trade.Buyer.Name != haus.Name? _playerRepo.GetOne(trade.Buyer.Id) : haus;
 
             // get Seller
-            var seller = trade.Seller != null ? _playerRepo.GetOne(trade.Seller.Id) : haus;
-            seller.Cash += trade.Cash;
+            var seller = trade.Seller != null && trade.Seller.Name != haus.Name ? _playerRepo.GetOne(trade.Seller.Id) : haus;
             // get References
             var sellerRef = _mapper.Map<PlayerResource,ModelReference>(seller);
             var buyerRef = _mapper.Map<PlayerResource, ModelReference>(buyer);
             // get cash and shares
             var tradeAsset = _assetRepo.GetOne(trade.Asset.Id);
-            var tradeShares = _shareRepo.GetMany().Where(s => s.CurrentOwner.Id == seller.PlayerId).Where(s => s._assetId == trade.Asset.Id).Take(trade.Shares).ToArray();
+            var assetShares = _shareRepo.GetMany();
+            var tradeShares = assetShares.Where(s => s._assetId == trade.Asset.Id).Where(s => s.CurrentOwner.Id == seller.PlayerId).Take(trade.Shares).ToArray();
             try
             {
+                // Transfer cash
+                seller.Cash += trade.Cash;
+                buyer.Cash -= trade.Cash;
                 // Transfer ownership of shares
                 var transferredShares = _transactionLogic.TransferShares(buyer, tradeShares, trade.Shares);
                 var shrs = await _shareRepo.UpdateMany(transferredShares.Select(s => s.ShareId).ToList(),Builders<ShareResource>.Update.Set("CurrentOwner", buyerRef));
@@ -86,6 +88,7 @@ namespace RiskGame.API.Services
                 await _playerRepo.UpdateOne(seller.PlayerId, updateBuilder.Set("Cash", seller.Cash));
                 // complete the trade ticket
                 trade.SuccessfulTrade = true;
+                trade.TradeId = Guid.NewGuid();
                 _transactionContext.AddTrade(_mapper.Map<TradeTicket, TransactionResource>(trade));
                 return trade;
             }

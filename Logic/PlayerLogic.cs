@@ -29,16 +29,14 @@ namespace RiskGame.API.Logic
             var asset = assets.Where(a => a.ModelType == ModelTypes.Asset).FirstOrDefault();
             var price = decision.Price;
             var lastPrice = asset.TradeHistory.OrderByDescending(t => t.Item1).LastOrDefault().Item2;
-            decimal playerWallet = player.Cash;
+            var portQty = portfolio.Where(s => s._assetId == asset.AssetId).Where(s => s.CurrentOwner.Id == player.PlayerId).Count();
+            var portfolioValue = portQty * lastPrice;
+            double portfolioAllocation = (double)(portfolioValue/(portfolioValue + player.Cash));
 
-            var portfolioValue = portfolio.Where(s => s._assetId == asset.AssetId).Where(s => s.CurrentOwner.Id == player.PlayerId).Count() * lastPrice;
-            double portfolioAllocation = (double)(portfolioValue/(portfolioValue + playerWallet));
-
-            if(Math.Abs(portfolioAllocation - player.RiskTolerance) > .2)
-            {
-                decision.Qty = (int)Math.Ceiling(((double)playerWallet * player.RiskTolerance) / (1 - player.RiskTolerance)) - portfolio.Count();
-            }
-            var turnType = portfolioAllocation - player.RiskTolerance > .2 ? 1 : portfolioAllocation - player.RiskTolerance < -.2 ? -1 : 0;
+            var allocationQty = (int)Math.Ceiling((decimal)player.RiskTolerance * (player.Cash + portfolioValue)/lastPrice - portQty);
+            var evaluationQty = (int)Math.Ceiling(portQty * (decision.Price - lastPrice) / lastPrice);
+            decision.Qty = allocationQty > 0 && evaluationQty > 0 ? Math.Max(allocationQty, evaluationQty) : allocationQty < 0 && evaluationQty < 0 ? Math.Min(allocationQty, evaluationQty) : allocationQty + evaluationQty;
+            
             decision.Asset = _mapper.Map<AssetResource, ModelReference>(asset);
             return decision;
         }
@@ -53,13 +51,11 @@ namespace RiskGame.API.Logic
             var asset = assets.Where(a => a.ModelType == ModelTypes.Asset).FirstOrDefault();
             decision.Asset = _mapper.Map<AssetResource,ModelReference>(asset);
             var news = new Newspaper(history).ReadNewspaper(player.Experience, asset);
-            var successRatio = (.7 * news.PrimarySuccessRatio + .3 * news.SecondarySuccessRatio);
+            var successRatio = (.7 * news.PrimarySuccessRatio + .3 * news.SecondarySuccessRatio) + 1;
             var weightedGrowth = (.7 * news.PrimaryGrowth + .3 * news.MarketGrowth);
-            decimal currentValueEstimate = (decimal)(news.LastDividendValue * (1 + successRatio * weightedGrowth * news.CyclesSinceLastDividend)) / assets[0].SharesOutstanding;
+            var currentValueEstimate = (decimal)Math.Pow(news.LastDividendValue * (1 + successRatio * weightedGrowth),asset.PeriodsSinceDividend);
             
-            decision.Price = (double)currentValueEstimate;
-            if (currentValueEstimate < assets[0].TradeHistory.OrderByDescending(a => a.Item1).FirstOrDefault().Item2) decision.Action = TurnTypes.Sell;
-            else decision.Action = TurnTypes.Buy;
+            decision.Price = currentValueEstimate;
             return decision;
         }
     }

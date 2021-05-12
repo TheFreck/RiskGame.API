@@ -49,7 +49,9 @@ namespace RiskGame.API.Services
         }
         public Task<string> PlayerLoop(Guid gameId)
         {
-            var players = _playerRepo.GetGamePlayers(gameId).Where(p => p.Name != "HAUS");
+            var allPlayers = _playerRepo.GetGamePlayers(gameId);
+            var players = allPlayers.Where(p => p.Name != "HAUS");
+            var haus = allPlayers.Where(p => p.Name == "HAUS");
             var assets = _assetRepo.GetGameAssets(gameId);
             var game = _econRepo.GetOne(gameId);
             do
@@ -58,47 +60,54 @@ namespace RiskGame.API.Services
                 timer.Start();
                 foreach (var player in players)
                 {
-                    if(player.SkipsTilTurn == 0)
+                    if(player.SkipsTilTurn != 0)
                     {
-                        player.SkipsTilTurn = player.DecisionFrequency;
-                        var ach = _playerRepo.UpdateOne(player.PlayerId, Builders<PlayerResource>.Update.Set("TurnsToSkip", player.DecisionFrequency)).Result;
+                        player.SkipsTilTurn--;
+                        var result = _playerRepo.UpdateOne(player.PlayerId, Builders<PlayerResource>.Update.Set("SkipsTilTurn", player.SkipsTilTurn)).Result;
                         continue;
                     }
-                    player.SkipsTilTurn--;
+                    player.SkipsTilTurn = player.DecisionFrequency;
+                    var updated = _playerRepo.UpdateOne(player.PlayerId, Builders<PlayerResource>.Update.Set("SkipsTilTurn", player.DecisionFrequency)).Result;
                     var shares = _shareRepo.GetMany(); // all shares
                     var playerShares = shares.Where(s => s.CurrentOwner.Id == player.PlayerId).ToArray(); // player shares
                     var tradeTicket = new TradeTicket();
                     tradeTicket.GameId = gameId;
                     tradeTicket.Asset = _mapper.Map<AssetResource,ModelReference>(assets[0]);
                     var decision = _playerLogic.PlayerTurn(player, _mapper.Map<ShareResource[],Share[]>(playerShares), assets, game.History);
+                    decision.Action = decision.Qty > 0 ? TurnTypes.Buy : decision.Qty < 0 ? TurnTypes.Sell : TurnTypes.Hold;
                     var total = decision.Asset;
                     tradeTicket.Shares = decision.Qty;
+                    var lastTradePrice = _assetRepo.GetGameAssets(gameId).Where(a => a.AssetId == tradeTicket.Asset.Id).FirstOrDefault().TradeHistory.OrderByDescending(t => t.Item1).FirstOrDefault().Item2;
 
                     switch (decision.Action)
                     {
                         case TurnTypes.QuickSell:
                             tradeTicket.Buyer = GetHAUSRef(gameId);
                             tradeTicket.Seller = ResToRef(player);
-                            tradeTicket.Cash = (int)Math.Floor(.95*(decision.Price * decision.Qty));
+                            tradeTicket.Cash = (int)Math.Floor(Math.Abs((decimal).95*(lastTradePrice * decision.Qty))); // multiplied by the number of periods since last dividend
                             break;
                         case TurnTypes.Sell:
                             tradeTicket.Buyer = GetHAUSRef(gameId);
                             tradeTicket.Seller = ResToRef(player);
-                            tradeTicket.Cash = (int)Math.Ceiling(.99*(decision.Price * decision.Qty));
+                            tradeTicket.Cash = (int)Math.Ceiling(Math.Abs((decimal).99 *(lastTradePrice * decision.Qty)));
                             break;
                         case TurnTypes.Hold:
                             continue;
                         case TurnTypes.Buy:
                             tradeTicket.Buyer = ResToRef(player);
                             tradeTicket.Seller = GetHAUSRef(gameId);
-                            tradeTicket.Cash = (int)Math.Floor(1.01*(decision.Price * decision.Qty));
+                            tradeTicket.Cash = (int)Math.Floor(Math.Abs((decimal)1.01 *(lastTradePrice * decision.Qty)));
                             break;
                         case TurnTypes.QuickBuy:
                             tradeTicket.Buyer = ResToRef(player);
                             tradeTicket.Seller = GetHAUSRef(gameId);
-                            tradeTicket.Cash = (int)Math.Ceiling(1.05 * (decision.Price * decision.Qty));
+                            tradeTicket.Cash = (int)Math.Ceiling(Math.Abs((decimal)1.05 * (lastTradePrice * decision.Qty)));
                             break;
                     }
+                    Console.WriteLine("buyer: " + tradeTicket.Buyer.Name);
+                    Console.WriteLine("seller: " + tradeTicket.Seller.Name);
+                    Console.WriteLine("cash: " + tradeTicket.Cash);
+                    Console.WriteLine("shares: " + tradeTicket.Shares);
                     var traded = _transactionService.Transact(tradeTicket);
                     // add transaction to board
                     timer.Stop();
@@ -123,9 +132,6 @@ namespace RiskGame.API.Services
             player.PlayerId = Guid.NewGuid();
             player.DecisionFrequency = player.DecisionFrequency < 5 ? randy.Next(5, 11) : player.DecisionFrequency;
             var playerResource = _mapper.Map<Player, PlayerResource>(player);
-            var playerCash = _shareRepo.GetMany().Where(s => s.ModelType == ModelTypes.Cash);
-            var update = Builders<ShareResource>.Update.Set("CurrentOwner", ToRef(player));
-            var updated = _shareRepo.UpdateMany(playerCash.Select(c => c.ShareId),update).Result;
             _playerRepo.CreateOne(playerResource);
             return playerResource;
         }
@@ -133,7 +139,7 @@ namespace RiskGame.API.Services
         // creates multiple new players
         public List<PlayerResource> CreateMany(List<Player> players)
         {
-            players.ForEach(p => p.PlayerId = Guid.NewGuid());
+            players.ForEach(p => { p.PlayerId = Guid.NewGuid(); p.DecisionFrequency = randy.Next(5, 11); });
             var newPlayers = _mapper.Map<List<Player>, List<PlayerResource>>(players);
             _playerRepo.CreateMany(newPlayers);
             return newPlayers;

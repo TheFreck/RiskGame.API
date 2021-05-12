@@ -98,7 +98,7 @@ export const GameHome = props => {
     };
     const selfDestruct = () => {
         API.gamePlay.initialize("badBoyNeedSpank").then(init => {
-            console.log("init: ", init);
+            console.log("init: ", init.data);
         })
         SETplayer({ player: {} });
         SETassets({ assets: {} });
@@ -142,7 +142,7 @@ export const GameHome = props => {
         for (let i = 0; i < num; i++) {
             players.push({
                 name: "Player_" + i,
-                cash: Math.floor(100 + randy() * 100),
+                cash: Math.floor(1000 + randy() * 1000),
                 riskTolerance: Math.floor(randy() * 100) / 100,
                 experience: Math.floor(randy() * 2)
             });

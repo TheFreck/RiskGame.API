@@ -84,7 +84,7 @@ export const ChartContainer = props => {
     )
     console.log("now: ", new Date().toLocaleTimeString());
     const getData = cb => {
-        debugger;
+        //debugger;
         let now = new Date();
         API.gamePlay.getData({ gameId: gameIdRef.current, assetId: assetsRef.current[0], since: new Date(now.getTime() - 60000).toLocaleTimeString() }).then(data => {
             console.log("data: ", data.data);

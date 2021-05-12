@@ -31,32 +31,33 @@ namespace RiskGame.API.Entities
                 _history.Blue.TakeLast(memory).Average(),
                 _history.Violet.TakeLast(memory).Average()
                 }.Average();
-            var cyclesSinceLastDividend = (int)DateTime.Now.Ticks - (int)asset.LastDividendDate.Ticks;
+
+            var milisecondsSinceLastDividend = (DateTime.Now - asset.LastDividendDate).Milliseconds;
 
             switch (asset.CompanyAsset.PrimaryIndustry)
             {
                 case IndustryTypes.Red:
-                    primaryGrowth = _history.Red.TakeLast(memory).Average() / cyclesSinceLastDividend;
+                    primaryGrowth = _history.Red.TakeLast(memory).Average() / milisecondsSinceLastDividend;
                     primarySucessRatio = _history.Red.TakeLast(memory).Count(d => d > 0) / memory;
                     break;
                 case IndustryTypes.Orange:
-                    primaryGrowth = _history.Orange.TakeLast(memory).Average() / cyclesSinceLastDividend;
+                    primaryGrowth = _history.Orange.TakeLast(memory).Average() / milisecondsSinceLastDividend;
                     primarySucessRatio = _history.Orange.TakeLast(memory).Count(d => d > 0) / memory;
                     break;
                 case IndustryTypes.Yellow:
-                    primaryGrowth = _history.Yellow.TakeLast(memory).Average() / cyclesSinceLastDividend;
+                    primaryGrowth = _history.Yellow.TakeLast(memory).Average() / milisecondsSinceLastDividend;
                     primarySucessRatio = _history.Yellow.TakeLast(memory).Count(d => d > 0) / memory;
                     break;
                 case IndustryTypes.Green:
-                    primaryGrowth = _history.Green.TakeLast(memory).Average() / cyclesSinceLastDividend;
+                    primaryGrowth = _history.Green.TakeLast(memory).Average() / milisecondsSinceLastDividend;
                     primarySucessRatio = _history.Green.TakeLast(memory).Count(d => d > 0) / memory;
                     break;
                 case IndustryTypes.Blue:
-                    primaryGrowth = _history.Blue.TakeLast(memory).Average() / cyclesSinceLastDividend;
+                    primaryGrowth = _history.Blue.TakeLast(memory).Average() / milisecondsSinceLastDividend;
                     primarySucessRatio = _history.Blue.TakeLast(memory).Count(d => d > 0) / memory;
                     break;
                 case IndustryTypes.Violet:
-                    primaryGrowth = _history.Violet.TakeLast(memory).Average() / cyclesSinceLastDividend;
+                    primaryGrowth = _history.Violet.TakeLast(memory).Average() / milisecondsSinceLastDividend;
                     primarySucessRatio = _history.Violet.TakeLast(memory).Count(d => d > 0) / memory;
                     break;
             }
@@ -88,7 +89,7 @@ namespace RiskGame.API.Entities
                 SecondarySuccessRatio = secondarySuccessRatio,
                 MarketGrowth = marketGrowth,
                 LastDividendValue = asset.LastDividendPayout,
-                CyclesSinceLastDividend = cyclesSinceLastDividend
+                CyclesSinceLastDividend = milisecondsSinceLastDividend
             };
         }
     }

@@ -31,6 +31,7 @@ namespace RiskGame.API.Models.AssetFolder
         public decimal MostRecentValue { get; set; }
         public int LastDividendPayout { get; set; }
         public DateTime LastDividendDate { get; set; }
+        public int PeriodsSinceDividend { get; set; }
         public string Message { get; set; }
         //
         // model type is used to convert this class to a ModelReference
