@@ -73,7 +73,7 @@ namespace RiskGame.API.Services
                     var tradeTicket = new TradeTicket();
                     tradeTicket.GameId = gameId;
                     tradeTicket.Asset = _mapper.Map<AssetResource,ModelReference>(assets[0]);
-                    var decision = _playerLogic.PlayerTurn(player, _mapper.Map<ShareResource[],Share[]>(playerShares), assets, game.History);
+                    var decision = _playerLogic.PlayerTurn(player, playerShares, assets, game.History);
                     decision.Action = decision.Qty > 0 ? TurnTypes.Buy : decision.Qty < 0 ? TurnTypes.Sell : TurnTypes.Hold;
                     var total = decision.Asset;
                     tradeTicket.Shares = decision.Qty;
@@ -84,7 +84,7 @@ namespace RiskGame.API.Services
                         case TurnTypes.QuickSell:
                             tradeTicket.Buyer = GetHAUSRef(gameId);
                             tradeTicket.Seller = ResToRef(player);
-                            tradeTicket.Cash = (int)Math.Floor(Math.Abs((decimal).95*(lastTradePrice * decision.Qty))); // multiplied by the number of periods since last dividend
+                            tradeTicket.Cash = (int)Math.Floor(Math.Abs((decimal).95*(lastTradePrice * decision.Qty))) * decision.Qty;
                             break;
                         case TurnTypes.Sell:
                             tradeTicket.Buyer = GetHAUSRef(gameId);
@@ -130,7 +130,7 @@ namespace RiskGame.API.Services
         public PlayerResource CreateOne(Player player)
         {
             player.PlayerId = Guid.NewGuid();
-            player.DecisionFrequency = player.DecisionFrequency < 5 ? randy.Next(5, 11) : player.DecisionFrequency;
+            player.DecisionFrequency = player.DecisionFrequency < 5 ? randy.Next(2, 5) : player.DecisionFrequency;
             var playerResource = _mapper.Map<Player, PlayerResource>(player);
             _playerRepo.CreateOne(playerResource);
             return playerResource;
@@ -139,7 +139,7 @@ namespace RiskGame.API.Services
         // creates multiple new players
         public List<PlayerResource> CreateMany(List<Player> players)
         {
-            players.ForEach(p => { p.PlayerId = Guid.NewGuid(); p.DecisionFrequency = randy.Next(5, 11); });
+            players.ForEach(p => { p.PlayerId = Guid.NewGuid(); p.DecisionFrequency = randy.Next(2,5); });
             var newPlayers = _mapper.Map<List<Player>, List<PlayerResource>>(players);
             _playerRepo.CreateMany(newPlayers);
             return newPlayers;

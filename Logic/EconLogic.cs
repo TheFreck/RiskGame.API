@@ -29,11 +29,11 @@ namespace RiskGame.API.Logic
             // grow assets
             var lastMarketResource = precursors.LastMarket;
             var lastMarket = _mapper.Map<MarketResource,Market>(lastMarketResource);
-            var grownAssets = GrowAssets(precursors.Assets, lastMarket).Select(a => a.CompanyAsset).ToArray();
-            var lastMarketMetrics = lastMarket.GetMetrics(grownAssets);
+            var grownAssets = GrowAssets(precursors.Assets, lastMarket).ToArray();
+            var lastMarketMetrics = lastMarket.GetMetrics(grownAssets.Select(a => a.CompanyAsset).ToArray());
             var nextMarket = new Market(precursors.EconId, precursors.Assets.Select(a => a.CompanyAsset).ToArray(), randy, lastMarketMetrics);
             // update economy
-            precursors.Economy.Assets = grownAssets;
+            precursors.Economy.Assets = grownAssets.Select(a => a.CompanyAsset).ToArray();
             // update precursors
             var red = nextMarket.GetMetric(IndustryTypes.Red);
             var orange = nextMarket.GetMetric(IndustryTypes.Orange);

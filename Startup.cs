@@ -20,6 +20,7 @@ using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
 using RiskGame.API.Logic;
 using RiskGame.API.Persistence.Repositories;
+using MongoDB.Driver.Core.Configuration;
 
 namespace RiskGame.API
 {

@@ -27,10 +27,11 @@ namespace RiskGame.API.Services
         private readonly IMarketRepo _marketRepo;
         private readonly IEconRepo _econRepo;
         private readonly IEconService _econService;
+        private readonly TransactionContext _transactionContext;
         private readonly Random randy;
         private readonly IMapper _mapper;
 
-        public MarketService(IMapper mapper, IEconService econService, IAssetRepo assetRepo, IPlayerRepo playerRepo, IShareRepo shareRepo, IMarketRepo marketRepo, IEconRepo econRepo)
+        public MarketService(IMapper mapper, IEconService econService, IAssetRepo assetRepo, IPlayerRepo playerRepo, IShareRepo shareRepo, IMarketRepo marketRepo, IEconRepo econRepo, TransactionContext transactionContext)
         {
             _mapper = mapper;
             randy = new Random();
@@ -40,6 +41,7 @@ namespace RiskGame.API.Services
             _marketRepo = marketRepo;
             _econRepo = econRepo;
             _econService = econService;
+            _transactionContext = transactionContext;
         }
         public ChartPixel GetRecords(Guid gameId, int lastSequence)
         {
@@ -95,6 +97,7 @@ namespace RiskGame.API.Services
         }
         public Guid NewGame(AssetResource[] assets)
         {
+            _transactionContext.CleanSlate();
             var newGame = new Economy();
             newGame.Markets = new List<Tuple<DateTime, MarketMetrics>>();
             newGame.Assets = assets.Select(a => a.CompanyAsset).ToArray();

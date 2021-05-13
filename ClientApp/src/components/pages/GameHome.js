@@ -46,7 +46,6 @@ export const GameHome = props => {
         () => {
             assetsRef.current = assets;
             dispatch({ type: 'SET_ASSETS', payload: assetsRef.current });
-            console.log("dispatched assets");
         },
         [assets]
     )
@@ -98,7 +97,7 @@ export const GameHome = props => {
     };
     const selfDestruct = () => {
         API.gamePlay.initialize("badBoyNeedSpank").then(init => {
-            console.log("init: ", init.data);
+            console.log(init.data);
         })
         SETplayer({ player: {} });
         SETassets({ assets: {} });
@@ -130,7 +129,7 @@ export const GameHome = props => {
             console.log("new: ", game.data);
             SETassets(game.data.assets);
             SETisRunning(false);
-            createPlayers(3, game.data.gameId);
+            createPlayers(11, game.data.gameId);
         });
     }
     const restartClick = () => {
@@ -142,7 +141,7 @@ export const GameHome = props => {
         for (let i = 0; i < num; i++) {
             players.push({
                 name: "Player_" + i,
-                cash: Math.floor(1000 + randy() * 1000),
+                cash: Math.floor(100 + randy() * 100),
                 riskTolerance: Math.floor(randy() * 100) / 100,
                 experience: Math.floor(randy() * 2)
             });

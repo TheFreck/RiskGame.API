@@ -29,9 +29,10 @@ namespace RiskGame.API.Logic
             randy = new Random();
         }
 
-        public Dictionary<Guid,int> PayDividend(AssetResource asset, Share[] shares)
+        public Dictionary<Guid,int> PayDividend(AssetResource asset, ShareResource[] shares)
         {
             // calculate dividend
+            asset.PeriodsSinceDividend = 0;
             var incomeSheet = CalculateDividend(asset);
             //var hausRef = _mapper.Map<PlayerResource, ModelReference>(haus);
             var dividendsPerShare = incomeSheet.Dividends / shares.Length;
@@ -40,7 +41,7 @@ namespace RiskGame.API.Logic
             foreach(var share in shares)
             {
                 if (!output.ContainsKey(share.CurrentOwner.Id)) output.Add(share.CurrentOwner.Id, 0);
-                output[share.CurrentOwner.Id] += incomeSheet.Dividends / shares.Length;
+                output[share.CurrentOwner.Id] += dividendsPerShare;
             }
             return output;
         }
@@ -64,6 +65,6 @@ namespace RiskGame.API.Logic
     }
     public interface IAssetLogic
     {
-        Dictionary<Guid, int> PayDividend(AssetResource asset, Share[] shares);
+        Dictionary<Guid, int> PayDividend(AssetResource asset, ShareResource[] shares);
     }
 }

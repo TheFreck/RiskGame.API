@@ -73,10 +73,14 @@ namespace RiskGame.API.Services
             var buyerRef = _mapper.Map<PlayerResource, ModelReference>(buyer);
             // get cash and shares
             var tradeAsset = _assetRepo.GetOne(trade.Asset.Id);
+            decimal price = trade.Cash / trade.Shares;
+            tradeAsset.TradeHistory.Add(Tuple.Create<TradeType, decimal>(trade.Action, price));
             var assetShares = _shareRepo.GetMany();
             var tradeShares = assetShares.Where(s => s._assetId == trade.Asset.Id).Where(s => s.CurrentOwner.Id == seller.PlayerId).Take(trade.Shares).ToArray();
             try
             {
+                // Update asset
+                _assetRepo.ReplaceOne(tradeAsset.AssetId, tradeAsset);
                 // Transfer cash
                 seller.Cash += trade.Cash;
                 buyer.Cash -= trade.Cash;
@@ -84,12 +88,13 @@ namespace RiskGame.API.Services
                 var transferredShares = _transactionLogic.TransferShares(buyer, tradeShares, trade.Shares);
                 var shrs = await _shareRepo.UpdateMany(transferredShares.Select(s => s.ShareId).ToList(),Builders<ShareResource>.Update.Set("CurrentOwner", buyerRef));
                 var updateBuilder = Builders<PlayerResource>.Update;
+                // update buyer and seller and submit the trade
                 await _playerRepo.UpdateOne(buyer.PlayerId, updateBuilder.Set("Cash", buyer.Cash));
                 await _playerRepo.UpdateOne(seller.PlayerId, updateBuilder.Set("Cash", seller.Cash));
-                // complete the trade ticket
-                trade.SuccessfulTrade = true;
                 trade.TradeId = Guid.NewGuid();
                 _transactionContext.AddTrade(_mapper.Map<TradeTicket, TransactionResource>(trade));
+                // complete the trade ticket
+                trade.SuccessfulTrade = true;
                 return trade;
             }
             catch (Exception e)

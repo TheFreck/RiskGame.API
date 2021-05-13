@@ -48,19 +48,19 @@ namespace RiskGame.API.Controllers
         // ****************************************************************
         // POST POST POST POST POST POST POST POST POST POST POST POST POST
         // ****************************************************************
-        [HttpPost("trade")]
-        public ActionResult<TradeClient> Trade([FromBody]TradeClient trade)
-        {
-            try
-            {
-                _transactionService.InsertTrade(_mapper.Map<TradeClient,TransactionResource>(trade));
-                return Ok();
-            }
-            catch (Exception e)
-            {
-                return NotFound(e.Message);
-            }
-        }
+        //[HttpPost("trade")]
+        //public ActionResult<TradeClient> Trade([FromBody]TradeClient trade)
+        //{
+        //    try
+        //    {
+        //        _transactionService.InsertTrade(_mapper.Map<TradeClient,TransactionResource>(trade));
+        //        return Ok();
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        return NotFound(e.Message);
+        //    }
+        //}
         // ***************************************************************
         // PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT
         // ***************************************************************

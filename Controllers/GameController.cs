@@ -57,10 +57,11 @@ namespace RiskGame.API.Controllers
                 {
                     Name = $"Asset_{i}",
                     SharesOutstanding = 1000,
-                    TradeHistory = new List<Tuple<TradeType, decimal>> { new Tuple<TradeType, decimal>(TradeType.Buy, 10) },
+                    TradeHistory = new List<Tuple<TradeType, decimal>> (),
                     LastDividendPayout = 10,
                     AssetId = id
                 });
+                asset.TradeHistory.Add(Tuple.Create(TradeType.Buy, asset.CompanyAsset.Value / asset.SharesOutstanding));
                 var outcome = await _assetService.Create(asset);
                 if (outcome == "done") _shareService.CreateShares(_mapper.Map<AssetResource, ModelReference>(asset), asset.SharesOutstanding, _mapper.Map<PlayerResource,ModelReference>(haus), asset.ModelType);
                 assets.Add(asset);

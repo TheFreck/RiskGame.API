@@ -23,8 +23,8 @@ namespace RiskGame.API.Logic
         {
             _mapper = mapper;
         }
-        public PlayerDecision PlayerTurn(PlayerResource player, Share[] portfolio, AssetResource[] assets, MarketMetricsHistory history) => AssetAllocation(player, portfolio, assets, Grapevine(EvaluateAsset(player, assets, history, new PlayerDecision())));
-        private PlayerDecision AssetAllocation(PlayerResource player, Share[] portfolio, AssetResource[] assets, PlayerDecision decision)
+        public PlayerDecision PlayerTurn(PlayerResource player, ShareResource[] portfolio, AssetResource[] assets, MarketMetricsHistory history) => AssetAllocation(player, portfolio, assets, Grapevine(EvaluateAsset(player, assets, history, new PlayerDecision())));
+        private PlayerDecision AssetAllocation(PlayerResource player, ShareResource[] portfolio, AssetResource[] assets, PlayerDecision decision)
         {
             var asset = assets.Where(a => a.ModelType == ModelTypes.Asset).FirstOrDefault();
             var price = decision.Price;
@@ -61,6 +61,6 @@ namespace RiskGame.API.Logic
     }
     public interface IPlayerLogic
     {
-        PlayerDecision PlayerTurn(PlayerResource player, Share[] portfolio, AssetResource[] assets, MarketMetricsHistory history);
+        PlayerDecision PlayerTurn(PlayerResource player, ShareResource[] portfolio, AssetResource[] assets, MarketMetricsHistory history);
     }
 }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RiskGame.API.Entities.Enums;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -10,6 +11,7 @@ namespace RiskGame.API.Models.TransactionFolder
         public int Sequence { get; set; }
         public Guid TradeId { get; set; }
         public Guid GameId { get; set; }
+        public TradeType Action { get; set; }
         public Guid Buyer { get; set; }
         public Guid Seller { get; set; }
         public Guid Asset { get; set; }

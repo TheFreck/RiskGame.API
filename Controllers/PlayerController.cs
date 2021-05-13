@@ -82,7 +82,6 @@ namespace RiskGame.API.Controllers
             foreach (var player in playersIn)
             {
                 player.GameId = incomingId;
-                var playerRef = _mapper.Map<PlayerIn, ModelReference>(player);
                 playerList.Add(new Player(player));
             }
             try

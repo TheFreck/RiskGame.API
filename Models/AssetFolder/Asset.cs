@@ -49,15 +49,8 @@ namespace RiskGame.API.Models.AssetFolder
             Debt = debt;
             ModelType = ModelTypes.Asset;
             CompanyAsset = new CompanyAsset();
-        }
-        public Asset(string name, Guid assetId, Guid gameId)
-        {
-            Name = name;
-            AssetId = assetId;
-            GameId = gameId;
-            Debt = new Random().Next(1, 10);
-            ModelType = ModelTypes.Asset;
-            CompanyAsset = new CompanyAsset();
+            CompanyHistory = new List<Tuple<DateTime, decimal>> { Tuple.Create(DateTime.Now, CompanyAsset.Value / sharesOutstanding) };
+            TradeHistory = new List<Tuple<TradeType, decimal>>();
         }
         public Asset()
         {

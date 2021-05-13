@@ -17,7 +17,7 @@ namespace RiskGame.API.Models.AssetFolder
         public CompanyAsset()
         {
             Waves = new List<Wave>();
-            Value = 100;
+            Value = (decimal)new Random().NextDouble()*10000+10000;
         }
     }
 }

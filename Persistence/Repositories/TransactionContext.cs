@@ -7,7 +7,7 @@ using RiskGame.API.Models.TransactionFolder;
 
 namespace RiskGame.API.Persistence.Repositories
 {
-    public class TransactionContext : ITransactionContext
+    public class TransactionContext
     {
         public string ConnectionString { get; set; }
         public TransactionContext(string connectionString)
@@ -41,7 +41,6 @@ namespace RiskGame.API.Persistence.Repositories
                         one.Asset = Guid.Parse(reader["asset"].ToString());
                         one.Price = Convert.ToDecimal(reader["price"]);
                         one.TradeTime = Convert.ToDateTime(reader["trade_time"]);
-                        //one.CompanyAssetValue = Convert.ToDecimal(reader["company_asset_value"]);
                     }
                     conn.Close();
                 }
@@ -56,7 +55,7 @@ namespace RiskGame.API.Persistence.Repositories
             using (MySqlConnection conn = GetConnection())
             {
                 conn.Open();
-                MySqlCommand cmd = new MySqlCommand($"SELECT * FROM asset_trades where 'game_id' = {gameId} where 'asset_id' = {assetId} where 'trade_time' >= {since} order by 'sequence' desc");
+                MySqlCommand cmd = new MySqlCommand($"SELECT * FROM asset_trades where 'game_id' = {gameId} where 'asset_id' = {assetId} where 'trade_time' >= {since} order by 'sequence' desc", conn);
                 using (var reader = cmd.ExecuteReader())
                 {
                     while (reader.Read())
@@ -70,7 +69,6 @@ namespace RiskGame.API.Persistence.Repositories
                             Seller = Guid.Parse(reader["seller"].ToString()),
                             Asset = Guid.Parse(reader["asset"].ToString()),
                             Price = Convert.ToDecimal(reader["price"]),
-                            //CompanyAssetValue = Convert.ToDecimal(reader["company_asset_value"])
                         });
                     }
                     conn.Close();
@@ -99,7 +97,6 @@ namespace RiskGame.API.Persistence.Repositories
                             Seller = Guid.Parse(reader["seller"].ToString()),
                             Asset = Guid.Parse(reader["asset"].ToString()),
                             Price = Convert.ToInt32(reader["price"]),
-                            //CompanyAssetValue = Convert.ToDecimal(reader["company_asset_value"])
                         });
                     }
                     conn.Close();
@@ -111,7 +108,6 @@ namespace RiskGame.API.Persistence.Repositories
         // add transaction
         public void AddTrade(TransactionResource trade)
         {
-            var one = new TransactionResource();
             using (MySqlConnection conn = GetConnection())
             {
                 var commandText = $"INSERT INTO `transactions`.`asset_trades` ( `trade_id`, `game_id`, `buyer`, `seller`, `asset`, `price` ) values('{trade.TradeId}','{trade.GameId}','{trade.Buyer}','{trade.Seller}','{trade.Asset}','{trade.Price}')";
@@ -126,13 +122,41 @@ namespace RiskGame.API.Persistence.Repositories
         }
         //
         // delete transactions
-    }
-    public interface ITransactionContext
-    {
-        TransactionResource GetTrade(Guid transactionId, string[] columns);
-        List<TransactionResource> GetMany(Guid gameId, Guid assetId, DateTime since);
-        public List<TransactionResource> GetAll(Guid gameId);
-        public void AddTrade(TransactionResource trade);
+        public void CleanSlate()
+        {
+            using (MySqlConnection conn = GetConnection())
+            {
+                var testText = "SELECT * FROM 'transactions'.'asset_trades';";
+                conn.Open();
+                MySqlCommand testCommand = new MySqlCommand(testText, conn);
+                var testReader = testCommand.ExecuteReader();
+                var commandText = String.Empty;
+                testReader.Read();
+                
+                if (testReader.FieldCount > 0) commandText = "DROP TABLE 'transactions'.'asset_trades';";
+                
+                commandText += "CREATE TABLE 'transactions'.'asset_trades' (" +
+                                    "  'sequence' INT(11) NOT NULL AUTO_INCREMENT," +
+                                    "  'trade_time' TIMESTAMP DEFAULT CURRENT_TIMESTAMP," +
+                                    "  'trade_id' VARCHAR(36) NOT NULL," +
+                                    "  'game_id' VARCHAR(36) NOT NULL," +
+                                    "  'buyer' VARCHAR(36) NOT NULL," +
+                                    "  'seller' VARCHAR(36) NOT NULL," +
+                                    "  'asset' VARCHAR(36) NOT NULL," +
+                                    "  'price' DECIMAL(11,3) UNSIGNED NOT NULL," +
+                                    "  UNIQUE INDEX 'sequence' ('sequence' ASC)," +
+                                    "  PRIMARY KEY ('sequence')," +
+                                    "  INDEX 'game_id' ('game_id' ASC)," +
+                                    "  INDEX 'buyer' ('buyer')," +
+                                    "  INDEX 'seller' ('seller')," +
+                                    "  INDEX 'asset' ('asset'));";
+                MySqlCommand cmd = new MySqlCommand(commandText, conn);
+                var reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                }
+                conn.Close();
+            }
+        }
     }
 }
-

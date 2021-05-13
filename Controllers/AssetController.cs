@@ -112,9 +112,9 @@ namespace RiskGame.API.Controllers
             asset.CompanyAsset = new CompanyAsset
             {
                 PrimaryIndustry = (IndustryTypes)randy.Next(5),
-                SecondaryIndustry = (IndustryTypes)randy.Next(5),
-                Value = asset.SharesOutstanding
+                SecondaryIndustry = (IndustryTypes)randy.Next(5)
             };
+            asset.TradeHistory = new List<Tuple<TradeType, decimal>>();
             asset.CompanyHistory = new List<Tuple<DateTime, decimal>>();
 
             // Get the Game
@@ -127,8 +127,11 @@ namespace RiskGame.API.Controllers
             var hausRef = _playerService.GetHAUSRef(gameId);
 
             // Add all game assets including the new one to the Game
-            var gameAssets = _assetService.GetGameAssets(gameId).Select(a => a.CompanyAsset).ToArray();
-            game.Assets = gameAssets;
+            var gameAssets = _assetService.GetGameAssets(gameId);
+            var gottenAsset = gameAssets.FirstOrDefault();
+            var price = gottenAsset.CompanyAsset.Value / gottenAsset.SharesOutstanding;
+            gottenAsset.TradeHistory.Add(Tuple.Create(TradeType.Buy, price));
+            game.Assets = gameAssets.Select(a => a.CompanyAsset).ToArray();
             var result = _marketService.UpdateGame(game);
 
             // Create Shares
@@ -163,7 +166,7 @@ namespace RiskGame.API.Controllers
 
             if (assetIn.Name == null) assetIn.Name = foundAsset.Name;
 
-            var update = _mapper.Map<AssetIn, Asset>(assetIn);
+            var update = _mapper.Map<AssetIn, AssetResource>(assetIn);
             update.AssetId = incomingId;
             try
             {
