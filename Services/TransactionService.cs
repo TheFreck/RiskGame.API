@@ -15,6 +15,7 @@ using RiskGame.API.Logic;
 using RiskGame.API.Entities.Enums;
 using RiskGame.API.Persistence.Repositories;
 using RiskGame.API.Models.TransactionFolder;
+using System.Threading;
 
 namespace RiskGame.API.Services
 {
@@ -62,7 +63,7 @@ namespace RiskGame.API.Services
                 return trade;
             } // OUT no shares offered
             // get Haus
-            var haus = _playerRepo.GetHAUS(/*trade.GameId*/);
+            var haus = _playerRepo.GetHAUS().Where(p => p.GameId == trade.GameId).FirstOrDefault();
             // get Buyer
             var buyer = trade.Buyer != null  && trade.Buyer.Name != haus.Name? _playerRepo.GetOne(trade.Buyer.Id) : haus;
 
@@ -74,24 +75,35 @@ namespace RiskGame.API.Services
             // get cash and shares
             var tradeAsset = _assetRepo.GetOne(trade.Asset.Id);
             decimal price = trade.Cash / trade.Shares;
-            tradeAsset.TradeHistory.Add(Tuple.Create<TradeType, decimal>(trade.Action, price));
+            var tradeHistory = tradeAsset.TradeHistory;
+            var tradeTuple = Tuple.Create<TradeType, decimal>(trade.Action, price);
+            var buyerTradeHistory = buyer.TradeHistory.ToList();
+            buyerTradeHistory.Add(tradeTuple);
+            var sellerTradeHistory = seller.TradeHistory.ToList();
+            sellerTradeHistory.Add(tradeTuple);
+            buyer.TradeHistory = buyerTradeHistory.ToArray();
+            seller.TradeHistory = sellerTradeHistory.ToArray();
+            tradeHistory.Add(tradeTuple);
             var assetShares = _shareRepo.GetMany();
             var tradeShares = assetShares.Where(s => s._assetId == trade.Asset.Id).Where(s => s.CurrentOwner.Id == seller.PlayerId).Take(trade.Shares).ToArray();
             try
             {
                 // Update asset
-                _assetRepo.ReplaceOne(tradeAsset.AssetId, tradeAsset);
+                //var replaceResult = _assetRepo.ReplaceOne(tradeAsset.AssetId, tradeAsset);
+                var assetUpdateBase = Builders<AssetResource>.Update;
+                var assetUpdateResult = _assetRepo.UpdateOne(tradeAsset.AssetId, assetUpdateBase.Set("TradeHistory", tradeHistory));
                 // Transfer cash
                 seller.Cash += trade.Cash;
                 buyer.Cash -= trade.Cash;
                 // Transfer ownership of shares
                 var transferredShares = _transactionLogic.TransferShares(buyer, tradeShares, trade.Shares);
                 var shrs = await _shareRepo.UpdateMany(transferredShares.Select(s => s.ShareId).ToList(),Builders<ShareResource>.Update.Set("CurrentOwner", buyerRef));
-                var updateBuilder = Builders<PlayerResource>.Update;
-                // update buyer and seller and submit the trade
-                await _playerRepo.UpdateOne(buyer.PlayerId, updateBuilder.Set("Cash", buyer.Cash));
-                await _playerRepo.UpdateOne(seller.PlayerId, updateBuilder.Set("Cash", seller.Cash));
+                var playerUpdate = Builders<PlayerResource>.Update;
+                // update buyer and seller
+                var buyerResult = await _playerRepo.UpdateOne(buyer.PlayerId, playerUpdate.Set("Cash", buyer.Cash).Set("TradeHistory",buyerTradeHistory.ToArray()));
+                var sellerResult = await _playerRepo.UpdateOne(seller.PlayerId, playerUpdate.Set("Cash", seller.Cash).Set("TradeHistory",sellerTradeHistory.ToArray()));
                 trade.TradeId = Guid.NewGuid();
+                // submit trade
                 _transactionContext.AddTrade(_mapper.Map<TradeTicket, TransactionResource>(trade));
                 // complete the trade ticket
                 trade.SuccessfulTrade = true;
@@ -106,11 +118,46 @@ namespace RiskGame.API.Services
             }
         }
         public void InsertTrade(TransactionResource trade) => _transactionContext.AddTrade(trade);
+        public string MultiPass()
+        {
+
+            ThreadStart firstRef = new ThreadStart(CallToChildThread);
+            var secondRef = new ThreadStart(CallToSecondChildThread);
+            var thirdRef = new ThreadStart(CallToThirdChildThread);
+            Console.WriteLine("In MultiPass: Creating the Child thread");
+            Thread firstChildThread = new Thread(firstRef);
+            var secondChildThread = new Thread(secondRef);
+            var thirdChildThread = new Thread(thirdRef);
+            firstChildThread.Start();
+            secondChildThread.Start();
+            thirdChildThread.Start();
+            var readKey = Console.ReadKey();
+            return "Give me your multipass!";
+        }
+        private static void CallToChildThread()
+        {
+            Console.WriteLine("Child thread starts: " + DateTime.Now);
+            Thread.Sleep(1000);
+            Console.WriteLine("Child thread ends: " + DateTime.Now);
+        }
+        private static void CallToSecondChildThread()
+        {
+            Console.WriteLine("Second child thread starts: " + DateTime.Now);
+            Thread.Sleep(700);
+            Console.WriteLine("Second child thread ends: " + DateTime.Now);
+        }
+        private static void CallToThirdChildThread()
+        {
+            Console.WriteLine("Third child thread starts: " + DateTime.Now);
+            Thread.Sleep(300);
+            Console.WriteLine("Third child thread ends: " + DateTime.Now);
+        }
     }
     public interface ITransactionService
     {
         List<TransactionResource> GetTransactions(Guid gameId);
         Task<TradeTicket> Transact(TradeTicket trade);
         void InsertTrade(TransactionResource trade);
+        string MultiPass();
     }
 }

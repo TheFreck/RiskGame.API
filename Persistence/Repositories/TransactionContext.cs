@@ -55,7 +55,7 @@ namespace RiskGame.API.Persistence.Repositories
             using (MySqlConnection conn = GetConnection())
             {
                 conn.Open();
-                MySqlCommand cmd = new MySqlCommand($"SELECT * FROM asset_trades where 'game_id' = {gameId} where 'asset_id' = {assetId} where 'trade_time' >= {since} order by 'sequence' desc", conn);
+                MySqlCommand cmd = new MySqlCommand($"SELECT * FROM `transactions`.`asset_trades` WHERE 'game_id' = {gameId} AND WHERE 'asset_id' = {assetId} AND WHERE 'trade_time' >= {since} ORDER BY 'sequence' DESC", conn);
                 using (var reader = cmd.ExecuteReader())
                 {
                     while (reader.Read())
@@ -126,30 +126,8 @@ namespace RiskGame.API.Persistence.Repositories
         {
             using (MySqlConnection conn = GetConnection())
             {
-                var testText = "SELECT * FROM 'transactions'.'asset_trades';";
+                var commandText = "DROP TABLE IF EXISTS `transactions`.`asset_trades`; CREATE TABLE `transactions`.`asset_trades` (`sequence` INT(11) NOT NULL AUTO_INCREMENT,`trade_time` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,`trade_id` VARCHAR(36) NOT NULL,`game_id` VARCHAR(36) NOT NULL,`buyer` VARCHAR(36) NOT NULL,`seller` VARCHAR(36) NOT NULL,`asset` VARCHAR(36) NOT NULL,`price` DECIMAL(11,3) UNSIGNED NOT NULL,UNIQUE INDEX `sequence` (`sequence` ASC),PRIMARY KEY (`sequence`),INDEX `game_id` (`game_id` ASC),INDEX `buyer` (`buyer`),INDEX `seller` (`seller`),INDEX `asset` (`asset`));";
                 conn.Open();
-                MySqlCommand testCommand = new MySqlCommand(testText, conn);
-                var testReader = testCommand.ExecuteReader();
-                var commandText = String.Empty;
-                testReader.Read();
-                
-                if (testReader.FieldCount > 0) commandText = "DROP TABLE 'transactions'.'asset_trades';";
-                
-                commandText += "CREATE TABLE 'transactions'.'asset_trades' (" +
-                                    "  'sequence' INT(11) NOT NULL AUTO_INCREMENT," +
-                                    "  'trade_time' TIMESTAMP DEFAULT CURRENT_TIMESTAMP," +
-                                    "  'trade_id' VARCHAR(36) NOT NULL," +
-                                    "  'game_id' VARCHAR(36) NOT NULL," +
-                                    "  'buyer' VARCHAR(36) NOT NULL," +
-                                    "  'seller' VARCHAR(36) NOT NULL," +
-                                    "  'asset' VARCHAR(36) NOT NULL," +
-                                    "  'price' DECIMAL(11,3) UNSIGNED NOT NULL," +
-                                    "  UNIQUE INDEX 'sequence' ('sequence' ASC)," +
-                                    "  PRIMARY KEY ('sequence')," +
-                                    "  INDEX 'game_id' ('game_id' ASC)," +
-                                    "  INDEX 'buyer' ('buyer')," +
-                                    "  INDEX 'seller' ('seller')," +
-                                    "  INDEX 'asset' ('asset'));";
                 MySqlCommand cmd = new MySqlCommand(commandText, conn);
                 var reader = cmd.ExecuteReader();
                 while (reader.Read())

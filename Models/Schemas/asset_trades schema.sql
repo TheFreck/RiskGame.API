@@ -1,4 +1,4 @@
-DROP TABLE `transactions`.`asset_trades`;
+DROP TABLE IF EXISTS `transactions`.`asset_trades`;
 CREATE TABLE `transactions`.`asset_trades` (
   `sequence` INT(11) NOT NULL AUTO_INCREMENT,
   `trade_time` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

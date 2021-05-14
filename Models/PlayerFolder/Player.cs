@@ -29,7 +29,7 @@ namespace RiskGame.API.Models.PlayerFolder
         public decimal Cash { get; set; }
         public double RiskTolerance { get; set; }
         public Sophistication Experience { get; set; }
-        public List<Issue> TradeHistory { get; set; }
+        public Tuple<TradeType,decimal>[] TradeHistory { get; set; }
         public int DecisionFrequency { get; set; }
         //
         // model type is used to convert this class to a ModelReference
@@ -49,10 +49,11 @@ namespace RiskGame.API.Models.PlayerFolder
             PlayerId = playerId;
             GameId = gameId;
         }
-        public Player(string name)
+        public Player(string name, Guid gameId)
         {
             Name = name;
             PlayerId = Guid.NewGuid();
+            GameId = gameId;
         }
         public Player(PlayerIn playerIn)
         {

@@ -13,6 +13,7 @@ using AutoMapper;
 using RiskGame.API.Entities.Enums;
 using RiskGame.API.Models.PlayerFolder;
 using RiskGame.API.Models;
+using System.Diagnostics;
 
 namespace RiskGame.API.Controllers
 {
@@ -48,7 +49,8 @@ namespace RiskGame.API.Controllers
         [HttpGet("new-game/{assetQty}")]
         public async Task<ActionResult<EconomyOut>> NewGame(int assetQty)
         {
-            var haus = _playerService.CreateOne(new Player("HAUS"));
+            var gameId = Guid.NewGuid();
+            var haus = _playerService.CreateOne(new Player("HAUS", gameId));
             var assets = new List<AssetResource>();
             for (var i = 0; i < assetQty; i++)
             {
@@ -56,17 +58,18 @@ namespace RiskGame.API.Controllers
                 var asset = _mapper.Map<Asset, AssetResource>(new Asset
                 {
                     Name = $"Asset_{i}",
-                    SharesOutstanding = 1000,
+                    GameId = gameId,
+                    SharesOutstanding = 1007,
                     TradeHistory = new List<Tuple<TradeType, decimal>> (),
-                    LastDividendPayout = 10,
                     AssetId = id
                 });
+                // add the IPO trade after creation to allow company asset to be created
                 asset.TradeHistory.Add(Tuple.Create(TradeType.Buy, asset.CompanyAsset.Value / asset.SharesOutstanding));
                 var outcome = await _assetService.Create(asset);
                 if (outcome == "done") _shareService.CreateShares(_mapper.Map<AssetResource, ModelReference>(asset), asset.SharesOutstanding, _mapper.Map<PlayerResource,ModelReference>(haus), asset.ModelType);
                 assets.Add(asset);
             }
-            return Ok(new EconomyOut { GameId = _marketService.NewGame(assets.ToArray()), Assets = assets.Select(a => a.AssetId).ToArray()});
+            return Ok(new EconomyOut { GameId = _marketService.NewGame(gameId, assets.ToArray()), Assets = assets.Select(a => a.AssetId).ToArray()});
         }
         [HttpGet("get-game-status/{gameId:length(36)}")]
         public ActionResult<bool> GameStatus(string gameId)

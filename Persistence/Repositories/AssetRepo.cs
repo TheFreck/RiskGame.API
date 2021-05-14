@@ -52,7 +52,7 @@ namespace RiskGame.API.Persistence.Repositories
             db.RunCommand(command);
         }
         // replace one
-        public void ReplaceOne(Guid id, AssetResource asset) => _assets.ReplaceOne(asset => asset.AssetId == id, asset);
+        public ReplaceOneResult ReplaceOne(Guid id, AssetResource asset) => _assets.ReplaceOne(asset => asset.AssetId == id, asset);
         // update one
         public Task<UpdateResult> UpdateOne(Guid assetId, UpdateDefinition<AssetResource> update)
         {
@@ -89,7 +89,7 @@ namespace RiskGame.API.Persistence.Repositories
         AssetResource[] GetGameAssets(Guid gameId);
         Task<string> CreateOne(AssetResource asset);
         void CopyAssets();
-        void ReplaceOne(Guid id, AssetResource asset);
+        ReplaceOneResult ReplaceOne(Guid id, AssetResource asset);
         Task<UpdateResult> UpdateOne(Guid assetId, UpdateDefinition<AssetResource> update);
         Task<UpdateResult> UpdateMany(List<Guid> assets, UpdateDefinition<AssetResource> updates);
         Task<DeleteResult> DeleteOne(Guid assetId);

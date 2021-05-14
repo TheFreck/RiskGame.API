@@ -15,6 +15,7 @@ using System.Reflection.Metadata;
 using RiskGame.API.Entities;
 using RiskGame.API.Entities.Enums;
 using RiskGame.API.Persistence.Repositories;
+using System.Diagnostics;
 
 namespace RiskGame.API.Services
 {
@@ -37,9 +38,21 @@ namespace RiskGame.API.Services
         public List<ShareResource> GetAllPlayerShares(ModelReference playerRef, AssetResource asset) => _shareRepo.GetMany().Where(s => s.CurrentOwner.Id == playerRef.Id).Where(s => s._assetId == asset.AssetId).ToList();
         public List<Guid> CreateShares(ModelReference  asset, int qty, ModelReference owner, ModelTypes type)
         {
-            // make sure owner has a PlayerId
-            var listOut = new List<Guid>();
-            for (var i = 0; i < qty; i++)
+            var inputs = new ShareInputs
+            {
+                Asset = asset,
+                Qty = qty - qty%20,
+                Owner = owner,
+                ModelType = type,
+            };
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+            Console.WriteLine("starting the timer");
+            var listOut = new SharesCreator(inputs, _shareRepo).CreateShares();
+            stopwatch.Stop();
+            Console.WriteLine("elapsed milliseconds: " + stopwatch.ElapsedMilliseconds);
+
+            for (var i = 0; i < qty%20; i++)
             {
                 var shareId = Guid.NewGuid();
                 listOut.Add(shareId);

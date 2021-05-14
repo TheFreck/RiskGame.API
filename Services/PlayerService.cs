@@ -51,7 +51,7 @@ namespace RiskGame.API.Services
         {
             var allPlayers = _playerRepo.GetGamePlayers(gameId);
             var players = allPlayers.Where(p => p.Name != "HAUS");
-            var haus = allPlayers.Where(p => p.Name == "HAUS");
+            var haus = allPlayers.Where(p => p.Name == "HAUS").FirstOrDefault();
             var assets = _assetRepo.GetGameAssets(gameId);
             var game = _econRepo.GetOne(gameId);
             do
@@ -76,32 +76,36 @@ namespace RiskGame.API.Services
                     var decision = _playerLogic.PlayerTurn(player, playerShares, assets, game.History);
                     decision.Action = decision.Qty > 0 ? TurnTypes.Buy : decision.Qty < 0 ? TurnTypes.Sell : TurnTypes.Hold;
                     var total = decision.Asset;
-                    tradeTicket.Shares = decision.Qty;
-                    var lastTradePrice = _assetRepo.GetGameAssets(gameId).Where(a => a.AssetId == tradeTicket.Asset.Id).FirstOrDefault().TradeHistory.OrderByDescending(t => t.Item1).FirstOrDefault().Item2;
-
+                    tradeTicket.Shares = Math.Abs(decision.Qty);
+                    var lastTrade = _assetRepo.GetGameAssets(gameId).Where(a => a.AssetId == tradeTicket.Asset.Id).FirstOrDefault();
+                    var lastTradePrice = lastTrade.TradeHistory.OrderByDescending(t => t.Item1).FirstOrDefault().Item2;
+                    var hausShares1 = _shareRepo.GetMany();
+                    var hausShares = hausShares1.Where(s => s.CurrentOwner.Id == haus.PlayerId).ToList();
+                    decimal hausSharesPortion = decision.Qty / hausShares.Count();
+                    hausSharesPortion = hausSharesPortion == 0 ? lastTradePrice : hausSharesPortion;
                     switch (decision.Action)
                     {
                         case TurnTypes.QuickSell:
                             tradeTicket.Buyer = GetHAUSRef(gameId);
                             tradeTicket.Seller = ResToRef(player);
-                            tradeTicket.Cash = (int)Math.Floor(Math.Abs((decimal).95*(lastTradePrice * decision.Qty))) * decision.Qty;
+                            tradeTicket.Cash = (decimal).95 * Math.Abs((lastTradePrice - hausSharesPortion) * decision.Qty);
                             break;
                         case TurnTypes.Sell:
                             tradeTicket.Buyer = GetHAUSRef(gameId);
                             tradeTicket.Seller = ResToRef(player);
-                            tradeTicket.Cash = (int)Math.Ceiling(Math.Abs((decimal).99 *(lastTradePrice * decision.Qty)));
+                            tradeTicket.Cash = (decimal).99 * Math.Abs((lastTradePrice - hausSharesPortion) * decision.Qty);
                             break;
                         case TurnTypes.Hold:
                             continue;
                         case TurnTypes.Buy:
                             tradeTicket.Buyer = ResToRef(player);
                             tradeTicket.Seller = GetHAUSRef(gameId);
-                            tradeTicket.Cash = (int)Math.Floor(Math.Abs((decimal)1.01 *(lastTradePrice * decision.Qty)));
+                            tradeTicket.Cash = (decimal)1.01 * Math.Abs((lastTradePrice - hausSharesPortion) * decision.Qty);
                             break;
                         case TurnTypes.QuickBuy:
                             tradeTicket.Buyer = ResToRef(player);
                             tradeTicket.Seller = GetHAUSRef(gameId);
-                            tradeTicket.Cash = (int)Math.Ceiling(Math.Abs((decimal)1.05 * (lastTradePrice * decision.Qty)));
+                            tradeTicket.Cash = (decimal)1.05 * Math.Abs((lastTradePrice - hausSharesPortion) * decision.Qty);
                             break;
                     }
                     Console.WriteLine("buyer: " + tradeTicket.Buyer.Name);
@@ -117,7 +121,7 @@ namespace RiskGame.API.Services
             return Task.FromResult("player loop ended");
         }
 
-        public PlayerResource GetHAUS(Guid gameId) => _playerRepo.GetHAUS(/*gameId*/);
+        public PlayerResource GetHAUS(Guid gameId) => _playerRepo.GetHAUS().Where(p => p.GameId == gameId).FirstOrDefault();
         public ModelReference GetHAUSRef(Guid gameId) => ResToRef(GetHAUS(gameId));
         //
         // Gets the player attached to the given id

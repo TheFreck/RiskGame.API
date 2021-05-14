@@ -22,7 +22,7 @@ namespace RiskGame.API.Entities
             double primaryGrowth = 0;
             double primarySucessRatio = 0;
             double secondarySuccessRatio = 0;
-            var marketGrowth = new double[]
+            double marketGrowth = new double[]
                 {
                 _history.Red.TakeLast(memory).Average(),
                 _history.Orange.TakeLast(memory).Average(),

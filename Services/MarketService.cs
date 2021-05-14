@@ -75,7 +75,7 @@ namespace RiskGame.API.Services
             var game = _econRepo.UpdateOne(gameId,update);
             _econService.AssetLoop(gameId);
         }
-        public string BigBang(string secretCode) => _econRepo.DeleteAll(secretCode) ? "the screams of the deleted data are beginning to fade... \n ...somewhere in the distance can be heard the sound of memory being reallocated" : "Not gonna do it";
+        public string BigBang(string secretCode) => _econRepo.DeleteAll(secretCode) ? "the screams of the deleted data are beginning to fade... \n ...somewhere in the distance can be heard the sound of memory being reallocated... \n ...and that's the fan turning on" : "Not gonna do it";
         public async Task<string> EndGame(Guid gameId)
         {
             // Stop game
@@ -95,7 +95,7 @@ namespace RiskGame.API.Services
             await _econRepo.DeleteOne(gameId);
             return "there is nothing left; just the rubble of bits and bytes to be reallocated";
         }
-        public Guid NewGame(AssetResource[] assets)
+        public Guid NewGame(Guid gameId, AssetResource[] assets)
         {
             _transactionContext.CleanSlate();
             var newGame = new Economy();
@@ -132,7 +132,7 @@ namespace RiskGame.API.Services
         UpdateResult SetPixelCount(Guid gameId, int count);
         UpdateResult SetTrendiness(Guid gameId, int trend);
         void AssetsStartStop(Guid gameId, bool running);
-        Guid NewGame(AssetResource[] assets);
+        Guid NewGame(Guid gameId, AssetResource[] assets);
         CompanyAsset[] GetCompanyAssets(Guid gameId);
         Economy GetGame(Guid gameId);
         string UpdateGame(Economy game);
