@@ -27,6 +27,7 @@ namespace RiskGame.API.Models.PlayerFolder
         [JsonProperty("Name")]
         public string Name { get; set; }
         public decimal Cash { get; set; }
+        public decimal NetWorth { get; set; }
         public double RiskTolerance { get; set; }
         public Sophistication Experience { get; set; }
         public Tuple<TradeType,decimal>[] TradeHistory { get; set; }

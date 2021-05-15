@@ -73,10 +73,9 @@ namespace RiskGame.API.Logic
                     wave.Period--;
                 }
                 asset.CompanyAsset.Waves = asset.CompanyAsset.Waves.Where(c => c.Period > 0).ToList();
-                var value = asset.CompanyAsset.Value * (1 + growthRate);
+                var value = asset.CompanyAsset.Value * (1 + growthRate * asset.CompanyAsset.InternalRateOfReturn);
                 asset.CompanyAsset.Value = value;
                 asset.CompanyHistory.Add(new Tuple<DateTime, decimal>(DateTime.Now,value));
-                //_assetService.Replace(Guid.Parse(asset.AssetId), _mapper.Map<AssetResource, Asset>(asset));
             }
             return assets;
         }

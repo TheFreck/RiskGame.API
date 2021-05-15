@@ -76,7 +76,7 @@ namespace RiskGame.API.Services
         }
         public async Task<string> Create(AssetResource asset) => await _assetRepo.CreateOne(asset);
         public void CopyData() =>_assetRepo.CopyAssets();
-        public void Replace(Guid id, AssetResource assetRes) => _assetRepo.ReplaceOne(id, assetRes);
+        //public void Replace(Guid id, AssetResource assetRes) => _assetRepo.ReplaceOne(id, assetRes);
         public void Update(Guid id, UpdateDefinition<AssetResource> update) => _assetRepo.UpdateOne(id, update);
         public void Remove(AssetResource assetIn) => _assetRepo.DeleteOne(assetIn.AssetId);
         public void RemoveFromGame(Guid assetId) => _assetRepo.DeleteOne(assetId);
@@ -96,7 +96,7 @@ namespace RiskGame.API.Services
         List<ChartPixel> GetTrades(Guid gameId, Guid assetId, DateTime since);
         Task<string> Create(AssetResource asset);
         void CopyData();
-        void Replace(Guid id, AssetResource assetRes);
+        //void Replace(Guid id, AssetResource assetRes);
         void Remove(AssetResource assetIn);
         void RemoveFromGame(Guid assetId);
         void RemoveAssetsFromGame(List<Guid> assetIds);

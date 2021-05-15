@@ -129,7 +129,7 @@ export const GameHome = props => {
             console.log("new: ", game.data);
             SETassets(game.data.assets);
             SETisRunning(false);
-            createPlayers(11, game.data.gameId);
+            createPlayers(21, game.data.gameId);
         });
     }
     const restartClick = () => {
@@ -141,7 +141,7 @@ export const GameHome = props => {
         for (let i = 0; i < num; i++) {
             players.push({
                 name: "Player_" + i,
-                cash: Math.floor(100 + randy() * 100),
+                cash: Math.floor(100 + randy() * 500),
                 riskTolerance: Math.floor(randy() * 100) / 100,
                 experience: Math.floor(randy() * 2)
             });

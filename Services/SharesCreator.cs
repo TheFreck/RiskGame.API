@@ -19,40 +19,42 @@ namespace RiskGame.API.Services
         private readonly int _qty;
         private readonly ModelReference _owner;
         private readonly ModelTypes _type;
+        private readonly int _threadCount;
+        private readonly int _perThreadCount;
+        private readonly int _lastThread;
+        private readonly Guid _gameId;
         public List<Guid> Shares;
         public SharesCreator(ShareInputs inputs, IShareRepo shareRepo)
         {
+            _gameId = inputs.GameId;
             _asset = inputs.Asset;
-            _qty = inputs.Qty/20;
+            _qty = inputs.Qty;
             _owner = inputs.Owner;
             _type = inputs.ModelType;
             _shareRepo = shareRepo;
+            _threadCount = (int)Math.Sqrt(_qty);
+            _perThreadCount = _qty / _threadCount;
+            _lastThread = _qty % _perThreadCount;
             Shares = new List<Guid>();
         }
         public List<Guid> CreateShares()
         {
+            // MEASURE THE TIME EACH THREAD RUNS TO DETERMINE HOW MANY THREADS TO CREATE
             var threads = new List<Thread>();
-            for(var i=0; i<20; i++)
+            for(var i=0; i<_threadCount; i++)
             {
                 threads.Add(new Thread(new ThreadStart(ShareCreation)));
-                Console.WriteLine($"Starting thread {i}");
             }
             threads.ForEach(t => t.Start());
             threads.ForEach(t => t.ExecutionContext.Dispose());
-            
-            Console.WriteLine("Finishing threads");
-            return Shares;
-        }
-        private void ShareCreation()
-        {
-            var listOut = new List<Guid>();
-            for (var i = 0; i < _qty; i++)
+            // last thread to handle the remainder
+            for (var i = 0; i < _lastThread; i++)
             {
                 var shareId = Guid.NewGuid();
-                listOut.Add(shareId);
                 _shareRepo.CreateOne(new ShareResource()
                 {
                     _assetId = _asset.Id,
+                    GameId = _gameId,
                     Name = $"Share of {_asset.Name}",
                     ShareId = shareId,
                     CurrentOwner = _owner,
@@ -60,8 +62,27 @@ namespace RiskGame.API.Services
                 });
                 Shares.Add(shareId);
             }
-            Console.WriteLine($"finished creating {_qty} shares");
-            
+            return Shares;
+        }
+        private void ShareCreation()
+        {
+            var listOut = new List<Guid>();
+            for (var i = 0; i < _perThreadCount; i++)
+            {
+                var shareId = Guid.NewGuid();
+                listOut.Add(shareId);
+                _shareRepo.CreateOne(new ShareResource()
+                {
+                    _assetId = _asset.Id,
+                    GameId = _gameId,
+                    Name = $"Share of {_asset.Name}",
+                    ShareId = shareId,
+                    CurrentOwner = _owner,
+                    ModelType = _type
+                });
+                Shares.Add(shareId);
+            }
+            Console.WriteLine($"finished creating {_perThreadCount} shares");
         }
     }
 }

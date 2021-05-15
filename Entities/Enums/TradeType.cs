@@ -7,6 +7,6 @@ namespace RiskGame.API.Entities.Enums
 {
     public enum TradeType
     {
-        Buy,Sell
+        Buy,Sell,Dividend
     }
 }

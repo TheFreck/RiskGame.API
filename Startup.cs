@@ -33,35 +33,42 @@ namespace RiskGame.API
         }
         public void ConfigureServices(IServiceCollection services)
         {
+            // SERVICE IS OUR MOTTO
             services.Configure<DatabaseSettings>(
                 Configuration?.GetSection("RiskGameDatabaseSettings"));
-
             services.AddSingleton<IDatabaseSettings>(sp =>
                 sp.GetRequiredService<IOptions<DatabaseSettings>>().Value);
 
             // SINGLETON SERVICES
             services.AddSingleton<IPlayerService,PlayerService>();
-            services.AddSingleton<IAssetService,AssetService>();
-            services.AddSingleton<IShareService,ShareService>();
-            services.AddSingleton<IMarketService, MarketService>();
             services.AddSingleton<IEconService, EconService>();
             services.AddSingleton<ITransactionService, TransactionService>();
 
-            // SERVICES
-            services.Add(new ServiceDescriptor(typeof(TransactionContext), new TransactionContext(Configuration?.GetSection("RiskGameDatabaseSettings").GetChildren().Where(v => v.Key == "MySqlConnectionString").Select(v => v.Value).FirstOrDefault().ToString())));
+            // SCOPED SERVICES
+            services.AddScoped<IAssetService,AssetService>();
+            services.AddScoped<IMarketService, MarketService>();
+            services.AddScoped<IShareService,ShareService>();
 
-            // LOGIC
+            // TRANSIENT LOGIC SERVICES
             services.AddTransient<IPlayerLogic, PlayerLogic>();
             services.AddTransient<IAssetLogic, AssetLogic>();
             services.AddTransient<ITransactionLogic,TransactionLogic>();
             services.AddTransient<IEconLogic, EconLogic>();
 
-            // REPOSITORIES
+            // REPOSITORIES SERVICES
             services.AddSingleton<IAssetRepo, AssetRepo>();
             services.AddSingleton<IPlayerRepo, PlayerRepo>();
             services.AddSingleton<IShareRepo, ShareRepo>();
             services.AddSingleton<IMarketRepo, MarketRepo>();
             services.AddSingleton<IEconRepo, EconRepo>();
+
+            // UNSCOPED SERVICES
+            services.Add(
+                new ServiceDescriptor(
+                    typeof(TransactionContext), 
+                    new TransactionContext(Configuration?.GetSection("RiskGameDatabaseSettings")
+                    .GetChildren().Where(v => v.Key == "MySqlConnectionString")
+                    .Select(v => v.Value).FirstOrDefault().ToString())));
 
             services.AddControllersWithViews();
 

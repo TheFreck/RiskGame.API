@@ -14,6 +14,7 @@ using RiskGame.API.Entities.Enums;
 using RiskGame.API.Models.PlayerFolder;
 using RiskGame.API.Models;
 using System.Diagnostics;
+using System.Threading;
 
 namespace RiskGame.API.Controllers
 {
@@ -49,9 +50,13 @@ namespace RiskGame.API.Controllers
         [HttpGet("new-game/{assetQty}")]
         public async Task<ActionResult<EconomyOut>> NewGame(int assetQty)
         {
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+            Console.WriteLine("starting the timer");
             var gameId = Guid.NewGuid();
             var haus = _playerService.CreateOne(new Player("HAUS", gameId));
             var assets = new List<AssetResource>();
+            var sharesIssued = 4444;
             for (var i = 0; i < assetQty; i++)
             {
                 var id = Guid.NewGuid();
@@ -59,16 +64,26 @@ namespace RiskGame.API.Controllers
                 {
                     Name = $"Asset_{i}",
                     GameId = gameId,
-                    SharesOutstanding = 1007,
+                    SharesOutstanding = sharesIssued,
                     TradeHistory = new List<Tuple<TradeType, decimal>> (),
+                    CompanyHistory = new List<Tuple<DateTime,decimal>>(),
                     AssetId = id
                 });
                 // add the IPO trade after creation to allow company asset to be created
                 asset.TradeHistory.Add(Tuple.Create(TradeType.Buy, asset.CompanyAsset.Value / asset.SharesOutstanding));
                 var outcome = await _assetService.Create(asset);
-                if (outcome == "done") _shareService.CreateShares(_mapper.Map<AssetResource, ModelReference>(asset), asset.SharesOutstanding, _mapper.Map<PlayerResource,ModelReference>(haus), asset.ModelType);
+                if (outcome == "done") _shareService.CreateShares(_mapper.Map<AssetResource, ModelReference>(asset), asset.SharesOutstanding, _mapper.Map<PlayerResource,ModelReference>(haus), asset.ModelType, gameId);
                 assets.Add(asset);
             }
+            var counter = 500;
+            do
+            {
+                counter--;
+                Thread.Sleep(250);
+            } while (_shareService.GetQueryableGameShares(gameId).Count() != sharesIssued * assetQty && counter > 0);
+            stopwatch.Stop();
+            Console.WriteLine("elapsed milliseconds: " + stopwatch.ElapsedMilliseconds);
+            if (counter <= 0) return NoContent();
             return Ok(new EconomyOut { GameId = _marketService.NewGame(gameId, assets.ToArray()), Assets = assets.Select(a => a.AssetId).ToArray()});
         }
         [HttpGet("get-game-status/{gameId:length(36)}")]
@@ -130,6 +145,7 @@ namespace RiskGame.API.Controllers
         [HttpPost("trading-on-off/{gameId:length(36)}/{isRunning}")]
         public void TradingOnOff(string gameId, bool isRunning)
         {
+            Thread.Sleep(500);
             var isGuid = Guid.TryParse(gameId, out var incomingId);
             _playerService.TradingStartStop(incomingId, isRunning);
         }

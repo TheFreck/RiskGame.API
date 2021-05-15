@@ -135,7 +135,7 @@ namespace RiskGame.API.Controllers
             var result = _marketService.UpdateGame(game);
 
             // Create Shares
-            _shareService.CreateShares(_mapper.Map<Asset, ModelReference>(asset), asset.SharesOutstanding, hausRef, ModelTypes.Asset);
+            _shareService.CreateShares(_mapper.Map<Asset, ModelReference>(asset), asset.SharesOutstanding, hausRef, ModelTypes.Asset, gameId);
             return Ok(_mapper.Map<Asset, AssetIn>(asset));
         }
         [HttpPost("add-shares/{id:length(36)}/{qty}/{type}/{gameId:length(36)}")]
@@ -150,34 +150,34 @@ namespace RiskGame.API.Controllers
             var haus = _playerService.GetHAUS(game);
             var asset = _assetService.GetAsset(incomingId,ModelTypes.Asset);
             if (asset.AssetId == Guid.Empty) NotFound("couldn't find it with that Id");
-            _shareService.CreateShares(_assetService.ResToRef(asset), qty, _playerService.GetHAUSRef(game), ModelTypes.Share);
+            _shareService.CreateShares(_assetService.ResToRef(asset), qty, _playerService.GetHAUSRef(game), ModelTypes.Share, game);
             return Ok();
         }
         // ***************************************************************
         // PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT
         // ***************************************************************
-        [HttpPut("{id:length(36)}")]
-        public IActionResult Update(string assetId, [FromBody] AssetIn assetIn)
-        {
-            var isGuid = Guid.TryParse(assetId, out var incomingId);
-            if (!isGuid) return NotFound("Me thinks that Id was not a Guid");
-            var foundAsset = _assetService.GetAsset(incomingId,ModelTypes.Asset);
-            if (foundAsset == null) return NotFound();
+        //[HttpPut("{id:length(36)}")]
+        //public IActionResult Update(string assetId, [FromBody] AssetIn assetIn)
+        //{
+        //    var isGuid = Guid.TryParse(assetId, out var incomingId);
+        //    if (!isGuid) return NotFound("Me thinks that Id was not a Guid");
+        //    var foundAsset = _assetService.GetAsset(incomingId,ModelTypes.Asset);
+        //    if (foundAsset == null) return NotFound();
 
-            if (assetIn.Name == null) assetIn.Name = foundAsset.Name;
+        //    if (assetIn.Name == null) assetIn.Name = foundAsset.Name;
 
-            var update = _mapper.Map<AssetIn, AssetResource>(assetIn);
-            update.AssetId = incomingId;
-            try
-            {
-                _assetService.Replace(incomingId, update);
-                return NoContent();
-            }
-            catch (Exception e)
-            {
-                return NotFound(e);
-            }
-        }
+        //    var update = _mapper.Map<AssetIn, AssetResource>(assetIn);
+        //    update.AssetId = incomingId;
+        //    try
+        //    {
+        //        _assetService.Replace(incomingId, update);
+        //        return NoContent();
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        return NotFound(e);
+        //    }
+        //}
         [HttpPut("delete-asset")]
         public IActionResult DeleteAsset([FromBody] string assetId) // assetId
         {

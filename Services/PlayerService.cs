@@ -45,13 +45,13 @@ namespace RiskGame.API.Services
         public async void TradingStartStop(Guid gameId, bool isRunning)
         {
             var loopAction = await PlayerLoop(gameId);
-            Console.WriteLine("player loop action: " + loopAction);
+            //Console.WriteLine("player loop action: " + loopAction);
         }
         public Task<string> PlayerLoop(Guid gameId)
         {
             var allPlayers = _playerRepo.GetGamePlayers(gameId);
             var players = allPlayers.Where(p => p.Name != "HAUS");
-            var haus = allPlayers.Where(p => p.Name == "HAUS").FirstOrDefault();
+            var haus = _playerRepo.GetHAUS().Where(h => h.GameId == gameId).FirstOrDefault();
             var assets = _assetRepo.GetGameAssets(gameId);
             var game = _econRepo.GetOne(gameId);
             do
@@ -79,44 +79,58 @@ namespace RiskGame.API.Services
                     tradeTicket.Shares = Math.Abs(decision.Qty);
                     var lastTrade = _assetRepo.GetGameAssets(gameId).Where(a => a.AssetId == tradeTicket.Asset.Id).FirstOrDefault();
                     var lastTradePrice = lastTrade.TradeHistory.OrderByDescending(t => t.Item1).FirstOrDefault().Item2;
-                    var hausShares1 = _shareRepo.GetMany();
-                    var hausShares = hausShares1.Where(s => s.CurrentOwner.Id == haus.PlayerId).ToList();
-                    decimal hausSharesPortion = decision.Qty / hausShares.Count();
-                    hausSharesPortion = hausSharesPortion == 0 ? lastTradePrice : hausSharesPortion;
+                    var allShares = _shareRepo.GetMany().ToList();
+                    var hausShares = allShares.Where(s => s.CurrentOwner.Id == haus.PlayerId).ToList();
+                    decimal portionOfHausShares = (hausShares.Count() > 0 ? (decimal)(decision.Qty) / (decimal)(hausShares.Count()) : (decimal).001);
+                    // ***************************************************************
+                    // MODIFY THIS MODIFIER TO CREATE MORE DIRECTIONALITY IN THE PRICE
+                    var lastTradeModifier = (1 + portionOfHausShares);
+                    // HAUS knows more and can influence the price more
+                    // get company asset value per share
+                    var companyAssetValue = assets[0].CompanyAssetValuePerShare;
+
+                    // create an elastic pull toward the company asset value per share
+                    // ***************************************************************
+
                     switch (decision.Action)
                     {
                         case TurnTypes.QuickSell:
                             tradeTicket.Buyer = GetHAUSRef(gameId);
                             tradeTicket.Seller = ResToRef(player);
-                            tradeTicket.Cash = (decimal).95 * Math.Abs((lastTradePrice - hausSharesPortion) * decision.Qty);
+                            tradeTicket.Cash = (decimal).99 * Math.Abs(lastTradePrice * lastTradeModifier * decision.Qty);
                             break;
                         case TurnTypes.Sell:
                             tradeTicket.Buyer = GetHAUSRef(gameId);
                             tradeTicket.Seller = ResToRef(player);
-                            tradeTicket.Cash = (decimal).99 * Math.Abs((lastTradePrice - hausSharesPortion) * decision.Qty);
+                            tradeTicket.Cash = (decimal).999 * Math.Abs(lastTradePrice * lastTradeModifier * decision.Qty);
                             break;
                         case TurnTypes.Hold:
                             continue;
                         case TurnTypes.Buy:
                             tradeTicket.Buyer = ResToRef(player);
                             tradeTicket.Seller = GetHAUSRef(gameId);
-                            tradeTicket.Cash = (decimal)1.01 * Math.Abs((lastTradePrice - hausSharesPortion) * decision.Qty);
+                            tradeTicket.Cash = (decimal)1.001 * Math.Abs(lastTradePrice * lastTradeModifier * decision.Qty);
                             break;
                         case TurnTypes.QuickBuy:
                             tradeTicket.Buyer = ResToRef(player);
                             tradeTicket.Seller = GetHAUSRef(gameId);
-                            tradeTicket.Cash = (decimal)1.05 * Math.Abs((lastTradePrice - hausSharesPortion) * decision.Qty);
+                            tradeTicket.Cash = (decimal)1.01 * Math.Abs(lastTradePrice * lastTradeModifier * decision.Qty);
                             break;
                     }
+                    Console.WriteLine("****************************************************************************************************\n                         **************************************************");
+                    Console.WriteLine("trade shares: " + tradeTicket.Shares);
+                    Console.WriteLine("haus shares: " + hausShares.Count());
+                    Console.WriteLine("portion of haus shares: " + portionOfHausShares);
+                    Console.WriteLine("price difference from last trade: " + (tradeTicket.Cash / tradeTicket.Shares - lastTradePrice));
                     Console.WriteLine("buyer: " + tradeTicket.Buyer.Name);
                     Console.WriteLine("seller: " + tradeTicket.Seller.Name);
-                    Console.WriteLine("cash: " + tradeTicket.Cash);
-                    Console.WriteLine("shares: " + tradeTicket.Shares);
+                    Console.WriteLine("price: " + tradeTicket.Cash / tradeTicket.Shares);
+                    Console.WriteLine("                         **************************************************                         \n****************************************************************************************************");
                     var traded = _transactionService.Transact(tradeTicket);
                     // add transaction to board
                     timer.Stop();
                 }
-                Console.WriteLine("player: " + timer.ElapsedMilliseconds);
+                //Console.WriteLine("player: " + timer.ElapsedMilliseconds);
             } while (_econRepo.GetOne(gameId).isRunning);
             return Task.FromResult("player loop ended");
         }

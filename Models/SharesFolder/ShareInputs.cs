@@ -8,9 +8,10 @@ namespace RiskGame.API.Models.SharesFolder
 {
     public class ShareInputs
     {
-        public ModelReference Asset;
-        public int Qty;
-        public ModelReference Owner;
-        public ModelTypes ModelType;
+        public Guid GameId { get; set; }
+        public ModelReference Asset { get; set; }
+        public int Qty { get; set; }
+        public ModelReference Owner { get; set; }
+        public ModelTypes ModelType { get; set; }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using MongoDB.Driver;
 using RiskGame.API.Entities;
+using RiskGame.API.Entities.Enums;
 using RiskGame.API.Logic;
 using RiskGame.API.Models.AssetFolder;
 using RiskGame.API.Models.EconomyFolder;
@@ -63,9 +64,23 @@ namespace RiskGame.API.Services
                 {
                     Console.WriteLine("dividend day!!!");
                     var shares = _shareRepo.GetMany().Where(s => s._assetId == next.Assets[0].AssetId).ToArray();
-                    var dividends = _assetLogic.PayDividend(next.Assets[0], shares);
+                    var asset = next.Assets[0];
+                    // calculate dividend
+                    asset.PeriodsSinceDividend = 0;
+                    var incomeSheet = _assetLogic.CalculateDividend(asset);
+                    var dividendsPerShare = incomeSheet.Dividends / shares.Length;
+                    asset.TradeHistory.Add(Tuple.Create(TradeType.Dividend, asset.TradeHistory.OrderByDescending(t => t.Item1).FirstOrDefault().Item2 - dividendsPerShare));
+                    asset.LastDividendPayout = asset.CompanyAsset.Value * asset.Debt - incomeSheet.Dividends;
+                    asset.CompanyAsset.Value = asset.LastDividendPayout / asset.Debt;
+                    // pay dividends on each share
+                    var dividendPaymentSchedule = new Dictionary<Guid, decimal>();
+                    foreach (var share in shares)
+                    {
+                        if (!dividendPaymentSchedule.ContainsKey(share.CurrentOwner.Id)) dividendPaymentSchedule.Add(share.CurrentOwner.Id, 0);
+                        dividendPaymentSchedule[share.CurrentOwner.Id] += dividendsPerShare;
+                    }
                     var players = new List<PlayerResource>();
-                    foreach(var key in dividends)
+                    foreach(var key in dividendPaymentSchedule)
                     {
                         var player = _playerRepo.GetOne(key.Key);
                         player.Cash += key.Value;
@@ -73,12 +88,18 @@ namespace RiskGame.API.Services
                         _playerRepo.UpdateOne(player.PlayerId, Builders<PlayerResource>.Update.Set("Cash", player.Cash));
                     }
                 }
-                _econRepo.ReplaceOne(econFilter, next.Economy);
-                _assetRepo.ReplaceOne(assets[0].AssetId, next.Assets[0]);
+                _econRepo.ReplaceOne(econFilter, next.Economy); // update instead
+                var assetUpdateBase = Builders<AssetResource>.Update;
+                var assetUpdate = assetUpdateBase
+                    .Set("CompanyAsset", assets[0].CompanyAsset)
+                    .Set("PeriodsSinceDividend", assets[0].PeriodsSinceDividend)
+                    .Set("TradeHistory", assets[0].TradeHistory)
+                    .Set("LastDividendPayout", assets[0].LastDividendPayout);
+                var updated = _assetRepo.UpdateOne(assets[0].AssetId, assetUpdate).Result;
                 _marketRepo.CreateOne(next.LastMarket);
                 economy = next.Economy;
                 timer.Stop();
-                Console.WriteLine("econ: " + timer.ElapsedMilliseconds);
+                //Console.WriteLine("econ: " + timer.ElapsedMilliseconds);
                 Thread.Sleep(1000);
             } while (IsRunning(econId));
             Console.WriteLine("Finito");

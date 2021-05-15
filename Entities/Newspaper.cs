@@ -18,19 +18,17 @@ namespace RiskGame.API.Entities
         }
         public Issue ReadNewspaper(Sophistication level, AssetResource asset)
         {
-            var memory = level == Sophistication.Savvy ? 50 : 20;
+            var memory = level == Sophistication.Savvy ? 22 : 7;
             double primaryGrowth = 0;
             double primarySucessRatio = 0;
             double secondarySuccessRatio = 0;
-            double marketGrowth = new double[]
-                {
-                _history.Red.TakeLast(memory).Average(),
-                _history.Orange.TakeLast(memory).Average(),
-                _history.Yellow.TakeLast(memory).Average(),
-                _history.Green.TakeLast(memory).Average(),
-                _history.Blue.TakeLast(memory).Average(),
-                _history.Violet.TakeLast(memory).Average()
-                }.Average();
+            var red = _history.Red.TakeLast(memory).Average();
+            var orange = _history.Orange.TakeLast(memory).Average();
+            var yellow = _history.Yellow.TakeLast(memory).Average();
+            var green = _history.Green.TakeLast(memory).Average();
+            var blue = _history.Blue.TakeLast(memory).Average();
+            var violet = _history.Violet.TakeLast(memory).Average();
+            double marketGrowth = new double[]{red,orange,yellow,green,blue,violet}.Average();
 
             switch (asset.CompanyAsset.PrimaryIndustry)
             {
@@ -86,7 +84,7 @@ namespace RiskGame.API.Entities
                 PrimarySuccessRatio = primarySucessRatio,
                 SecondarySuccessRatio = secondarySuccessRatio,
                 MarketGrowth = marketGrowth,
-                LastDividendValue = asset.LastDividendPayout,
+                LastDividendValue = (double)asset.LastDividendPayout,
                 PeriodsSinceDividend = asset.PeriodsSinceDividend
             };
         }

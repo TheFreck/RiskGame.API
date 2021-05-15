@@ -61,8 +61,6 @@ namespace RiskGame.API.Controllers
         //        return NotFound(e.Message);
         //    }
         //}
-        [HttpPost("multipass")]
-        public ActionResult<string> MultiPass() => _transactionService.MultiPass();
         // ***************************************************************
         // PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT
         // ***************************************************************

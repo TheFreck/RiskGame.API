@@ -32,5 +32,13 @@ namespace RiskGame.API.Models.EconomyFolder
         public List<Tuple<DateTime, MarketMetrics>> Markets = new List<Tuple<DateTime, MarketMetrics>>();
         public MarketMetricsHistory History = new MarketMetricsHistory();
         public Player HAUS { get; set; }
+        public Economy(Guid gameId)
+        {
+            GameId = gameId;
+        }
+        public Economy()
+        {
+
+        }
     }
 }

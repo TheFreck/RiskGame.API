@@ -31,40 +31,24 @@ namespace RiskGame.API.Services
             _playerRepo = playerRepo;
         }
         public IQueryable<ShareResource> GetQueryableShares(Guid assetId) => _shareRepo.GetMany().Where(s => s._assetId == assetId);
+        public IQueryable<ShareResource> GetQueryableGameShares(Guid gameId) => _shareRepo.GetMany().Where(s => s.GameId == gameId);
         public ShareResource GetSpecificShare(Guid id) => _shareRepo.GetOne(id);
         public IQueryable<ShareResource> GetSpecificShares(List<Guid> shares) => _shareRepo.GetManySpecific(shares);
         public int GetPlayerShareCount(Guid playerId, Guid assetId) => _shareRepo.GetMany().Where(s => s.CurrentOwner.Id == playerId).Where(s => s._assetId == assetId).Count();
         public List<ShareResource> GetPlayerShares(ModelReference playerRef, AssetResource asset, int qty) => _shareRepo.GetMany().Where(s => s.CurrentOwner == playerRef).Where(s => s._assetId == asset.AssetId).Take(qty).ToList();
         public List<ShareResource> GetAllPlayerShares(ModelReference playerRef, AssetResource asset) => _shareRepo.GetMany().Where(s => s.CurrentOwner.Id == playerRef.Id).Where(s => s._assetId == asset.AssetId).ToList();
-        public List<Guid> CreateShares(ModelReference  asset, int qty, ModelReference owner, ModelTypes type)
+        public List<Guid> CreateShares(ModelReference  asset, int qty, ModelReference owner, ModelTypes type, Guid gameId)
         {
             var inputs = new ShareInputs
             {
+                GameId = gameId,
                 Asset = asset,
-                Qty = qty - qty%20,
+                Qty = qty,
                 Owner = owner,
                 ModelType = type,
             };
-            var stopwatch = new Stopwatch();
-            stopwatch.Start();
-            Console.WriteLine("starting the timer");
             var listOut = new SharesCreator(inputs, _shareRepo).CreateShares();
-            stopwatch.Stop();
-            Console.WriteLine("elapsed milliseconds: " + stopwatch.ElapsedMilliseconds);
 
-            for (var i = 0; i < qty%20; i++)
-            {
-                var shareId = Guid.NewGuid();
-                listOut.Add(shareId);
-                _shareRepo.CreateOne(new ShareResource()
-                {
-                    _assetId = asset.Id,
-                    Name = $"Share of {asset.Name}",
-                    ShareId = shareId,
-                    CurrentOwner = owner,
-                    ModelType = type
-                });
-            }
             return listOut;
         }
         public UpdateResult UpdateShares(List<Guid> shares, UpdateDefinition<ShareResource> update) => _shareRepo.UpdateMany(shares, update).Result;
@@ -138,12 +122,13 @@ namespace RiskGame.API.Services
     public interface IShareService
     {
         IQueryable<ShareResource> GetQueryableShares(Guid assetId);
+        IQueryable<ShareResource> GetQueryableGameShares(Guid gameId);
         ShareResource GetSpecificShare(Guid id);
         IQueryable<ShareResource> GetSpecificShares(List<Guid> shares);
         int GetPlayerShareCount(Guid playerId, Guid assetId);
         List<ShareResource> GetPlayerShares(ModelReference  playerRef, AssetResource asset, int qty);
         List<ShareResource> GetAllPlayerShares(ModelReference  playerRef, AssetResource asset);
-        List<Guid> CreateShares(ModelReference asset, int qty, ModelReference owner, ModelTypes type);
+        List<Guid> CreateShares(ModelReference asset, int qty, ModelReference owner, ModelTypes type, Guid gameId);
         UpdateResult UpdateShares(List<Guid> shares, UpdateDefinition<ShareResource> update);
         DeleteResult ShredShares(Guid assetId);
         ModelReference  ToRef(Share share);

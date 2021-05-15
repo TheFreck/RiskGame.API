@@ -13,11 +13,14 @@ namespace RiskGame.API.Models.AssetFolder
         public IndustryTypes PrimaryIndustry { get; set; }
         public IndustryTypes SecondaryIndustry { get; set; }
         public decimal Value { get; set; }
+        public decimal InternalRateOfReturn { get; set; }
         public List<Wave> Waves { get; set; }
         public CompanyAsset()
         {
+            var randy = new Random();
             Waves = new List<Wave>();
-            Value = (decimal)new Random().NextDouble()*10000+10000;
+            Value = (decimal)randy.NextDouble() * 10000 + 10000;
+            InternalRateOfReturn = (decimal)(1 + randy.NextDouble() / (randy.NextDouble() + 100));
         }
     }
 }

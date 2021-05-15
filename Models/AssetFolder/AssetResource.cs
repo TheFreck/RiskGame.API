@@ -25,12 +25,13 @@ namespace RiskGame.API.Models.AssetFolder
         public decimal LastBuyPrice { get; set; }
         public decimal LastSellPrice { get; set; }
         public decimal MostRecentValue { get; set; }
-        public int LastDividendPayout { get; set; }
+        public decimal LastDividendPayout { get; set; }
         public DateTime LastDividendDate { get; set; }
         public int PeriodsSinceDividend { get; set; }
         public string Message { get; set; }
         public ModelTypes ModelType { get; set; }
         public CompanyAsset CompanyAsset { get; set; }
+        public decimal CompanyAssetValuePerShare { get; set; }
         public int Debt { get; set; }
         public List<Tuple<DateTime, decimal>> CompanyHistory { get; set; }
     }
