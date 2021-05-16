@@ -59,18 +59,22 @@ namespace RiskGame.API.Controllers
             var sharesIssued = 4444;
             for (var i = 0; i < assetQty; i++)
             {
-                var id = Guid.NewGuid();
                 var asset = _mapper.Map<Asset, AssetResource>(new Asset
                 {
                     Name = $"Asset_{i}",
                     GameId = gameId,
                     SharesOutstanding = sharesIssued,
-                    TradeHistory = new List<Tuple<TradeType, decimal>> (),
-                    CompanyHistory = new List<Tuple<DateTime,decimal>>(),
-                    AssetId = id
+                    TradeHistory = new List<Tuple<TradeType, decimal>>(),
+                    CompanyHistory = new List<Tuple<DateTime, decimal>>(),
+                    AssetId = Guid.NewGuid(),
+                    Debt = new Random().Next(1, 10),
+                    CompanyAsset = new CompanyAsset()
                 });
+
                 // add the IPO trade after creation to allow company asset to be created
-                asset.TradeHistory.Add(Tuple.Create(TradeType.Buy, asset.CompanyAsset.Value / asset.SharesOutstanding));
+                asset.CompanyAssetValuePerShare = asset.CompanyAsset.Value * asset.Debt / asset.SharesOutstanding;
+                asset.TradeHistory.Add(Tuple.Create(TradeType.Buy, asset.CompanyAssetValuePerShare));
+                asset.MostRecentValue = asset.CompanyAsset.Value * asset.Debt;
                 var outcome = await _assetService.Create(asset);
                 if (outcome == "done") _shareService.CreateShares(_mapper.Map<AssetResource, ModelReference>(asset), asset.SharesOutstanding, _mapper.Map<PlayerResource,ModelReference>(haus), asset.ModelType, gameId);
                 assets.Add(asset);
@@ -145,7 +149,7 @@ namespace RiskGame.API.Controllers
         [HttpPost("trading-on-off/{gameId:length(36)}/{isRunning}")]
         public void TradingOnOff(string gameId, bool isRunning)
         {
-            Thread.Sleep(500);
+            Thread.Sleep(5000);
             var isGuid = Guid.TryParse(gameId, out var incomingId);
             _playerService.TradingStartStop(incomingId, isRunning);
         }

@@ -40,11 +40,11 @@ namespace RiskGame.API
                 sp.GetRequiredService<IOptions<DatabaseSettings>>().Value);
 
             // SINGLETON SERVICES
-            services.AddSingleton<IPlayerService,PlayerService>();
             services.AddSingleton<IEconService, EconService>();
-            services.AddSingleton<ITransactionService, TransactionService>();
 
             // SCOPED SERVICES
+            services.AddScoped<IPlayerService,PlayerService>();
+            services.AddScoped<ITransactionService, TransactionService>();
             services.AddScoped<IAssetService,AssetService>();
             services.AddScoped<IMarketService, MarketService>();
             services.AddScoped<IShareService,ShareService>();

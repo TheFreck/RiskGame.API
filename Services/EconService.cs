@@ -60,18 +60,18 @@ namespace RiskGame.API.Services
                     LastMarket = market
                 };
                 var next = _econLogic.LoopRound(loop);
-                if(next.Assets[0].PeriodsSinceDividend == 50)
+                var asset = next.Assets[0];
+                if(asset.PeriodsSinceDividend == 50)
                 {
                     Console.WriteLine("dividend day!!!");
                     var shares = _shareRepo.GetMany().Where(s => s._assetId == next.Assets[0].AssetId).ToArray();
-                    var asset = next.Assets[0];
                     // calculate dividend
                     asset.PeriodsSinceDividend = 0;
                     var incomeSheet = _assetLogic.CalculateDividend(asset);
                     var dividendsPerShare = incomeSheet.Dividends / shares.Length;
                     asset.TradeHistory.Add(Tuple.Create(TradeType.Dividend, asset.TradeHistory.OrderByDescending(t => t.Item1).FirstOrDefault().Item2 - dividendsPerShare));
-                    asset.LastDividendPayout = asset.CompanyAsset.Value * asset.Debt - incomeSheet.Dividends;
-                    asset.CompanyAsset.Value = asset.LastDividendPayout / asset.Debt;
+                    asset.LastDividendPayout = incomeSheet.Dividends;
+                    asset.MostRecentValue = asset.CompanyAsset.Value * asset.Debt;
                     // pay dividends on each share
                     var dividendPaymentSchedule = new Dictionary<Guid, decimal>();
                     foreach (var share in shares)
@@ -88,14 +88,19 @@ namespace RiskGame.API.Services
                         _playerRepo.UpdateOne(player.PlayerId, Builders<PlayerResource>.Update.Set("Cash", player.Cash));
                     }
                 }
+
+                asset.CompanyAsset.Value = asset.MostRecentValue / asset.Debt;
+
+                asset.CompanyAssetValuePerShare = asset.MostRecentValue / asset.SharesOutstanding; ;
                 _econRepo.ReplaceOne(econFilter, next.Economy); // update instead
                 var assetUpdateBase = Builders<AssetResource>.Update;
                 var assetUpdate = assetUpdateBase
-                    .Set("CompanyAsset", assets[0].CompanyAsset)
-                    .Set("PeriodsSinceDividend", assets[0].PeriodsSinceDividend)
-                    .Set("TradeHistory", assets[0].TradeHistory)
-                    .Set("LastDividendPayout", assets[0].LastDividendPayout);
-                var updated = _assetRepo.UpdateOne(assets[0].AssetId, assetUpdate).Result;
+                    .Set("CompanyAsset", asset.CompanyAsset)
+                    .Set("PeriodsSinceDividend", asset.PeriodsSinceDividend)
+                    .Set("TradeHistory", asset.TradeHistory)
+                    .Set("LastDividendPayout", asset.LastDividendPayout)
+                    .Set("CompanyAssetValuePerShare", asset.CompanyAssetValuePerShare);
+                var updated = _assetRepo.UpdateOne(asset.AssetId, assetUpdate).Result;
                 _marketRepo.CreateOne(next.LastMarket);
                 economy = next.Economy;
                 timer.Stop();

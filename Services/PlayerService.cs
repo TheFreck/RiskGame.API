@@ -45,7 +45,7 @@ namespace RiskGame.API.Services
         public async void TradingStartStop(Guid gameId, bool isRunning)
         {
             var loopAction = await PlayerLoop(gameId);
-            //Console.WriteLine("player loop action: " + loopAction);
+            Console.WriteLine("player loop action: " + loopAction);
         }
         public Task<string> PlayerLoop(Guid gameId)
         {
@@ -84,12 +84,13 @@ namespace RiskGame.API.Services
                     decimal portionOfHausShares = (hausShares.Count() > 0 ? (decimal)(decision.Qty) / (decimal)(hausShares.Count()) : (decimal).001);
                     // ***************************************************************
                     // MODIFY THIS MODIFIER TO CREATE MORE DIRECTIONALITY IN THE PRICE
-                    var lastTradeModifier = (1 + portionOfHausShares);
-                    // HAUS knows more and can influence the price more
-                    // get company asset value per share
-                    var companyAssetValue = assets[0].CompanyAssetValuePerShare;
-
-                    // create an elastic pull toward the company asset value per share
+                    double priceDiff = (double)assets[0].CompanyAssetValuePerShare - (double)decision.Price;
+                    var numerator = (decimal)(Math.Pow(4, 2 * priceDiff) - 1);
+                    var denominator = (decimal)Math.Pow(4, priceDiff);
+                    var addOn = (decimal)2.75 * (decimal)priceDiff;
+                    decimal hausChange = numerator / denominator - addOn;
+                    decimal scarcity = (decimal)tradeTicket.Shares / (decimal)hausShares.Count();
+                    var lastTradeModifier = (1 + hausChange + scarcity);
                     // ***************************************************************
 
                     switch (decision.Action)
@@ -120,7 +121,7 @@ namespace RiskGame.API.Services
                     Console.WriteLine("****************************************************************************************************\n                         **************************************************");
                     Console.WriteLine("trade shares: " + tradeTicket.Shares);
                     Console.WriteLine("haus shares: " + hausShares.Count());
-                    Console.WriteLine("portion of haus shares: " + portionOfHausShares);
+                    Console.WriteLine("last trade modifier: " + lastTradeModifier);
                     Console.WriteLine("price difference from last trade: " + (tradeTicket.Cash / tradeTicket.Shares - lastTradePrice));
                     Console.WriteLine("buyer: " + tradeTicket.Buyer.Name);
                     Console.WriteLine("seller: " + tradeTicket.Seller.Name);

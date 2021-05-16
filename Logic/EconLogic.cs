@@ -49,8 +49,6 @@ namespace RiskGame.API.Logic
             precursors.Economy.History.Blue.Add(blue);
             precursors.Economy.History.Violet.Add(violet);
 
-
-
             return precursors;
         }
         private AssetResource[] GrowAssets(AssetResource[] assets, Market market)

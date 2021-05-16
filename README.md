@@ -100,4 +100,4 @@ The other thing I did was to wire up a MySQL db to store the transactions. Creat
 I also started transferring my notes to the Wiki and linked it to the top of the ReadMe.  
 
 **5/14/2021
-Been busy the past week or so. Added multi-threading to the creation of shares reducing the time it took to create 4000 shares from several minutes down to around 50 seconds. Did a bunch of bug chasing.
+Been busy** the past week or so. Added multi-threading to the creation of shares reducing the time it took to create 4000 shares from several minutes down to around 50 seconds. Did a bunch of bug chasing.

@@ -22,8 +22,6 @@ namespace RiskGame.API.Models.AssetFolder
         public string Name { get; set; }
         public int SharesOutstanding { get; set; }
         public List<Tuple<TradeType, decimal>> TradeHistory { get; set; }
-        public decimal LastBuyPrice { get; set; }
-        public decimal LastSellPrice { get; set; }
         public decimal MostRecentValue { get; set; }
         public decimal LastDividendPayout { get; set; }
         public DateTime LastDividendDate { get; set; }
