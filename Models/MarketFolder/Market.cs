@@ -41,22 +41,22 @@ namespace RiskGame.API.Models.MarketFolder
             MarketTrendiness = randy.Next(8);
             if (randy.Next(9) > MarketTrendiness) RedDirection = yester != null ? (Direction)((int)yester.RedDirection * -1) : Direction.Up;
             else RedDirection = yester != null ? yester.RedDirection : Direction.Up;
-            Red = randy.NextDouble() * (int)RedDirection;
+            Red = (int)RedDirection * (.01 / randy.NextDouble() - .009);
             if (randy.Next(9) > MarketTrendiness) OrangeDirection = yester != null ? (Direction)((int)yester.OrangeDirection * -1) : Direction.Up;
             else OrangeDirection = yester != null ? yester.OrangeDirection : Direction.Up;
-            Orange = randy.NextDouble() * (int)OrangeDirection;
+            Orange = (int)OrangeDirection * (.01 / randy.NextDouble() - .009);
             if (randy.Next(9) > MarketTrendiness) YellowDirection = yester != null ? (Direction)((int)yester.YellowDirection * -1) : Direction.Up;
             else YellowDirection = yester != null ? yester.YellowDirection : Direction.Up;
-            Yellow = randy.NextDouble() * (int)YellowDirection;
+            Yellow = (int)YellowDirection * (.01 / randy.NextDouble() - .009);
             if (randy.Next(9) > MarketTrendiness) GreenDirection = yester != null ? (Direction)((int)yester.GreenDirection * -1) : Direction.Up;
             else GreenDirection = yester != null ? yester.GreenDirection : Direction.Up;
-            Green = randy.NextDouble() * (int)GreenDirection;
+            Green = (int)GreenDirection * (.01 / randy.NextDouble() - .009);
             if (randy.Next(9) > MarketTrendiness) BlueDirection = yester != null ? (Direction)((int)yester.BlueDirection * -1) : Direction.Up;
             else BlueDirection = yester != null ? yester.BlueDirection : Direction.Up;
-            Blue = randy.NextDouble() * (int)BlueDirection;
+            Blue = (int)BlueDirection * (.01 / randy.NextDouble() - .009);
             if (randy.Next(9) > MarketTrendiness) VioletDirection = yester != null ? (Direction)((int)yester.VioletDirection * -1) : Direction.Up;
             else VioletDirection = yester != null ? yester.VioletDirection : Direction.Up;
-            Violet = randy.NextDouble() * (int)VioletDirection;
+            Violet = (int)VioletDirection * (.01 / randy.NextDouble() - .009);
         }
         public Market()
         {

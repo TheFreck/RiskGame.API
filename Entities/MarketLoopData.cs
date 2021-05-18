@@ -14,13 +14,13 @@ namespace RiskGame.API.Entities
     {
         [Required]
         public EconomyResource Economy { get; set; }
-        [Required]
-        public MarketMetrics Market { get; set; }
+        //[Required]
+        //public MarketMetrics MarketMetrics { get; set; }
         [Required]
         public Guid EconId { get; set; }
         [Required]
         public AssetResource[] Assets { get; set; }
         [Required]
-        public MarketResource LastMarket { get; set; }
+        public MarketResource Market { get; set; }
     }
 }

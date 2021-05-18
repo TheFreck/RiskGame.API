@@ -74,8 +74,8 @@ namespace RiskGame.API.Services
                     tradeTicket.GameId = gameId;
                     tradeTicket.Asset = _mapper.Map<AssetResource,ModelReference>(assets[0]);
                     var decision = _playerLogic.PlayerTurn(player, playerShares, assets, game.History);
-                    decision.Action = decision.Qty > 0 ? TurnTypes.Buy : decision.Qty < 0 ? TurnTypes.Sell : TurnTypes.Hold;
-                    var total = decision.Asset;
+                    tradeTicket.Action = (TradeType)(int)(decision.Qty > 0 ? TurnTypes.Buy : decision.Qty < 0 ? TurnTypes.Sell : TurnTypes.Hold);
+                    //var total = decision.Asset;
                     tradeTicket.Shares = Math.Abs(decision.Qty);
                     var lastTrade = _assetRepo.GetGameAssets(gameId).Where(a => a.AssetId == tradeTicket.Asset.Id).FirstOrDefault();
                     var lastTradePrice = lastTrade.TradeHistory.OrderByDescending(t => t.Item1).FirstOrDefault().Item2;
@@ -84,7 +84,7 @@ namespace RiskGame.API.Services
                     decimal portionOfHausShares = (hausShares.Count() > 0 ? (decimal)(decision.Qty) / (decimal)(hausShares.Count()) : (decimal).001);
                     // ***************************************************************
                     // MODIFY THIS MODIFIER TO CREATE MORE DIRECTIONALITY IN THE PRICE
-                    double priceDiff = (double)assets[0].CompanyAssetValuePerShare - (double)decision.Price;
+                    var priceDiff = (double)((assets[0].CompanyAssetValuePerShare - lastTradePrice) / lastTradePrice);
                     var numerator = (decimal)(Math.Pow(4, 2 * priceDiff) - 1);
                     var denominator = (decimal)Math.Pow(4, priceDiff);
                     var addOn = (decimal)2.75 * (decimal)priceDiff;
@@ -126,9 +126,9 @@ namespace RiskGame.API.Services
                     Console.WriteLine("buyer: " + tradeTicket.Buyer.Name);
                     Console.WriteLine("seller: " + tradeTicket.Seller.Name);
                     Console.WriteLine("price: " + tradeTicket.Cash / tradeTicket.Shares);
+                    Console.WriteLine("asset value per share: " + assets[0].CompanyAssetValuePerShare);
                     Console.WriteLine("                         **************************************************                         \n****************************************************************************************************");
                     var traded = _transactionService.Transact(tradeTicket);
-                    // add transaction to board
                     timer.Stop();
                 }
                 //Console.WriteLine("player: " + timer.ElapsedMilliseconds);

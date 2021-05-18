@@ -5,6 +5,7 @@ import { createBrowserHistory as createHistory } from "history";
 import $ from 'jquery';
 import { GameHome } from './components/pages/GameHome';
 import Store from './stateManagement/Store';
+import { PlayerLoopFlowChart } from './components/pages/PlayerLoopFlowChart';
 
 import './custom.css'
 const history = createHistory();
@@ -55,6 +56,7 @@ export default class App extends Component {
                 >
                     <Route exact path='/' component={GameHome} />
                     <Route path='/game' component={GameHome} />
+                    <Route path='/player-flow' component={PlayerLoopFlowChart} />
                 </Router>
             </Store>
         );

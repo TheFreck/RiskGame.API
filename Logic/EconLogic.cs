@@ -27,7 +27,7 @@ namespace RiskGame.API.Logic
         public MarketLoopData LoopRound(MarketLoopData precursors)
         {
             // grow assets
-            var lastMarketResource = precursors.LastMarket;
+            var lastMarketResource = precursors.Market;
             var lastMarket = _mapper.Map<MarketResource,Market>(lastMarketResource);
             var grownAssets = GrowAssets(precursors.Assets, lastMarket).ToArray();
             var lastMarketMetrics = lastMarket.GetMetrics(grownAssets.Select(a => a.CompanyAsset).ToArray());
@@ -41,7 +41,7 @@ namespace RiskGame.API.Logic
             var green = nextMarket.GetMetric(IndustryTypes.Green);
             var blue = nextMarket.GetMetric(IndustryTypes.Blue);
             var violet = nextMarket.GetMetric(IndustryTypes.Violet);
-            precursors.LastMarket = _mapper.Map<Market,MarketResource>(nextMarket);
+            precursors.Market = _mapper.Map<Market,MarketResource>(nextMarket);
             precursors.Economy.History.Red.Add(red);
             precursors.Economy.History.Orange.Add(orange);
             precursors.Economy.History.Yellow.Add(yellow);
@@ -55,11 +55,11 @@ namespace RiskGame.API.Logic
         {
             foreach (var asset in assets)
             {
-                if (asset.CompanyAsset == null) continue;
+                //if (asset.CompanyAsset == null) continue;
                 asset.PeriodsSinceDividend++;
-                var period = randy.Next(10, 100);
                 decimal primary = (decimal)market.GetMetric(asset.CompanyAsset.PrimaryIndustry);
                 decimal secondary = (decimal)market.GetMetric(asset.CompanyAsset.SecondaryIndustry);
+                var period = randy.Next(10, 100);
                 double magnitude = (double)GrowthRate(primary, secondary) / period;
                 asset.CompanyAsset.Waves.Add(new Wave {
                     Magnitude = magnitude, 

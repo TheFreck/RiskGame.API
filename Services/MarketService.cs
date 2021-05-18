@@ -102,14 +102,6 @@ namespace RiskGame.API.Services
             newGame.Markets = new List<Tuple<DateTime, MarketMetrics>>();
             newGame.Assets = assets.Select(a => a.CompanyAsset).ToArray();
             var newMarket = new Market();
-            //foreach(var asset in assets)
-            //{
-            //    asset.TradeHistory = new List<Tuple<TradeType, decimal>>();
-            //    asset.CompanyHistory = new List<Tuple<DateTime, decimal>>();
-            //}
-            //var assetUpdatorBase = Builders<AssetResource>.Update;
-            //var update = assetUpdatorBase.Set("TradeHistory", new List<Tuple<TradeType, decimal>>()).Set("CompanyHistory", new List<Tuple<DateTime, decimal>>());
-            //_assetRepo.UpdateMany(assets.Select(a => a.AssetId).ToList(),update);
             newGame.Markets.Add(new Tuple<DateTime, MarketMetrics>(DateTime.Now, newMarket.GetMetrics(assets.Select(a => a.CompanyAsset).ToArray())));
             _econRepo.CreateOne(_mapper.Map<Economy,EconomyResource>(newGame));
             return newGame.GameId;

@@ -36,7 +36,7 @@ namespace RiskGame.API.Logic
             var allocationQty = (int)Math.Ceiling((decimal)player.RiskTolerance * (player.Cash + portfolioValue)/lastPrice - portQty);
             var evaluationQty = (int)Math.Ceiling(portQty * (decision.Price - lastPrice) / lastPrice);
             decision.Qty = allocationQty > 0 && evaluationQty > 0 ? Math.Max(allocationQty, evaluationQty) : allocationQty < 0 && evaluationQty < 0 ? Math.Min(allocationQty, evaluationQty) : allocationQty + evaluationQty;
-            
+            decision.Action = decision.Qty > 0 ? TurnTypes.Buy : decision.Qty < 0 ? TurnTypes.Sell : TurnTypes.Hold;
             decision.Asset = _mapper.Map<AssetResource, ModelReference>(asset);
             return decision;
         }
@@ -53,8 +53,7 @@ namespace RiskGame.API.Logic
             var news = new Newspaper(history).ReadNewspaper(player.Experience, asset);
             var successRatio = (.7 * news.PrimarySuccessRatio + .3 * news.SecondarySuccessRatio) + 1;
             var weightedGrowth = (.7 * news.PrimaryGrowth + .3 * news.MarketGrowth);
-            var currentValueEstimate = (decimal)Math.Pow(news.LastDividendValue * (1 + successRatio * weightedGrowth),asset.PeriodsSinceDividend);
-            
+            var currentValueEstimate = (decimal)news.LastDividendValue * (decimal)Math.Pow(1 + weightedGrowth,asset.PeriodsSinceDividend);
             decision.Price = currentValueEstimate;
             return decision;
         }

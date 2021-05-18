@@ -48,9 +48,10 @@ namespace RiskGame.API.Logic
         public IncomeSheet CalculateDividend(AssetResource asset)
         {
             var recentValue = asset.MostRecentValue;
-            var currentValue = asset.CompanyAsset.Value;
-            var grossIncome = (currentValue - recentValue) * asset.Debt;
-            var debtService = (decimal).02 * asset.Debt * recentValue;
+            var currentValue = asset.CompanyAsset.Value * asset.Debt;
+            var grossIncome = currentValue - recentValue;
+            // eventually increase the interest rate based on amount of debt
+            var debtService = (decimal).02 * recentValue * (asset.Debt -1);
             var growthAfterDebtService = grossIncome - debtService;
             var dividends = (int)Math.Floor(growthAfterDebtService / 2) - ((int)Math.Floor(growthAfterDebtService / 2) % asset.SharesOutstanding);
             var equityGrowth = growthAfterDebtService - dividends;
