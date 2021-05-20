@@ -55,7 +55,7 @@ namespace RiskGame.API
             services.AddTransient<ITransactionLogic,TransactionLogic>();
             services.AddTransient<IEconLogic, EconLogic>();
 
-            // REPOSITORIES SERVICES
+            // REPOSITORY SERVICES
             services.AddSingleton<IAssetRepo, AssetRepo>();
             services.AddSingleton<IPlayerRepo, PlayerRepo>();
             services.AddSingleton<IShareRepo, ShareRepo>();
@@ -69,6 +69,7 @@ namespace RiskGame.API
                     new TransactionContext(Configuration?.GetSection("RiskGameDatabaseSettings")
                     .GetChildren().Where(v => v.Key == "MySqlConnectionString")
                     .Select(v => v.Value).FirstOrDefault().ToString())));
+            services.AddSwaggerGen();
 
             services.AddControllersWithViews();
 
@@ -82,19 +83,12 @@ namespace RiskGame.API
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            if (env.IsDevelopment())
+            app.UseSwagger();
+            app.UseSwaggerUI(c =>
             {
-                app.UseDeveloperExceptionPage();
-            }
-            else
-            {
-                app.UseExceptionHandler("/Error");
-                app.UseHsts();
-            }
-
-            app.UseHttpsRedirection();
-            app.UseStaticFiles();
-            app.UseSpaStaticFiles();
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "RiskGame.API");
+                c.RoutePrefix = string.Empty;
+            });
 
             app.UseRouting();
 
@@ -105,15 +99,41 @@ namespace RiskGame.API
                     pattern: "api/{controller}/{action=Index}/{id?}");
             });
 
-            app.UseSpa(spa =>
-            {
-                spa.Options.SourcePath = "ClientApp";
+            // ***************************************************
+            // un comment this section while removing Swagger
+            //if (env.IsDevelopment())
+            //{
+            //    app.UseDeveloperExceptionPage();
+            //}
+            //else
+            //{
+            //    app.UseExceptionHandler("/Error");
+            //    app.UseHsts();
+            //}
 
-                if (env.IsDevelopment())
-                {
-                    spa.UseReactDevelopmentServer(npmScript: "start");
-                }
-            });
+            //app.UseHttpsRedirection();
+            //app.UseStaticFiles();
+            //app.UseSpaStaticFiles();
+
+            //app.UseRouting();
+
+            //app.UseEndpoints(endpoints =>
+            //{
+            //    endpoints.MapControllerRoute(
+            //        name: "default",
+            //        pattern: "api/{controller}/{action=Index}/{id?}");
+            //});
+
+            //app.UseSpa(spa =>
+            //{
+            //    spa.Options.SourcePath = "ClientApp";
+
+            //    if (env.IsDevelopment())
+            //    {
+            //        spa.UseReactDevelopmentServer(npmScript: "start");
+            //    }
+            //});
+            // ****************************************************************
         }
     }
 }

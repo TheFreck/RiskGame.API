@@ -75,7 +75,6 @@ namespace RiskGame.API.Services
                     tradeTicket.Asset = _mapper.Map<AssetResource,ModelReference>(assets[0]);
                     var decision = _playerLogic.PlayerTurn(player, playerShares, assets, game.History);
                     tradeTicket.Action = (TradeType)(int)(decision.Qty > 0 ? TurnTypes.Buy : decision.Qty < 0 ? TurnTypes.Sell : TurnTypes.Hold);
-                    //var total = decision.Asset;
                     tradeTicket.Shares = Math.Abs(decision.Qty);
                     var lastTrade = _assetRepo.GetGameAssets(gameId).Where(a => a.AssetId == tradeTicket.Asset.Id).FirstOrDefault();
                     var lastTradePrice = lastTrade.TradeHistory.OrderByDescending(t => t.Item1).FirstOrDefault().Item2;

@@ -24,7 +24,6 @@ namespace RiskGame.API.Models.AssetFolder
         public List<Tuple<TradeType, decimal>> TradeHistory { get; set; }
         public decimal MostRecentValue { get; set; }
         public decimal LastDividendPayout { get; set; }
-        public DateTime LastDividendDate { get; set; }
         public int PeriodsSinceDividend { get; set; }
         public string Message { get; set; }
         public ModelTypes ModelType { get; set; }

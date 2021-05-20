@@ -61,7 +61,7 @@ namespace RiskGame.API.Services
                 };
                 var next = _econLogic.LoopRound(loop);
                 var asset = next.Assets[0];
-                if(asset.PeriodsSinceDividend == 20)
+                if(asset.PeriodsSinceDividend == 50)
                 {
                     Console.WriteLine("dividend day!!!");
                     var shares = _shareRepo.GetMany().Where(s => s._assetId == next.Assets[0].AssetId).ToArray();
@@ -101,6 +101,7 @@ namespace RiskGame.API.Services
                     .Set("LastDividendPayout", asset.LastDividendPayout)
                     .Set("CompanyAssetValuePerShare", asset.CompanyAssetValuePerShare);
                 var updated = _assetRepo.UpdateOne(asset.AssetId, assetUpdate).Result;
+                Console.WriteLine("asset updated asset value per share: " + asset.CompanyAssetValuePerShare);
                 _marketRepo.CreateOne(next.Market);
                 economy = next.Economy;
                 timer.Stop();

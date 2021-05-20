@@ -62,6 +62,11 @@ namespace RiskGame.API.Services
                 });
                 Shares.Add(shareId);
             }
+            foreach (Thread thread in threads)
+            {
+                thread.Join();
+            }
+
             return Shares;
         }
         private void ShareCreation()

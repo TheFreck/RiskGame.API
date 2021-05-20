@@ -32,9 +32,8 @@ namespace RiskGame.API.Logic
             var grownAssets = GrowAssets(precursors.Assets, lastMarket).ToArray();
             var lastMarketMetrics = lastMarket.GetMetrics(grownAssets.Select(a => a.CompanyAsset).ToArray());
             var nextMarket = new Market(precursors.EconId, precursors.Assets.Select(a => a.CompanyAsset).ToArray(), randy, lastMarketMetrics);
-            // update economy
             precursors.Economy.Assets = grownAssets.Select(a => a.CompanyAsset).ToArray();
-            // update precursors
+            // update market history
             var red = nextMarket.GetMetric(IndustryTypes.Red);
             var orange = nextMarket.GetMetric(IndustryTypes.Orange);
             var yellow = nextMarket.GetMetric(IndustryTypes.Yellow);
@@ -71,9 +70,9 @@ namespace RiskGame.API.Logic
                     wave.Period--;
                 }
                 asset.CompanyAsset.Waves = asset.CompanyAsset.Waves.Where(c => c.Period > 0).ToList();
-                var value = asset.CompanyAsset.Value * (1 + growthRate * asset.CompanyAsset.InternalRateOfReturn);
+                decimal value = asset.CompanyAsset.Value * (1 + growthRate * asset.CompanyAsset.InternalRateOfReturn);
                 asset.CompanyAsset.Value = value;
-                asset.CompanyHistory.Add(new Tuple<DateTime, decimal>(DateTime.Now,value));
+                asset.CompanyHistory.Add(Tuple.Create(DateTime.Now,value));
             }
             return assets;
         }
