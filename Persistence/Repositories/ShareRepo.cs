@@ -49,14 +49,16 @@ namespace RiskGame.API.Persistence.Repositories
         // delete many
         public Task<DeleteResult> DeleteMany(IEnumerable<Guid> shares)
         {
-            var filter = Builders<ShareResource>.Filter.AnyEq("ShareId", shares);
+            var filter = Builders<ShareResource>.Filter.Eq("ShareId", shares);
             return _shares.DeleteManyAsync(filter);
         }
         // delete asset shares
         public Task<DeleteResult> DeleteAssetShares(Guid assetId)
         {
-            var filter = Builders<ShareResource>.Filter.AnyEq("_assetId", assetId);
-            return _shares.DeleteManyAsync(filter);
+            var filter = Builders<ShareResource>.Filter.Eq("_assetId", assetId);
+            var shares = _shares.Find(Builders<ShareResource>.Filter.Eq("_assetId", assetId)).ToList();
+            var done = _shares.DeleteManyAsync(filter);
+            return done;
         }
     }
     public interface IShareRepo

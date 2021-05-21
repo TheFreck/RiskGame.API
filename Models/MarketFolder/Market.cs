@@ -12,6 +12,7 @@ namespace RiskGame.API.Models.MarketFolder
 {
     public class Market
     {
+        public Guid MarketId { get; set; }
         public int SequenceNumber { get; set; }
         public Guid GameId { get; set; }
         public int MarketTrendiness; // 0-9
@@ -34,6 +35,7 @@ namespace RiskGame.API.Models.MarketFolder
         public Asset CASH { get; set; }
         public Market(Guid gameId, CompanyAsset[] assets, Random randy, MarketMetrics yester)
         {
+            MarketId = Guid.NewGuid();
             Time = DateTime.Now;
             SequenceNumber = yester != null ? yester.SequenceNumber + 1 : 0;
             GameId = gameId;
@@ -60,6 +62,7 @@ namespace RiskGame.API.Models.MarketFolder
         }
         public Market()
         {
+            MarketId = Guid.NewGuid();
             Red = Orange = Yellow = Green = Blue = Violet = 0;
             RedDirection = OrangeDirection = YellowDirection = GreenDirection = BlueDirection = VioletDirection = Direction.Up;
         }

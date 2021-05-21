@@ -19,7 +19,7 @@ namespace RiskGame.API.Persistence.Repositories
             _settings = settings;
         }
         // get one
-        public MarketResource GetOne(Guid marketId) => _markets.AsQueryable().Where(p => p.ObjectId == marketId.ToString()).FirstOrDefault();
+        public MarketResource GetOne(Guid marketId) => _markets.AsQueryable().Where(p => p.MarketId == marketId).FirstOrDefault();
         // get many specific markets
         public IQueryable<MarketResource> GetManySpecific(List<Guid> playerIds) => _markets.AsQueryable().Where(p => playerIds.Contains(Guid.Parse(p.ObjectId)));
         // get many
@@ -40,7 +40,7 @@ namespace RiskGame.API.Persistence.Repositories
         // delete one
         public Task<DeleteResult> DeleteOne(Guid marketId)
         {
-            var filter = Builders<MarketResource>.Filter.Eq("ObjectId", marketId.ToString());
+            var filter = Builders<MarketResource>.Filter.Eq("MarketId", marketId);
             return _markets.DeleteOneAsync(filter);
         }
         // delete many
