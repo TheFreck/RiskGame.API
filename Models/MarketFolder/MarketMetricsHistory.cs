@@ -18,12 +18,12 @@ namespace RiskGame.API.Models.MarketFolder
         public List<double> Violet { get; set; }
         public MarketMetricsHistory()
         {
-            Red = new List<double>();
-            Orange = new List<double>();
-            Yellow = new List<double>();
-            Green = new List<double>();
-            Blue = new List<double>();
-            Violet = new List<double>();
+            Red = new List<double>() { 0 };
+            Orange = new List<double>() { 0 };
+            Yellow = new List<double>() { 0 };
+            Green = new List<double>() { 0 };
+            Blue = new List<double>() { 0 };
+            Violet = new List<double>() { 0 };
         }
     }
 }

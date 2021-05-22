@@ -5,6 +5,7 @@ using RiskGame.API.Entities;
 using RiskGame.API.Models.AssetFolder;
 using RiskGame.API.Models.EconomyFolder;
 using RiskGame.API.Models.MarketFolder;
+using RiskGame.API.Models.PlayerFolder;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,7 +26,7 @@ namespace RiskGame.API.Models.EconomyFolder
         public CompanyAsset[] Assets { get; set; }
         public List<Tuple<DateTime,MarketMetrics>> Markets { get; set; }
         public MarketMetricsHistory History { get; set; }
+        public Player HAUS { get; set; }
         public bool isRunning { get; set; }
-        public int Trendiness { get; set; }
     }
 }

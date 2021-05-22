@@ -92,7 +92,12 @@ namespace RiskGame.API.Services
                 asset.CompanyAsset.Value = asset.MostRecentValue / asset.Debt;
 
                 asset.CompanyAssetValuePerShare = asset.MostRecentValue / asset.SharesOutstanding; ;
-                _econRepo.ReplaceOne(econFilter, next.Economy); // update instead
+                var econUpdate = Builders<EconomyResource>.Update
+                    .Set("Assets", next.Economy.Assets)
+                    .Set("History", next.Economy.History)
+                    .Set("HAUS", next.Economy.HAUS)
+                    .Set("isRunning", next.Economy.isRunning);
+                _econRepo.UpdateOne(econId, econUpdate);
                 var assetUpdateBase = Builders<AssetResource>.Update;
                 var assetUpdate = assetUpdateBase
                     .Set("CompanyAsset", asset.CompanyAsset)
