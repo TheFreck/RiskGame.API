@@ -25,7 +25,7 @@ namespace RiskGame.API.Models.AssetFolder
         [JsonProperty("Name")]
         public string Name { get; set; }
         public int SharesOutstanding { get; set; }
-        public List<Tuple<TradeType, decimal>> TradeHistory { get; set; }
+        public List<Tuple<DateTime, TradeType, decimal>> TradeHistory { get; set; }
         public decimal MostRecentValue { get; set; }
         public decimal LastDividendPayout { get; set; }
         public int PeriodsSinceDividend { get; set; }
@@ -48,7 +48,7 @@ namespace RiskGame.API.Models.AssetFolder
             ModelType = ModelTypes.Asset;
             CompanyAsset = new CompanyAsset();
             CompanyHistory = new List<Tuple<DateTime, decimal>> { Tuple.Create(DateTime.Now, CompanyAsset.Value / sharesOutstanding) };
-            TradeHistory = new List<Tuple<TradeType, decimal>>();
+            TradeHistory = new List<Tuple<DateTime, TradeType, decimal>>();
             CompanyAssetValuePerShare = (CompanyAsset.Value * Debt) / SharesOutstanding;
         }
         public Asset()

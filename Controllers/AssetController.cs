@@ -5,6 +5,7 @@ using RiskGame.API.Entities;
 using RiskGame.API.Entities.Enums;
 using RiskGame.API.Models;
 using RiskGame.API.Models.AssetFolder;
+using RiskGame.API.Models.EconomyFolder;
 using RiskGame.API.Models.PlayerFolder;
 using RiskGame.API.Models.SharesFolder;
 using RiskGame.API.Services;
@@ -114,7 +115,7 @@ namespace RiskGame.API.Controllers
                 PrimaryIndustry = (IndustryTypes)randy.Next(5),
                 SecondaryIndustry = (IndustryTypes)randy.Next(5)
             };
-            asset.TradeHistory = new List<Tuple<TradeType, decimal>>();
+            asset.TradeHistory = new List<Tuple<DateTime, TradeType, decimal>>();
             asset.CompanyHistory = new List<Tuple<DateTime, decimal>>();
 
             // Get the Game
@@ -130,9 +131,11 @@ namespace RiskGame.API.Controllers
             var gameAssets = _assetService.GetGameAssets(gameId);
             var gottenAsset = gameAssets.FirstOrDefault();
             var price = gottenAsset.CompanyAsset.Value / gottenAsset.SharesOutstanding;
-            gottenAsset.TradeHistory.Add(Tuple.Create(TradeType.Buy, price));
+            gottenAsset.TradeHistory.Add(Tuple.Create(DateTime.Now, TradeType.Buy, price));
             game.Assets = gameAssets.Select(a => a.CompanyAsset).ToArray();
-            var result = _marketService.UpdateGame(game);
+            
+            
+            var result = _marketService.UpdateGame(game.GameId, Builders<EconomyResource>.Update.Set("Assets",game.Assets));
 
             // Create Shares
             _shareService.CreateShares(_mapper.Map<Asset, ModelReference>(asset), asset.SharesOutstanding, hausRef, ModelTypes.Asset, gameId);

@@ -35,25 +35,30 @@ namespace RiskGame.API.Services
             _mapper = mapper;
 
         }
-        public List<AssetResource> GetAsync() => _assetRepo.GetMany().ToList();
+        public List<AssetResource> GetAssets() => _assetRepo.GetMany().ToList();
         public CompanyAsset[] GetCompanyAssets(Guid gameId) => _assetRepo.GetMany().Where(a => a.GameId == gameId).Select(a => a.CompanyAsset).ToArray();
-        public List<ShareResource> GetShares(Guid assetId, ModelTypes type) => _shareRepo.GetMany().Where(s => s._assetId == assetId).Where(s => s.ModelType == type).ToList();
-        public AssetResource GetAsset(Guid id, ModelTypes type) => _assetRepo.GetMany().Where(a => a.AssetId == id).Where(a => a.ModelType == type).FirstOrDefault();
+        public IQueryable<ShareResource> GetShares(Guid assetId)
+        {
+            var many = _shareRepo.GetMany().Where(s => s._assetId == assetId).AsQueryable();
+            return many;
+        }
+        public AssetResource GetAsset(Guid id, ModelTypes type) => _assetRepo.GetMany()
+            .Where(a => a.AssetId == id)
+            .Where(a => a.ModelType == type)
+            .FirstOrDefault();
         public AssetResource[] GetGameAssets(Guid id) => _assetRepo.GetMany().Where(a => a.GameId == id).Where(a => a.CompanyAsset != null).ToArray();
         public ChartPixel GetAssetPrices(Guid gameId, Guid assetId, int frame)
         {
-            var assets = _assetRepo.GetMany().Where(a => a.GameId == gameId).Where(a => a.AssetId == assetId).Select(a => a.TradeHistory).FirstOrDefault();
-            var target = assets.GetRange(frame, assets.Count - 1);
-            var open = target.FirstOrDefault();
-            var descending = target.OrderByDescending(t => t.Item2);
+            var trades = _assetRepo.GetMany().Where(a => a.GameId == gameId).Where(a => a.AssetId == assetId).Select(a => a.TradeHistory).FirstOrDefault();
+            var pixelTrades = trades.OrderBy(d => d.Item1).TakeLast(trades.Count - frame);
             return new ChartPixel
             {
-                Open = target.FirstOrDefault().Item2,
-                Close = target.LastOrDefault().Item2,
-                High = descending.FirstOrDefault().Item2,
-                Low = descending.LastOrDefault().Item2,
-                Volume = target.Count(),
-                LastFrame = assets.Count()
+                Volume = pixelTrades.Count(),
+                Open = pixelTrades.FirstOrDefault().Item3,
+                Close = pixelTrades.LastOrDefault().Item3,
+                High = pixelTrades.OrderByDescending(t => t.Item3).FirstOrDefault().Item3,
+                Low = pixelTrades.OrderByDescending(t => t.Item3).LastOrDefault().Item3,
+                LastFrame = trades.Count()
             };
         }
         public List<ChartPixel> GetTrades(Guid gameId, Guid assetId, DateTime since)
@@ -83,13 +88,14 @@ namespace RiskGame.API.Services
         public void RemoveAssetsFromGame(List<Guid> assetIds) => _assetRepo.DeleteMany(assetIds);
         public ModelReference ToRef(Asset asset) => _mapper.Map<Asset, ModelReference>(asset);
         public ModelReference ResToRef(AssetResource asset) => _mapper.Map<AssetResource, ModelReference>(asset);
+
     }
     public interface IAssetService
     {
         //string Initialize();
-        List<AssetResource> GetAsync();
+        List<AssetResource> GetAssets();
         CompanyAsset[] GetCompanyAssets(Guid gameId);
-        List<ShareResource> GetShares(Guid id, ModelTypes type);
+        IQueryable<ShareResource> GetShares(Guid id);
         AssetResource GetAsset(Guid id, ModelTypes type);
         AssetResource[] GetGameAssets(Guid id);
         ChartPixel GetAssetPrices(Guid gameId, Guid assetId, int frame);

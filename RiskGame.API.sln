@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.31025.194
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RiskGame.API", "RiskGame.API.csproj", "{9642496E-47A6-45C4-BAA5-511F93BCAC90}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Asset", "..\Test.Asset\Test.Asset.csproj", "{FC5E9B61-DF97-43AE-9B2D-779922451021}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.UnitTests", "..\Test.UnitTests\Test.UnitTests.csproj", "{86A8ACE7-C82C-4DA7-B0DB-A9F5752D04F1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,10 +17,10 @@ Global
 		{9642496E-47A6-45C4-BAA5-511F93BCAC90}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9642496E-47A6-45C4-BAA5-511F93BCAC90}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9642496E-47A6-45C4-BAA5-511F93BCAC90}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FC5E9B61-DF97-43AE-9B2D-779922451021}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FC5E9B61-DF97-43AE-9B2D-779922451021}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FC5E9B61-DF97-43AE-9B2D-779922451021}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FC5E9B61-DF97-43AE-9B2D-779922451021}.Release|Any CPU.Build.0 = Release|Any CPU
+		{86A8ACE7-C82C-4DA7-B0DB-A9F5752D04F1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{86A8ACE7-C82C-4DA7-B0DB-A9F5752D04F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{86A8ACE7-C82C-4DA7-B0DB-A9F5752D04F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{86A8ACE7-C82C-4DA7-B0DB-A9F5752D04F1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

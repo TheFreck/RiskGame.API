@@ -77,7 +77,7 @@ namespace RiskGame.API.Services
                     tradeTicket.Action = (TradeType)(int)(decision.Qty > 0 ? TurnTypes.Buy : decision.Qty < 0 ? TurnTypes.Sell : TurnTypes.Hold);
                     tradeTicket.Shares = Math.Abs(decision.Qty);
                     var lastTrade = _assetRepo.GetGameAssets(gameId).Where(a => a.AssetId == tradeTicket.Asset.Id).FirstOrDefault();
-                    var lastTradePrice = lastTrade.TradeHistory.OrderByDescending(t => t.Item1).FirstOrDefault().Item2;
+                    var lastTradePrice = lastTrade.TradeHistory.OrderByDescending(t => t.Item1).FirstOrDefault().Item3;
                     var allShares = _shareRepo.GetMany().ToList();
                     var hausShares = allShares.Where(s => s.CurrentOwner.Id == haus.PlayerId).ToList();
                     decimal portionOfHausShares = (hausShares.Count() > 0 ? (decimal)(decision.Qty) / (decimal)(hausShares.Count()) : (decimal).001);

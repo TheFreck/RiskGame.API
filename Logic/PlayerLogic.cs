@@ -28,7 +28,7 @@ namespace RiskGame.API.Logic
         {
             var asset = assets.Where(a => a.ModelType == ModelTypes.Asset).FirstOrDefault();
             var price = decision.Price;
-            var lastPrice = asset.TradeHistory.OrderByDescending(t => t.Item1).LastOrDefault().Item2;
+            var lastPrice = asset.TradeHistory.OrderByDescending(t => t.Item1).LastOrDefault().Item3;
             var portQty = portfolio.Where(s => s._assetId == asset.AssetId).Where(s => s.CurrentOwner.Id == player.PlayerId).Count();
             var portfolioValue = portQty * lastPrice;
             double portfolioAllocation = (double)(portfolioValue/(portfolioValue + player.Cash));

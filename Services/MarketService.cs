@@ -60,15 +60,15 @@ namespace RiskGame.API.Services
             }
             return pixel;
         }
-        public UpdateResult SetPixelCount(Guid gameId, int count) {
-            var update = Builders<EconomyResource>.Update.Set("PixelCount", count);
-            return _econRepo.UpdateOne(gameId,update).Result;
-        }
-        public UpdateResult SetTrendiness(Guid gameId, int trend)
-        {
-            var update = Builders<EconomyResource>.Update.Set("Trendiness", trend);
-            return _econRepo.UpdateOne(gameId, update).Result;
-        }
+        //public UpdateResult SetPixelCount(Guid gameId, int count) {
+        //    var update = Builders<EconomyResource>.Update.Set("PixelCount", count);
+        //    return _econRepo.UpdateOne(gameId,update).Result;
+        //}
+        //public UpdateResult SetTrendiness(Guid gameId, int trend)
+        //{
+        //    var update = Builders<EconomyResource>.Update.Set("Trendiness", trend);
+        //    return _econRepo.UpdateOne(gameId, update).Result;
+        //}
         public void AssetsStartStop(Guid gameId, bool running)
         {
             var update = Builders<EconomyResource>.Update.Set("isRunning", running);
@@ -108,12 +108,7 @@ namespace RiskGame.API.Services
         }
         public CompanyAsset[] GetCompanyAssets(Guid gameId) => _assetRepo.GetGameAssets(gameId).Select(a => a.CompanyAsset).ToArray();
         public Economy GetGame(Guid gameId) => _mapper.Map<EconomyResource,Economy>(_econRepo.GetOne(gameId));
-        public string UpdateGame(Economy game)
-        {
-            return _econRepo.ReplaceOne(Builders<EconomyResource>.Filter.Eq("GameId", game.GameId),
-                _mapper.Map<Economy, EconomyResource>(game)
-                ).ToString();
-        }
+        public string UpdateGame(Guid econId, UpdateDefinition<EconomyResource> update) => _econRepo.UpdateOne(econId, update).Result.ToString();
         public List<MarketMetrics> GetMarkets(Guid gameId) => _mapper.Map<List<MarketResource>,List<MarketMetrics>>(_marketRepo.GetMany().Where(m => m.GameId == gameId).ToList());
     }
     public interface IMarketService
@@ -121,13 +116,13 @@ namespace RiskGame.API.Services
         string BigBang(string secretCode);
         Task<string> EndGame(Guid gameId);
         ChartPixel GetRecords(Guid gameId, int lastSequence);
-        UpdateResult SetPixelCount(Guid gameId, int count);
-        UpdateResult SetTrendiness(Guid gameId, int trend);
+        //UpdateResult SetPixelCount(Guid gameId, int count);
+        //UpdateResult SetTrendiness(Guid gameId, int trend);
         void AssetsStartStop(Guid gameId, bool running);
         Guid NewGame(Guid gameId, AssetResource[] assets);
         CompanyAsset[] GetCompanyAssets(Guid gameId);
         Economy GetGame(Guid gameId);
-        string UpdateGame(Economy game);
+        string UpdateGame(Guid econId, UpdateDefinition<EconomyResource> update);
         List<MarketMetrics> GetMarkets(Guid gameId);
     }
 }

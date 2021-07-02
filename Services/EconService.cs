@@ -69,7 +69,7 @@ namespace RiskGame.API.Services
                     asset.PeriodsSinceDividend = 0;
                     var incomeSheet = _assetLogic.CalculateDividend(asset);
                     var dividendsPerShare = incomeSheet.Dividends / shares.Length;
-                    asset.TradeHistory.Add(Tuple.Create(TradeType.Dividend, asset.TradeHistory.OrderByDescending(t => t.Item1).FirstOrDefault().Item2 - dividendsPerShare));
+                    asset.TradeHistory.Add(Tuple.Create(DateTime.Now, TradeType.Dividend, asset.TradeHistory.OrderByDescending(t => t.Item1).FirstOrDefault().Item3 - dividendsPerShare));
                     asset.LastDividendPayout = incomeSheet.Dividends;
                     asset.MostRecentValue = asset.CompanyAsset.Value * asset.Debt;
                     // pay dividends on each share

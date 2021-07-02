@@ -73,7 +73,7 @@ namespace RiskGame.API.Services
             
             // trade price
             decimal price = trade.Cash / trade.Shares;
-            var tradeTuple = Tuple.Create(trade.Action, price);
+            var tradeTuple = Tuple.Create(DateTime.Now, trade.Action, price);
             
             // trade history
             var buyerTradeHistory = buyer.TradeHistory.ToList();
@@ -93,8 +93,8 @@ namespace RiskGame.API.Services
             var tradeShares = assetShares.Where(s => s._assetId == trade.Asset.Id).Where(s => s.CurrentOwner.Id == seller.PlayerId).Take(trade.Shares).ToArray();
 
             // update buyer and seller networth
-            buyer.NetWorth = tradeTuple.Item2 * tradeShares.Length + buyer.Cash;
-            seller.NetWorth = tradeTuple.Item2 * tradeShares.Length + seller.Cash;
+            buyer.NetWorth = tradeTuple.Item3 * tradeShares.Length + buyer.Cash;
+            seller.NetWorth = tradeTuple.Item3 * tradeShares.Length + seller.Cash;
             try
             {
                 // Transfer cash

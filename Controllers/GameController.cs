@@ -64,7 +64,7 @@ namespace RiskGame.API.Controllers
                     Name = $"Asset_{i}",
                     GameId = gameId,
                     SharesOutstanding = sharesIssued,
-                    TradeHistory = new List<Tuple<TradeType, decimal>>(),
+                    TradeHistory = new List<Tuple<DateTime, TradeType, decimal>>(),
                     CompanyHistory = new List<Tuple<DateTime, decimal>>(),
                     AssetId = Guid.NewGuid(),
                     Debt = new Random().Next(1, 10),
@@ -73,7 +73,7 @@ namespace RiskGame.API.Controllers
 
                 // add the IPO trade after creation to allow company asset to be created
                 asset.CompanyAssetValuePerShare = asset.CompanyAsset.Value * asset.Debt / asset.SharesOutstanding;
-                asset.TradeHistory.Add(Tuple.Create(TradeType.Buy, asset.CompanyAssetValuePerShare));
+                asset.TradeHistory.Add(Tuple.Create(DateTime.Now, TradeType.Buy, asset.CompanyAssetValuePerShare));
                 asset.MostRecentValue = asset.CompanyAsset.Value * asset.Debt;
                 var outcome = await _assetService.Create(asset);
                 if (outcome == "done") _shareService.CreateShares(_mapper.Map<AssetResource, ModelReference>(asset), asset.SharesOutstanding, _mapper.Map<PlayerResource,ModelReference>(haus), asset.ModelType, gameId);
@@ -156,13 +156,13 @@ namespace RiskGame.API.Controllers
         // ***
         // PUT
         // ***
-        [HttpPut("pixel-trend/{pixel}/{trend}")]
-        public string SetPixelAndTrend(Guid gameId, int pixel, int trend)
-        {
-            _marketService.SetPixelCount(gameId, pixel);
-            _marketService.SetTrendiness(gameId, trend);
-            return "dun did it";
-        }
+        //[HttpPut("pixel-trend/{pixel}/{trend}")]
+        //public string SetPixelAndTrend(Guid gameId, int pixel, int trend)
+        //{
+        //    _marketService.SetPixelCount(gameId, pixel);
+        //    _marketService.SetTrendiness(gameId, trend);
+        //    return "dun did it";
+        //}
         [HttpPut("blowup-the-inside-world")]
         public ActionResult<string> BlowUpTheInsideWorld([FromBody] string secretCode)
         {

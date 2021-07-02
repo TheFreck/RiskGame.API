@@ -21,7 +21,7 @@ namespace RiskGame.API.Models.AssetFolder
         [JsonProperty("Name")]
         public string Name { get; set; }
         public int SharesOutstanding { get; set; }
-        public List<Tuple<TradeType, decimal>> TradeHistory { get; set; }
+        public List<Tuple<DateTime, TradeType, decimal>> TradeHistory { get; set; }
         public decimal MostRecentValue { get; set; }
         public decimal LastDividendPayout { get; set; }
         public int PeriodsSinceDividend { get; set; }

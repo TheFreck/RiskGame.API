@@ -2,7 +2,7 @@
 import Chart from './Chart';
 
 export const ChartLoop = props => {
-    console.log(`I am an ${props.isRunning ? "" : "in"}active chart loop`);
+    console.log(`I am an ${props.isRunning ? "" : "inactive chart loop"}`);
     // *****
     // STATE
     // *****

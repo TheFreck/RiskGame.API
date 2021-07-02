@@ -21,11 +21,9 @@ namespace RiskGame.API.Logic
 {
     public class AssetLogic : IAssetLogic
     {
-        private readonly IMapper _mapper;
         private readonly Random randy;
-        public AssetLogic(IMapper mapper)
+        public AssetLogic()
         {
-            _mapper = mapper;
             randy = new Random();
         }
 
@@ -34,7 +32,6 @@ namespace RiskGame.API.Logic
             // calculate dividend
             asset.PeriodsSinceDividend = 0;
             var incomeSheet = CalculateDividend(asset);
-            //var hausRef = _mapper.Map<PlayerResource, ModelReference>(haus);
             var dividendsPerShare = incomeSheet.Dividends / shares.Length;
             // pay dividends on each share
             var output = new Dictionary<Guid, decimal>();

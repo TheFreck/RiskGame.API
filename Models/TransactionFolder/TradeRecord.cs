@@ -13,7 +13,8 @@ namespace RiskGame.API.Models.TransactionFolder
         public ModelReference  Buyer { get; set; }
         public ModelReference  Asset { get; set; }
         public Guid ShareId { get; set; }
-        public int Price { get; set; }
+        public decimal Price { get; set; }
         public DateTime TradeTime { get; set; }
     }
 }
+

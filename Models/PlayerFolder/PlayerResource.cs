@@ -26,7 +26,7 @@ namespace RiskGame.API.Models.PlayerFolder
         public decimal NetWorth { get; set; }
         public double RiskTolerance { get; set; }
         public Sophistication Experience { get; set; }
-        public Tuple<TradeType, decimal>[] TradeHistory { get; set; }
+        public Tuple<DateTime, TradeType, decimal>[] TradeHistory { get; set; }
         public int DecisionFrequency { get; set; }
         public int SkipsTilTurn { get; set; }
         //
