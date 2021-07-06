@@ -54,8 +54,8 @@ namespace RiskGame.API.Services
             return new ChartPixel
             {
                 Volume = pixelTrades.Count(),
-                Open = pixelTrades.FirstOrDefault().Item3,
-                Close = pixelTrades.LastOrDefault().Item3,
+                Open = pixelTrades.OrderBy(a => a.Item1).FirstOrDefault().Item3,
+                Close = pixelTrades.OrderBy(a => a.Item1).LastOrDefault().Item3,
                 High = pixelTrades.OrderByDescending(t => t.Item3).FirstOrDefault().Item3,
                 Low = pixelTrades.OrderByDescending(t => t.Item3).LastOrDefault().Item3,
                 LastFrame = trades.Count()

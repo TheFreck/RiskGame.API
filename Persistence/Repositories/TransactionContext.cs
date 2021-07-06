@@ -8,7 +8,7 @@ using RiskGame.API.Models.TransactionFolder;
 
 namespace RiskGame.API.Persistence.Repositories
 {
-    public class TransactionContext
+    public class TransactionContext : ITransactionContext
     {
         public string ConnectionString { get; set; }
         public TransactionContext(string connectionString)
@@ -19,7 +19,10 @@ namespace RiskGame.API.Persistence.Repositories
         {
             return new MySqlConnection(ConnectionString);
         }
-
+        public MySqlConnection GetPrivateConnection()
+        {
+            return GetConnection();
+        }
         //
         // get one
         public TransactionResource GetTrade(Guid transactionId, string[] columns)
@@ -139,5 +142,15 @@ namespace RiskGame.API.Persistence.Repositories
                 conn.Close();
             }
         }
+    }
+
+    public interface ITransactionContext
+    {
+        TransactionResource GetTrade(Guid transactionId, string[] columns);
+        List<TransactionResource> GetMany(Guid gameId, Guid assetId, DateTime since);
+        List<TransactionResource> GetAll(Guid gameId);
+        void AddTrade(TransactionResource trade);
+        void CleanSlate();
+        MySqlConnection GetPrivateConnection();
     }
 }

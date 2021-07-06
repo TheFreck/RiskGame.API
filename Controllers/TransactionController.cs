@@ -31,10 +31,6 @@ namespace RiskGame.API.Controllers
         // ***************************************************************
         // GET GET GET GET GET GET GET GET GET GET GET GET GET GET GET GET
         // ***************************************************************
-        [HttpGet]
-        public ActionResult<string> Get() => Ok("you are connected to the transactions controller");
-        [HttpGet("transactions")]
-        public List<TransactionResource> GetTransactions(Guid gameId) => _transactionService.GetTransactions(gameId);
         [HttpGet("get-trades/{gameId:length(36)}/{assetId:length(36)}/{since}")]
         public ActionResult<List<ChartPixel>> GetTrades(string gameId, string assetId, DateTime since)
         {
@@ -48,19 +44,19 @@ namespace RiskGame.API.Controllers
         // ****************************************************************
         // POST POST POST POST POST POST POST POST POST POST POST POST POST
         // ****************************************************************
-        //[HttpPost("trade")]
-        //public ActionResult<TradeClient> Trade([FromBody]TradeClient trade)
-        //{
-        //    try
-        //    {
-        //        _transactionService.InsertTrade(_mapper.Map<TradeClient,TransactionResource>(trade));
-        //        return Ok();
-        //    }
-        //    catch (Exception e)
-        //    {
-        //        return NotFound(e.Message);
-        //    }
-        //}
+        [HttpPost("trade")]
+        public ActionResult<TradeClient> Trade([FromBody] TradeClient trade)
+        {
+            try
+            {
+                _transactionService.InsertTrade(_mapper.Map<TradeClient, TransactionResource>(trade));
+                return Ok();
+            }
+            catch (Exception e)
+            {
+                return NotFound(e.Message);
+            }
+        }
         // ***************************************************************
         // PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT
         // ***************************************************************

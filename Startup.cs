@@ -69,6 +69,7 @@ namespace RiskGame.API
                     new TransactionContext(Configuration?.GetSection("RiskGameDatabaseSettings")
                     .GetChildren().Where(v => v.Key == "MySqlConnectionString")
                     .Select(v => v.Value).FirstOrDefault().ToString())));
+
             services.AddSwaggerGen();
 
             services.AddControllersWithViews();
