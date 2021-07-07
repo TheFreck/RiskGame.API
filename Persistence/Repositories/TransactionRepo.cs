@@ -10,25 +10,37 @@ namespace RiskGame.API.Persistence.Repositories
 {
     public class TransactionRepo : ITransactionRepo
     {
+        private readonly ITransactionContext _context;
         private readonly IDatabaseSettings _settings;
         private readonly string _sqlConnection;
         private readonly MySqlConnection _transactions;
-        public TransactionRepo(IDatabaseSettings settings, MySqlConnection sqlConnection)
+        public TransactionRepo(ITransactionContext context)
         {
-            _settings = settings;
-            _sqlConnection = '@' + _settings.MySqlConnectionString;
-            using var db = new MySqlConnection('@' + _settings.MySqlConnectionString);
-            _transactions = db;
-            _transactions.Open();
+            _context = context;
         }
         public void AddTransaction(TradeTicket trade)
         {
-            using var cmd = new MySqlCommand();
-            cmd.Connection = _transactions;
+            var newTrade = new TransactionResource
+            {
+                TradeId = trade.TradeId,
+                Buyer = trade.Buyer.Id,
+                Seller = trade.Seller.Id,
+                Asset = trade.Asset.Id,
+                Price = trade.Cash / trade.Shares,
+                Shares = trade.Shares,
+                TradeTime = trade.TradeTime
+            };
+            _context.AddTrade(newTrade);
         }
+        public TransactionResource GetTrade(Guid transactionId, string[] columns) =>_context.GetTrade(transactionId, columns);
+        public List<TransactionResource> GetTradesSince(Guid gameId, Guid assetId, DateTime? since) =>_context.GetMany(gameId, assetId, since);
+        public void CleanSlate() =>_context.CleanSlate();
     }
     public interface ITransactionRepo
     {
-
+        void AddTransaction(TradeTicket trade);
+        TransactionResource GetTrade(Guid transactionId, string[] columns);
+        List<TransactionResource> GetTradesSince(Guid gameId, Guid assetId, DateTime? since);
+        void CleanSlate();
     }
 }

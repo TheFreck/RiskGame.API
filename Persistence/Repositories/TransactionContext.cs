@@ -15,20 +15,20 @@ namespace RiskGame.API.Persistence.Repositories
         {
             ConnectionString = connectionString;
         }
-        private MySqlConnection GetConnection()
+        private MySqlConnection Connect()
         {
             return new MySqlConnection(ConnectionString);
         }
-        public MySqlConnection GetPrivateConnection()
+        public MySqlConnection GetConnection()
         {
-            return GetConnection();
+            return Connect();
         }
         //
         // get one
         public TransactionResource GetTrade(Guid transactionId, string[] columns)
         {
             var one = new TransactionResource();
-            using (MySqlConnection conn = GetConnection())
+            using (MySqlConnection conn = Connect())
             {
                 conn.Open();
                 // implement specific columns to pass back
@@ -53,13 +53,14 @@ namespace RiskGame.API.Persistence.Repositories
         }
         //
         // get many
-        public List<TransactionResource> GetMany(Guid gameId, Guid assetId, DateTime since) // combine with GetAll
+        public List<TransactionResource> GetMany(Guid gameId, Guid assetId, DateTime? since) // combine with GetAll
         {
             var many = new List<TransactionResource>();
+            string sinceOrAll = since != null ? $"'trade_time' >= {since} " : "";
             using (MySqlConnection conn = GetConnection())
             {
                 conn.Open();
-                MySqlCommand cmd = new MySqlCommand($"SELECT * FROM `transactions`.`asset_trades` WHERE 'game_id' = {gameId} AND WHERE 'asset_id' = {assetId} AND WHERE 'trade_time' >= {since} ORDER BY 'sequence' DESC", conn);
+                MySqlCommand cmd = new MySqlCommand($"SELECT * FROM `transactions`.`asset_trades` WHERE 'game_id' = {gameId} AND WHERE 'asset_id' = {assetId} AND WHERE {sinceOrAll}ORDER BY 'sequence' DESC", conn);
                 using (var reader = cmd.ExecuteReader())
                 {
                     while (reader.Read())
@@ -147,10 +148,10 @@ namespace RiskGame.API.Persistence.Repositories
     public interface ITransactionContext
     {
         TransactionResource GetTrade(Guid transactionId, string[] columns);
-        List<TransactionResource> GetMany(Guid gameId, Guid assetId, DateTime since);
+        List<TransactionResource> GetMany(Guid gameId, Guid assetId, DateTime? since);
         List<TransactionResource> GetAll(Guid gameId);
         void AddTrade(TransactionResource trade);
         void CleanSlate();
-        MySqlConnection GetPrivateConnection();
+        MySqlConnection GetConnection();
     }
 }

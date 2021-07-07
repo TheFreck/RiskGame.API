@@ -22,16 +22,16 @@ namespace RiskGame.API.Services
         private readonly IPlayerRepo _playerRepo;
         private readonly IMarketRepo _marketRepo;
         private readonly IEconRepo _econRepo;
-        private readonly TransactionContext _transactionContext;
+        private readonly ITransactionRepo _transactionRepo;
         private readonly IMapper _mapper;
-        public AssetService(IAssetRepo assetRepo, IPlayerRepo playerRepo, IShareRepo shareRepo, IMarketRepo marketRepo, IEconRepo econRepo, TransactionContext transactionContext, IMapper mapper)
+        public AssetService(IAssetRepo assetRepo, IPlayerRepo playerRepo, IShareRepo shareRepo, IMarketRepo marketRepo, IEconRepo econRepo, ITransactionRepo transactionRepo, IMapper mapper)
         {
             _assetRepo = assetRepo;
             _playerRepo = playerRepo;
             _shareRepo = shareRepo;
             _marketRepo = marketRepo;
             _econRepo = econRepo;
-            _transactionContext = transactionContext;
+            _transactionRepo = transactionRepo;
             _mapper = mapper;
 
         }
@@ -64,7 +64,7 @@ namespace RiskGame.API.Services
         public List<ChartPixel> GetTrades(Guid gameId, Guid assetId, DateTime since)
         {
             var tradesOut = new List<ChartPixel>();
-            var trades = _transactionContext.GetMany(gameId, assetId, since);
+            var trades = _transactionRepo.GetTradesSince(gameId, assetId, since);
             var allTrades = trades.GroupBy(t => t.TradeTime.Second);
             foreach(var tradeGroup in allTrades)
             {
