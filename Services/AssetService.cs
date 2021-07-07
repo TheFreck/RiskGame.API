@@ -70,19 +70,18 @@ namespace RiskGame.API.Services
             {
                 tradesOut.Add(new ChartPixel
                 {
+                    TimeOpen = tradeGroup.OrderByDescending(t => t.Sequence).FirstOrDefault().TradeTime,
                     Open = tradeGroup.OrderByDescending(t => t.Sequence).FirstOrDefault().Price,
                     Close = tradeGroup.OrderBy(t => t.Sequence).FirstOrDefault().Price,
                     High = tradeGroup.OrderByDescending(t => t.Price).FirstOrDefault().Price,
                     Low = tradeGroup.OrderBy(t => t.Price).FirstOrDefault().Price,
                     Volume = tradeGroup.Count(),
+                    TimeClose = tradeGroup.OrderBy(t => t.Sequence).FirstOrDefault().TradeTime
                 });
             }
             return tradesOut;
         }
         public async Task<string> Create(AssetResource asset) => await _assetRepo.CreateOne(asset);
-        public void CopyData() =>_assetRepo.CopyAssets();
-        //public void Replace(Guid id, AssetResource assetRes) => _assetRepo.ReplaceOne(id, assetRes);
-        public void Update(Guid id, UpdateDefinition<AssetResource> update) => _assetRepo.UpdateOne(id, update);
         public void Remove(AssetResource assetIn) => _assetRepo.DeleteOne(assetIn.AssetId);
         public void RemoveFromGame(Guid assetId) => _assetRepo.DeleteOne(assetId);
         public void RemoveAssetsFromGame(List<Guid> assetIds) => _assetRepo.DeleteMany(assetIds);
@@ -101,8 +100,6 @@ namespace RiskGame.API.Services
         ChartPixel GetAssetPrices(Guid gameId, Guid assetId, int frame);
         List<ChartPixel> GetTrades(Guid gameId, Guid assetId, DateTime since);
         Task<string> Create(AssetResource asset);
-        void CopyData();
-        //void Replace(Guid id, AssetResource assetRes);
         void Remove(AssetResource assetIn);
         void RemoveFromGame(Guid assetId);
         void RemoveAssetsFromGame(List<Guid> assetIds);

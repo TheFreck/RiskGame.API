@@ -13,5 +13,7 @@ namespace RiskGame.API.Entities
         public decimal Low { get; set; }
         public int Volume { get; set; }
         public int LastFrame { get; set; }
+        public DateTime TimeOpen { get; set; }
+        public DateTime TimeClose { get; set; }
     }
 }
